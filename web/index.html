@@ -4,33 +4,35 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#fafaf8">
-  <meta name="description" content="Thenvio turns goals into paths, assumptions into tests and uncertainty into decisions. Bring your own AI.">
-  <title>Thenvio — Decide with clarity</title>
+  <meta name="description" content="Thenvio turns a single idea into a living tree of possibilities, assumptions, questions, experiments and connected insights.">
+  <title>Thenvio — Explore every direction</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./ideas.css">
 </head>
 <body>
   <div class="app">
     <aside class="sidebar" aria-label="Primary">
-      <a class="brand" href="#" aria-label="Thenvio Studio" id="brand">
+      <a class="brand" href="#" aria-label="Thenvio home" id="brand">
         <span class="brandmark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
         <span class="brandname">thenvio<span class="branddot">.</span></span>
       </a>
       <div class="sidebar-divider"></div>
       <div class="side-section-label">YOUR WORKSPACE</div>
       <nav class="navigation" aria-label="Main navigation">
-        <button type="button" class="nav-item active" data-tab="overview"><span class="nav-icon" aria-hidden="true">◈</span> Studio</button>
+        <button type="button" class="nav-item active" data-tab="branches"><span class="nav-icon" aria-hidden="true">⌁</span> Idea branches</button>
+        <button type="button" class="nav-item" data-tab="overview"><span class="nav-icon" aria-hidden="true">◈</span> Decision analysis</button>
         <button type="button" class="nav-item" data-tab="assumptions"><span class="nav-icon" aria-hidden="true">◎</span> Assumptions</button>
         <button type="button" class="nav-item" data-tab="skills"><span class="nav-icon" aria-hidden="true">⌘</span> Founder skills <span class="nav-count">24</span></button>
         <button type="button" class="nav-item" data-tab="integrations"><span class="nav-icon" aria-hidden="true">⇄</span> Connections</button>
       </nav>
       <div class="sidebar-spacer"></div>
-      <div class="sidebar-help"><span class="sidebar-help-title">A quieter way to think.</span><span>Less noise. Better reasoning.</span></div>
-      <div class="side-footer"><span class="live-dot"></span> ENGINE LOCAL <span>v0.2</span></div>
+      <div class="sidebar-help"><span class="sidebar-help-title">One thought, many futures.</span><span>Explore what could be.</span></div>
+      <div class="side-footer"><span class="live-dot"></span> IDEAS STORED LOCALLY <span>v0.3</span></div>
     </aside>
     <div class="workspace">
       <header class="topbar">
-        <div class="breadcrumbs">Thenvio <span>/</span> <strong id="breadcrumb">Studio</strong></div>
+        <div class="breadcrumbs">Thenvio <span>/</span> <strong id="breadcrumb">Idea branches</strong></div>
         <div class="top-actions">
           <span class="session-label"><span class="live-dot"></span> Saved on this device</span>
           <span class="demo-label" id="demoLabel">ILLUSTRATIVE DEMO</span>
@@ -39,11 +41,102 @@
           <button type="button" class="icon-button settings-button" id="settingsButton" aria-label="Personalize appearance" title="Appearance settings">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2" fill="var(--surface)"/><circle cx="16" cy="17" r="2" fill="var(--surface)"/></svg>
           </button>
-          <button type="button" class="icon-button mobile-new" id="mobileNew" title="New decision" aria-label="New decision">+</button>
+          <button type="button" class="icon-button mobile-new" id="mobileNew" title="New idea" aria-label="New idea">+</button>
         </div>
       </header>
       <main>
-        <section class="view active" id="view-overview" aria-label="Decision lab">
+        <section class="view active ideas-view" id="view-branches" aria-label="Idea branches">
+          <header class="ideas-heading">
+            <div class="ideas-head-copy">
+              <div class="eyebrow"><span class="ideas-eyebrow-line"></span> IDEAS, EXPLORED</div>
+              <h1>One idea. <span>Infinite directions.</span></h1>
+              <p>Start with a thought. Follow every possibility, challenge your assumptions, and see where it leads.</p>
+            </div>
+            <button type="button" class="primary-button ideas-new" id="ideaNew"><span aria-hidden="true">+</span> New idea</button>
+          </header>
+          <div class="ideas-project-row">
+            <div class="ideas-project-heading">
+              <label for="ideaProjectSelect">YOUR IDEAS</label>
+              <select id="ideaProjectSelect" aria-label="Choose an idea"></select>
+            </div>
+            <div class="ideas-project-details" id="ideaStats" aria-live="polite"></div>
+            <div class="ideas-history-controls">
+              <button type="button" class="ideas-small-icon" id="ideaUndo" aria-label="Undo last edit" title="Undo">↶</button>
+              <button type="button" class="ideas-small-icon" id="ideaRedo" aria-label="Redo last edit" title="Redo">↷</button>
+            </div>
+          </div>
+          <div class="ideas-body">
+            <section class="ideas-map-panel" aria-label="Idea map workspace">
+              <div class="ideas-map-toolbar">
+                <div class="ideas-mode-toggle" role="group" aria-label="Explore view">
+                  <button type="button" data-idea-mode="map" class="active" aria-pressed="true"><span aria-hidden="true">⌁</span> Map</button>
+                  <button type="button" data-idea-mode="outline" aria-pressed="false"><span aria-hidden="true">☷</span> Outline</button>
+                </div>
+                <div class="ideas-toolbar-right">
+                  <label class="ideas-search"><span aria-hidden="true">⌕</span><input id="ideaSearch" type="search" placeholder="Find a branch" aria-label="Find a branch"></label>
+                  <button type="button" class="ideas-small-icon" id="ideaZoomOut" title="Zoom out" aria-label="Zoom out">−</button>
+                  <span class="ideas-zoom-value" id="ideaZoomLabel">100%</span>
+                  <button type="button" class="ideas-small-icon" id="ideaZoomIn" title="Zoom in" aria-label="Zoom in">+</button>
+                  <button type="button" class="ideas-fit" id="ideaFit" title="Fit map to screen">Fit</button>
+                </div>
+              </div>
+              <div class="ideas-viewport" id="ideaViewport" tabindex="0" aria-label="Interactive branching map. Drag to pan, use zoom controls to navigate.">
+                <div class="ideas-canvas" id="ideaCanvas">
+                  <svg id="ideaLines" class="ideas-lines" aria-hidden="true"></svg>
+                  <div class="ideas-node-layer" id="ideaNodes"></div>
+                </div>
+                <div class="ideas-map-watermark">THENVIO <span> / </span> EXPLORE</div>
+              </div>
+              <div class="ideas-outline" id="ideaOutline" hidden aria-label="Idea outline"></div>
+              <footer class="ideas-map-footer">
+                <span id="ideaMapHint">Drag to explore · Select any branch to develop it further</span>
+                <div><button type="button" id="ideaExpandAll">Expand all</button><button type="button" id="ideaCollapseAll">Collapse branches</button></div>
+              </footer>
+            </section>
+            <aside class="ideas-inspector" aria-label="Selected branch editor">
+              <div class="ideas-inspector-top">
+                <span class="ideas-inspector-eyebrow">BRANCH DETAILS</span>
+                <span id="ideaDepth" class="ideas-depth">LEVEL 01</span>
+              </div>
+              <div id="ideaTrail" class="ideas-trail" aria-label="Branch ancestry"></div>
+              <form id="ideaInspectorForm" class="ideas-inspector-form">
+                <label for="ideaTitleInput">Title<input id="ideaTitleInput" name="title" maxlength="150" required></label>
+                <div class="ideas-inspector-fields">
+                  <label for="ideaKindInput">Type<select id="ideaKindInput" name="kind">
+                    <option value="idea">Main idea</option><option value="direction">Direction</option>
+                    <option value="question">Question</option><option value="assumption">Assumption</option>
+                    <option value="experiment">Experiment</option><option value="insight">Insight</option>
+                  </select></label>
+                  <label for="ideaStatusInput">State<select id="ideaStatusInput" name="status">
+                    <option value="open">Open</option><option value="exploring">Exploring</option>
+                    <option value="supported">Supported</option><option value="refuted">Disproved</option>
+                  </select></label>
+                </div>
+                <label for="ideaDescriptionInput">Thinking / context<textarea id="ideaDescriptionInput" name="description" rows="4" maxlength="4000" placeholder="What are you exploring here?"></textarea></label>
+                <label for="ideaEvidenceInput">Evidence / notes<textarea id="ideaEvidenceInput" name="evidence" rows="3" maxlength="4000" placeholder="What have you learned? Keep facts separate from guesses."></textarea></label>
+                <button type="submit" class="ideas-save">Save changes <span aria-hidden="true">↗</span></button>
+              </form>
+              <div class="ideas-inspector-divider"></div>
+              <div class="ideas-inspector-section-heading">TAKE IT FURTHER</div>
+              <div class="ideas-branch-buttons">
+                <button type="button" class="ideas-add-branch" id="ideaAddChild"><span aria-hidden="true">+</span> Add a branch</button>
+                <button type="button" class="ideas-develop" id="ideaDevelop"><span aria-hidden="true">⌁</span> Develop ideas</button>
+              </div>
+              <p class="ideas-guidance">“Develop ideas” adds editable exploration prompts. It does not invent AI research.</p>
+              <div class="ideas-inspector-divider"></div>
+              <div class="ideas-inspector-section-heading">CONNECT THINKING</div>
+              <div class="ideas-connect-row">
+                <select id="ideaLinkTarget" aria-label="Branch to connect"><option value="">Select another branch</option></select>
+                <button type="button" class="ideas-link-button" id="ideaLink">Link</button>
+              </div>
+              <div id="ideaConnectionsList" class="ideas-connections-list"></div>
+              <div class="ideas-inspector-divider"></div>
+              <button type="button" class="ideas-copy" id="ideaCopy"><span aria-hidden="true">⌘</span> Copy this reasoning for AI <span aria-hidden="true">↗</span></button>
+              <button type="button" class="ideas-delete" id="ideaDelete">Delete this branch</button>
+            </aside>
+          </div>
+        </section>
+        <section class="view" id="view-overview" aria-label="Decision lab">
           <div class="studio-intro">
             <div class="eyebrow">THENVIO STUDIO <span class="eyebrow-dot"></span> THINK IN POSSIBILITIES</div>
             <h1>What are you deciding?</h1>
@@ -159,6 +252,21 @@
     <div class="settings-group last"><label class="motion-label" for="motionToggle"><span><strong>Subtle animations</strong><small>Never at the cost of accessibility.</small></span><input id="motionToggle" type="checkbox" checked></label></div>
     <div class="modal-actions"><button type="button" class="primary-button compact" data-close="settingsDialog">Done</button></div>
   </dialog>
+  <dialog id="ideaCreateDialog" class="modal ideas-modal">
+    <form id="ideaCreateForm">
+      <div class="modal-head"><div><span class="section-index" id="ideaDialogEyebrow">CREATE A THOUGHT</span><h2 id="ideaDialogTitle">New idea</h2></div><button type="button" class="modal-close" data-close="ideaCreateDialog" aria-label="Close">×</button></div>
+      <p class="ideas-dialog-desc" id="ideaDialogDescription">Every big idea starts with one thought.</p>
+      <label>What are you thinking about?<input id="ideaCreateTitle" name="title" maxlength="150" required placeholder="e.g. Make local friendships easier" autocomplete="off"></label>
+      <label id="ideaCreateKindWrap">Branch type<select id="ideaCreateKind" name="kind">
+        <option value="direction">New direction</option><option value="question">Question to explore</option>
+        <option value="assumption">Assumption to challenge</option><option value="experiment">Experiment to try</option>
+        <option value="insight">Something learned</option>
+      </select></label>
+      <label>Context (optional)<textarea id="ideaCreateDescription" name="description" maxlength="4000" rows="3" placeholder="What's behind this thought?"></textarea></label>
+      <div class="modal-actions"><button type="button" class="ghost-button" data-close="ideaCreateDialog">Cancel</button><button type="submit" class="primary-button compact" id="ideaCreateSubmit">Create idea</button></div>
+    </form>
+  </dialog>
+  <input id="ideaImportInput" type="file" accept=".json,application/json" hidden>
   <input id="importInput" type="file" accept=".json,application/json" hidden>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script type="module" src="./app.mjs"></script>

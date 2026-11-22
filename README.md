@@ -1,5 +1,23 @@
 # Thenvio
 
+## Thenvio is for growing ideas (v0.3)
+
+**The main workspace is a living idea map — not a decision dashboard.** Start with one thought and grow it into branching directions, assumptions, questions, experiments and discoveries. The previous comparative scoring screen is still available as a **secondary Decision analysis** tab for users who choose to evaluate a mature option.
+
+What is implemented in the primary **Idea branches** view:
+
+- True multi-level, interactive, draggable, zoomable **branch canvas** with curved parent-child lines, collapsible subtrees, keyboard selection and an alternate outline view.
+- Create unlimited-depth editable branches (capped at 400 nodes per idea for safety). Each branch has editable title, type, status, description, evidence and notes.
+- Connect related branches using explicit cross-links; explore ancestors with breadcrumb navigation.
+- **Develop ideas** adds category-specific thinking prompts as editable children. **These are templates, not AI-generated insights or verified research.**
+- Search, filter-by-text highlighting, expand/collapse, fit map, zoom in/out, branch navigation, undo and redo.
+- Multiple ideas in a saved local portfolio; choose between them, import and export all ideas as portable JSON.
+- **Copy this reasoning for AI** includes the selected branch, its ancestors, descendants, hypotheses and notes for use in any existing assistant, without requiring Thenvio to pay model tokens.
+- Light/dark/system appearance and all earlier personalization controls remain available. No account required.
+
+This is the product's core experience. Workspaces are stored in browser localStorage, not synced. Export regularly. A native ChatGPT remote connector, collaboration and autonomous AI branching are not implemented yet.
+
+
 **Think in paths. Decide with evidence.**
 
 Thenvio is a local-first decision-intelligence workspace. Users can combine their existing AI assistants with a deterministic engine that checks constraints, dependencies and what changes the recommendation. There is **no hosted model**, no shared paid model API, and no operator-funded tokens.
