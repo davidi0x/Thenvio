@@ -91,7 +91,7 @@ export function thinkNext(graph,nodeId,{mode='explore',round=0,locale='pl',count
  if(!Number.isInteger(round)||round<0||!Number.isInteger(count)||count<1||count>12)throw Error('Invalid suggestion window');
  const path=branchPath(graph,nodeId),focus=path.at(-1),lang=locale==='en'?'en':'pl';
  const domain=detectIdeaDomain(graph.title+' '+focus.title+' '+graph.nodes[0].description);
- const data=(mode==='explore'?[...(domainSeeds[domain]||domainSeeds.general)]:[]).concat(methods[mode]);
+ const data=(mode==='explore'&&path.length===1?[...(domainSeeds[domain]||domainSeeds.general)]:[]).concat(methods[mode]);
  const existing=new Set(graph.nodes.filter(n=>n.parentId===nodeId).map(n=>norm(n.title)));
  const items=data.map(([id,plTitle,enTitle,plQuestion,enQuestion,plAnswer,enAnswer])=>{
   const title=l(lang,plTitle,enTitle);

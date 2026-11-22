@@ -89,10 +89,15 @@ export function initIdeaFlow({getGraph,getSelected,mutate,notice}){
   panel.classList.remove('is-open');backdrop.hidden=true;
   document.body.classList.remove('idea-sheet-locked');visible=false;
  }
- function guessedMode(node){
+ function guessedMode(node,graph){
+  // The flow progresses from possibilities to answers to tests, not in circles.
+  let depth=0,p=node;
+  while(p.parentId&&depth<30){depth++;p=graph.nodes.find(n=>n.id===p.parentId)||graph.nodes[0];}
   if(node.kind==='question')return 'answer';
   if(node.kind==='assumption')return 'challenge';
-  if(node.kind==='experiment')return 'test';
+  if(node.kind==='experiment')return 'challenge';
+  if(node.kind==='direction'&&depth>=2)return 'test';
+  if(node.kind==='direction'&&depth===1)return 'answer';
   return 'explore';
  }
  function sendSuggestion(card){
@@ -115,7 +120,7 @@ export function initIdeaFlow({getGraph,getSelected,mutate,notice}){
  }
  function render(){
   const graph=getGraph(),node=graph.nodes.find(n=>n.id===getSelected())||graph.nodes[0];
-  if(focus!==node.id){focus=node.id;mode=guessedMode(node);round=0;kind='direction';$('#ideaOwnInput').value='';}
+  if(focus!==node.id){focus=node.id;mode=guessedMode(node,graph);round=0;kind='direction';$('#ideaOwnInput').value='';}
   const header=node.kind==='question'?T.titleQuestion:node.kind==='assumption'?T.titleAssumption:node.kind==='experiment'?T.titleExperiment:T.titleThinking;
   $('#ideaFlowTitle').textContent=header;
   $('.idea-flow-description').textContent=T.description;
