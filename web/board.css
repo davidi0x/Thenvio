@@ -86,3 +86,60 @@
  .board-panel form{gap:8px}
 }
 @media(prefers-reduced-motion:reduce){.board-note,.board-note-plus{transition:none!important}}
+
+
+/* Immersive canvas mode: one surface and one compact tool strip. */
+body.canvas-mode .topbar,body.canvas-mode .footer{display:none}
+body.canvas-mode main{width:100%;max-width:none;padding:0!important;margin:0!important;overflow:hidden}
+body.canvas-mode .board-shell{height:100dvh;min-height:0;margin:0!important}
+body.canvas-mode .workspace{min-height:0;height:100dvh}
+body.canvas-mode .sidebar-help,body.canvas-mode .side-footer,body.canvas-mode .side-section-label{display:none}
+body.canvas-mode .board-header{height:60px;min-height:60px}
+body.canvas-mode .board-name select{max-width:min(36vw,410px)}
+body.canvas-mode .board-icon{font-size:18px}
+body.canvas-mode .board-ai-button{padding:9px 13px}
+body.canvas-mode .board-viewport:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+@media(min-width:691px){
+ body.canvas-mode .app{grid-template-columns:72px minmax(0,1fr)}
+ body.canvas-mode .sidebar{align-items:center;padding:24px 9px;border-right:1px solid var(--line);height:100dvh}
+ body.canvas-mode .brand{padding:0 0 29px;margin:0 auto;width:auto}
+ body.canvas-mode .brandname{display:none}
+ body.canvas-mode .brandmark{width:26px;height:26px;gap:4px;grid-template-columns:repeat(2,10px);grid-template-rows:repeat(2,10px)}
+ body.canvas-mode .sidebar-divider{width:42px;margin:0 0 24px}
+ body.canvas-mode .navigation{align-items:center;gap:9px;width:100%}
+ body.canvas-mode .nav-item{width:47px;height:47px;display:grid;place-items:center;justify-content:center;gap:0;padding:0;border-radius:12px;font-size:0}
+ body.canvas-mode .nav-item .nav-icon{font-size:21px;width:auto;line-height:1}
+ body.canvas-mode .nav-count{display:none}
+}
+@media(max-width:690px){
+ body.canvas-mode .app{display:block}
+ body.canvas-mode .workspace{height:auto;min-height:0}
+ body.canvas-mode .sidebar{padding:10px 12px 5px;border-right:0;border-bottom:1px solid var(--line);height:auto}
+ body.canvas-mode .brand{padding:0 0 9px 2px}
+ body.canvas-mode .brandname{font-size:19px}
+ body.canvas-mode .navigation{gap:4px}
+ body.canvas-mode .nav-item{padding:7px 10px}
+ body.canvas-mode .board-shell{height:calc(100dvh - 93px);min-height:360px;margin:0!important}
+ body.canvas-mode .board-header{height:52px;min-height:52px;padding:0 12px;gap:7px}
+ body.canvas-mode .board-name{gap:4px}
+ body.canvas-mode .board-name select{font-size:14px;max-width:36vw}
+ body.canvas-mode .board-header-actions{gap:4px}
+ body.canvas-mode .board-icon{height:31px;width:31px;font-size:16px}
+ body.canvas-mode .board-header-export{display:none}
+ body.canvas-mode .board-ai-button{padding:7px 9px;font-size:11px}
+ body.canvas-mode .board-split{margin:0 2px;height:19px}
+ body.canvas-mode .board-viewport{height:100%}
+}
+
+
+/* Compact mobile overflow menu keeps import/export accessible with no extra toolbar. */
+.board-menu{display:none;position:relative}
+.board-menu summary{list-style:none;cursor:pointer;width:31px;height:31px;display:grid;place-items:center;border:1px solid var(--line);border-radius:8px;color:var(--text);font-size:21px;line-height:1}
+.board-menu summary::-webkit-details-marker{display:none}
+.board-menu-popup{position:absolute;top:39px;right:0;min-width:166px;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;padding:6px;box-shadow:0 12px 35px rgba(0,0,0,.13);z-index:35}
+.board-menu-popup button{display:block;text-align:left;width:100%;border:0;background:transparent;color:var(--text);padding:11px 12px;border-radius:7px;font-size:12px}
+.board-menu-popup button:hover{background:var(--soft)}
+@media(max-width:690px){
+ body.canvas-mode .board-menu{display:block}
+ body.canvas-mode #boardSettings{display:none}
+}
