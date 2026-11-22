@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0c0d">
+  <meta name="description" content="Thenvio turns goals into paths, assumptions into tests and uncertainty into decisions. Bring your own AI.">
+  <title>Thenvio — Decide with clarity</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <a class="brand" href="#" aria-label="Thenvio home" id="brand">
+        <span class="brandmark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+        <span class="brandname">thenvio<span class="branddot">.</span></span>
+      </a>
+      <div class="side-section-label">WORKSPACE</div>
+      <nav class="navigation" aria-label="Main navigation">
+        <button type="button" class="nav-item active" data-tab="overview"><span class="nav-icon">◫</span> Decision lab</button>
+        <button type="button" class="nav-item" data-tab="assumptions"><span class="nav-icon">◎</span> Assumptions</button>
+        <button type="button" class="nav-item" data-tab="skills"><span class="nav-icon">⌘</span> Founder skills <span class="nav-count">24</span></button>
+        <button type="button" class="nav-item" data-tab="integrations"><span class="nav-icon">⇄</span> Integrations</button>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <div class="side-note"><span class="live-dot"></span> LOCAL-FIRST ENGINE <span class="side-note-sub">No hosted AI. No token billing.</span></div>
+      <div class="side-footer">THENVIO <span>PREVIEW 0.1</span></div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar">
+        <div class="breadcrumbs">Workspace <span>/</span> <strong id="breadcrumb">Decision lab</strong></div>
+        <div class="top-actions">
+          <span class="demo-label" id="demoLabel">ILLUSTRATIVE DEMO</span>
+          <button type="button" class="ghost-button" id="importButton">Import</button>
+          <button type="button" class="ghost-button" id="exportButton">Export <span aria-hidden="true">↗</span></button>
+          <button type="button" class="icon-button mobile-new" id="mobileNew" title="New decision">+</button>
+        </div>
+      </header>
+      <main>
+        <section class="view active" id="view-overview" aria-label="Decision lab">
+          <div class="heading-row">
+            <div class="heading-intro">
+              <div class="eyebrow"><span class="eyebrow-line"></span> DECISION INTELLIGENCE</div>
+              <h1>Better decisions.<br><span class="muted-heading">Fewer blind spots.</span></h1>
+              <p class="lead">Explore the consequences before you commit. Every path, assumption and trade-off in one place.</p>
+            </div>
+            <button type="button" class="primary-button" id="newDecision">+ New decision</button>
+          </div>
+          <div class="project-line"><span class="project-kicker">ACTIVE DECISION</span><strong id="projectTitle"></strong><button type="button" class="text-button" id="editProject">Edit</button></div>
+          <div class="metric-grid" id="metricGrid"></div>
+          <div class="two-col">
+            <div class="main-col">
+              <section class="panel controls-panel">
+                <div class="section-head"><div><div class="eyebrow subtle">01 / CONSTRAINTS</div><h2>Change the conditions</h2></div><div class="tiny-badge">LIVE RECALCULATION</div></div>
+                <p class="section-sub">No new AI request. Move a parameter to instantly re-evaluate every path.</p>
+                <div class="control-grid">
+                  <div class="control"><label for="budgetRange">Available budget <strong id="budgetLabel">$12,000</strong></label><input id="budgetRange" type="range" min="0" max="50000" step="100"><div class="range-ends"><span>$0</span><span id="budgetMax">$50,000</span></div></div>
+                  <div class="control"><label for="weeksRange">Time to decision <strong id="weeksLabel">12 weeks</strong></label><input id="weeksRange" type="range" min="1" max="52" step="1"><div class="range-ends"><span>1 week</span><span>52 weeks</span></div></div>
+                  <div class="control"><label for="riskRange">Risk tolerance <strong id="riskLabel">40 / 100</strong></label><input id="riskRange" type="range" min="0" max="100" step="1"><div class="range-ends"><span>Conservative</span><span>Exploratory</span></div></div>
+                </div>
+              </section>
+              <section class="panel routes-panel">
+                <div class="section-head"><div><div class="eyebrow subtle">02 / COMPARISON</div><h2>Possible paths <span id="pathCount" class="heading-count"></span></h2></div><button type="button" class="small-button" id="addPath">+ Add path</button></div>
+                <div id="routes"></div>
+                <p class="method-note">Scores are transparent comparative heuristics — not probabilities, validated forecasts or claims about the market.</p>
+              </section>
+            </div>
+            <div class="side-col">
+              <section class="panel detail-panel"><div class="eyebrow subtle">03 / DEEP DIVE</div><div id="pathDetail"></div></section>
+              <section class="panel action-panel"><div class="section-head"><div><div class="eyebrow subtle">04 / NEXT</div><h2>What to validate</h2></div></div><div id="nextActions"></div><button class="inline-link" type="button" data-tab="assumptions">Open assumption register <span>↗</span></button></section>
+            </div>
+          </div>
+        </section>
+        <section class="view" id="view-assumptions" aria-label="Assumptions">
+          <div class="page-heading"><div class="eyebrow"><span class="eyebrow-line"></span> EVIDENCE SYSTEM</div><h1>Assumptions<span class="branddot">.</span></h1><p class="lead">Every strategy rests on claims. Track which ones have evidence and which ones can break a plan.</p></div>
+          <div class="panel page-panel"><div class="section-head"><div><h2>Evidence register</h2><p class="section-sub">“Supported” without a source still carries an uncertainty penalty.</p></div><button class="primary-button compact" id="addAssumption" type="button">+ Add assumption</button></div><div class="table-wrap" id="assumptionTable"></div></div>
+        </section>
+        <section class="view" id="view-skills" aria-label="Founder skills">
+          <div class="page-heading"><div class="eyebrow"><span class="eyebrow-line"></span> FOUNDER OPERATING SYSTEM</div><h1>Skills<span class="branddot">.</span></h1><p class="lead">24 original, evidence-first protocols. Use them with your own AI assistant and bring the results back into the decision lab.</p></div>
+          <div class="skill-toolbar"><input class="search-input" id="skillSearch" placeholder="Search capabilities..." aria-label="Search skills"><select id="skillCategory" aria-label="Filter by category"><option value="">All categories</option></select></div>
+          <div class="skill-grid" id="skillGrid"></div>
+        </section>
+        <section class="view" id="view-integrations" aria-label="Integrations">
+          <div class="page-heading"><div class="eyebrow"><span class="eyebrow-line"></span> BRING YOUR OWN AI</div><h1>One engine.<br><span class="muted-heading">Many AI tools.</span></h1><p class="lead">Thenvio does the decision math. Your AI assistant handles language and research using your own plan or account.</p></div>
+          <div class="integration-grid">
+            <div class="panel integration-card"><div class="integration-icon">⌘</div><h2>Claude Desktop / Cursor</h2><p>Local MCP server over stdio. Tools expose scoring, stress tests and founder protocols — no Thenvio API key.</p><span class="availability available">IMPLEMENTED LOCALLY</span><h3>Install from the cloned repository</h3><div class="codebox"><code>node /absolute/path/to/Thenvio/integrations/mcp/server.mjs</code></div><p class="helper">Configure your MCP client to launch that command. Exact client configuration is documented in the repository.</p></div>
+            <div class="panel integration-card"><div class="integration-icon">✳</div><h2>ChatGPT</h2><p>Prompts and JSON export work today. A direct ChatGPT app/connector requires a separately deployed remote MCP endpoint and platform setup.</p><span class="availability pending">REMOTE CONNECTOR NOT DEPLOYED</span><button type="button" class="small-button" id="copyContext">Copy project context</button></div>
+            <div class="panel integration-card"><div class="integration-icon">⇢</div><h2>Any other assistant</h2><p>Export an explicit project snapshot or copy a skill prompt. No proprietary model integration is required.</p><span class="availability available">PORTABLE JSON + PROMPTS</span><button type="button" class="small-button" id="exportSecondary">Export current decision</button></div>
+          </div>
+          <div class="privacy-strip"><span>◈</span><div><strong>Private by architecture.</strong><p>Projects stay in browser storage until you choose to export them. No accounts, trackers, hosted inference or background uploads in this preview.</p></div></div>
+        </section>
+      </main>
+      <footer class="footer"><span>THENVIO / A CLEARER WAY TO THINK</span><span>Local data · Explicit assumptions · No simulated research</span></footer>
+    </div>
+  </div>
+  <dialog id="projectDialog" class="modal"><form id="projectForm"><div class="modal-head"><h2 id="projectDialogTitle">New decision</h2><button class="modal-close" formnovalidate type="button" data-close="projectDialog" aria-label="Close">×</button></div><label>Decision name<input name="title" maxlength="180" required placeholder="e.g. Launch in Germany"></label><label>What are you trying to achieve?<textarea name="goal" maxlength="3000" rows="3" required placeholder="Describe an outcome, not a feature."></textarea></label><div class="form-cols"><label>Budget (USD)<input name="budget" type="number" min="0" max="1000000000" step="1" required></label><label>Timeline (weeks)<input name="weeks" type="number" min="1" max="520" required></label></div><div class="modal-actions"><button type="button" class="ghost-button" data-close="projectDialog">Cancel</button><button type="submit" class="primary-button compact">Save decision</button></div></form></dialog>
+  <dialog id="pathDialog" class="modal"><form id="pathForm"><div class="modal-head"><h2 id="pathDialogTitle">Add a path</h2><button class="modal-close" type="button" data-close="pathDialog" aria-label="Close">×</button></div><input name="id" type="hidden"><label>Name<input name="name" maxlength="180" required placeholder="One distinct strategy"></label><label>How would this route work?<textarea name="description" maxlength="1500" rows="2"></textarea></label><div class="form-cols"><label>Estimated cost (USD)<input name="cost" type="number" min="0" max="1000000000" step="1" required></label><label>Estimated weeks<input name="weeks" type="number" min="0" max="520" step="1" required></label></div><div class="form-cols triple"><label>Upside / 100<input name="upside" type="number" min="0" max="100" required></label><label>Risk / 100<input name="risk" type="number" min="0" max="100" required></label><label>Learning / 100<input name="learning" type="number" min="0" max="100" required></label></div><div class="form-hint">These values are your estimates, not market facts.</div><fieldset><legend>Dependent assumptions</legend><div id="pathDependencies" class="check-list"></div></fieldset><div class="modal-actions"><button type="button" class="ghost-button" data-close="pathDialog">Cancel</button><button type="submit" class="primary-button compact">Save path</button></div></form></dialog>
+  <dialog id="assumptionDialog" class="modal"><form id="assumptionForm"><div class="modal-head"><h2 id="assumptionDialogTitle">Add assumption</h2><button class="modal-close" type="button" data-close="assumptionDialog" aria-label="Close">×</button></div><input name="id" type="hidden"><label>Claim to validate<textarea name="claim" maxlength="1000" rows="2" required placeholder="One specific claim, testable in reality"></textarea></label><label>Evidence status<select name="status"><option value="unknown">Unknown / untested</option><option value="supported">Supported</option><option value="refuted">Refuted</option></select></label><label>Evidence source or note<input name="source" maxlength="2000" placeholder="Source URL, interview reference or proof note"></label><p class="form-hint">No source means the claim remains uncertain even when marked supported.</p><div class="modal-actions"><button type="button" class="ghost-button" data-close="assumptionDialog">Cancel</button><button type="submit" class="primary-button compact">Save assumption</button></div></form></dialog>
+  <dialog id="skillDialog" class="modal"><div class="modal-head"><h2 id="skillDialogTitle"></h2><button class="modal-close" type="button" data-close="skillDialog" aria-label="Close">×</button></div><p id="skillDescription" class="section-sub"></p><label for="skillPrompt">Paste this into your AI assistant</label><textarea id="skillPrompt" class="prompt-textarea" readonly rows="13"></textarea><div class="modal-actions"><button type="button" class="ghost-button" data-close="skillDialog">Close</button><button id="copySkill" type="button" class="primary-button compact">Copy prompt</button></div></dialog>
+  <input id="importInput" type="file" accept=".json,application/json" hidden>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>

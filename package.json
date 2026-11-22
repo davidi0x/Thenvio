@@ -1,0 +1,16 @@
+{
+  "name": "thenvio",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "Local-first evidence-led decision intelligence",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/dev.mjs",
+    "test": "node --test",
+    "check": "node --check core/engine.mjs && node --check core/demo.mjs && node --check core/skills.mjs && node --check web/app.mjs && node --check integrations/mcp/server.mjs"
+  }
+}
