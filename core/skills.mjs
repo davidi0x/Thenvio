@@ -30,6 +30,6 @@ export const SKILL_BY_ID=Object.fromEntries(SKILLS.map(s=>[s.id,s]));
 export function getSkill(id){const s=SKILL_BY_ID[id];if(!s)throw Error('Unknown skill: '+id);return s;}
 export function skillPrompt(id,project){
  const s=getSkill(id);
- const context=project?'\\nGOAL: '+project.goal+'\\nASSUMPTIONS:\\n'+project.assumptions.map(a=>'- ['+a.status+'] '+a.claim+(a.source?' | '+a.source:' | no source')).join('\\n'):'';
- return '# Thenvio / '+s.name+'\\nMISSION: '+s.summary+'\\nDELIVERABLE: '+s.deliverable+'\\nMETHOD: '+s.instructions+'\\nRULES: Clearly separate facts, assumptions, estimates and recommendations. Cite accessible sources with dates or say not verified. Never invent business metrics, interviews or market data. End with the cheapest next experiment and the go/no-go trigger.'+context;
+ const context=project?'\nGOAL: '+project.goal+'\nASSUMPTIONS:\n'+project.assumptions.map(a=>'- ['+a.status+'] '+a.claim+(a.source?' | '+a.source:' | no source')).join('\n'):'';
+ return '# Thenvio / '+s.name+'\nMISSION: '+s.summary+'\nDELIVERABLE: '+s.deliverable+'\nMETHOD: '+s.instructions+'\nRULES: Clearly separate facts, assumptions, estimates and recommendations. Cite accessible sources with dates or say not verified. Never invent business metrics, interviews or market data. End with the cheapest next experiment and the go/no-go trigger.'+context;
 }
