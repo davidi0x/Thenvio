@@ -1,9 +1,9 @@
 {
   "name": "thenvio",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "private": true,
-  "description": "Local-first evidence-led decision intelligence",
+  "description": "Local-first interactive idea branching and exploration",
   "engines": {
     "node": ">=20"
   },
@@ -11,7 +11,7 @@
     "build": "node scripts/build.mjs",
     "dev": "node scripts/dev.mjs",
     "test": "node --test",
-    "check": "node --check core/engine.mjs && node --check core/demo.mjs && node --check core/skills.mjs && node --check web/app.mjs && node --check integrations/mcp/server.mjs && node --check core/visuals.mjs",
+    "check": "node --check core/engine.mjs && node --check core/demo.mjs && node --check core/skills.mjs && node --check web/app.mjs && node --check integrations/mcp/server.mjs && node --check core/visuals.mjs && node --check core/idea-graph.mjs && node --check core/demo-ideas.mjs && node --check web/idea-explorer.mjs",
     "skills:install": "node scripts/install-skills.mjs",
     "deploy:cloudflare": "node scripts/deploy-cloudflare.mjs"
   }

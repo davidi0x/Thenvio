@@ -2,6 +2,7 @@ import {evaluate,stressTest,emptyProject,loadProject} from './core/engine.mjs';
 import {demoProject} from './core/demo.mjs';
 import {SKILLS,skillPrompt} from './core/skills.mjs';
 import {chartModel} from './core/visuals.mjs';
+import {initIdeaExplorer} from './idea-explorer.mjs';
 
 const $=selector=>document.querySelector(selector);
 const $all=selector=>[...document.querySelectorAll(selector)];
@@ -27,7 +28,7 @@ function getStored(){
 }
 let project=getStored();
 let selectedPath=evaluate(project).winners.recommended||project.paths[0]?.id||null;
-let activeTab='overview';
+let activeTab='branches';
 let editingProject=false;
 let editingAssumption=null;
 let toastTimer;
@@ -47,13 +48,14 @@ function setProject(next){
   persist();render();
 }
 function navigate(tab){
-  if(!['overview','assumptions','skills','integrations'].includes(tab))return;
+  if(!['branches','overview','assumptions','skills','integrations'].includes(tab))return;
   activeTab=tab;
   $all('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+tab));
   $all('.nav-item').forEach(v=>{const on=v.dataset.tab===tab;v.classList.toggle('active',on);if(on)v.setAttribute('aria-current','page');else v.removeAttribute('aria-current');});
-  $('#breadcrumb').textContent={overview:'Studio',assumptions:'Assumptions',skills:'Founder skills',integrations:'Connections'}[tab];
+  $('#breadcrumb').textContent={branches:'Idea branches',overview:'Decision analysis',assumptions:'Assumptions',skills:'Founder skills',integrations:'Connections'}[tab];
   window.scrollTo({top:0,behavior:'instant'});
   render();
+  if(tab==='branches')ideaExplorer.show();
 }
 function metric(label,value,caption,accent=false){
   const card=node('div','metric');
@@ -365,7 +367,7 @@ function render(){
   const report=evaluate(project);
   $('#projectTitle').textContent=project.title;
   $('#projectGoal').textContent=project.goal;
-  $('#demoLabel').textContent=project.id==='demo'?'ILLUSTRATIVE DEMO':'LOCAL PROJECT';
+  $('#demoLabel').textContent=activeTab==='branches'?(ideaExplorer.getGraph().id==='g-demo-ideas'?'ILLUSTRATIVE IDEA MAP':'LOCAL IDEA MAP'):(project.id==='demo'?'ILLUSTRATIVE DEMO':'LOCAL PROJECT');
   renderMetrics(report);renderControls();renderRoutes(report);renderDetail(report);renderNext(report);
   renderAssumptions();renderSkills();renderViz(report);
 }
@@ -498,7 +500,7 @@ function setPreference(key,value){
 function bind(){
   $all('[data-tab]').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.tab)));
   $all('[data-close]').forEach(el=>el.addEventListener('click',()=>closeDialog(el.dataset.close)));
-  $('#brand').addEventListener('click',e=>{e.preventDefault();navigate('overview');});
+  $('#brand').addEventListener('click',e=>{e.preventDefault();navigate('branches');});
   $('#newDecision').addEventListener('click',openQuickDecision);
   $('#quickGoal').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();openQuickDecision();}});
   $('#settingsButton').addEventListener('click',()=>{applyPreferences();openDialog('settingsDialog');});
@@ -509,7 +511,7 @@ function bind(){
   $('#motionToggle').addEventListener('change',e=>setPreference('motion',e.target.checked?'on':'off'));
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(preferences.theme==='system')applyPreferences();});
   window.addEventListener('resize',()=>{if(activeTab==='overview')renderViz(evaluate(project));},{passive:true});
-  $('#mobileNew').addEventListener('click',()=>openProject());
+  $('#mobileNew').addEventListener('click',()=>activeTab==='branches'?ideaExplorer.create():openProject());
   $('#editProject').addEventListener('click',()=>openProject(true));
   $('#addPath').addEventListener('click',()=>openPath());
   $('#addAssumption').addEventListener('click',()=>openAssumption());
@@ -551,10 +553,10 @@ function bind(){
   for(const cat of categories){const opt=node('option','',cat);opt.value=cat;$('#skillCategory').append(opt);}
   $('#copySkill').addEventListener('click',()=>copyText($('#skillPrompt').value));
   $('#copyContext').addEventListener('click',()=>copyText('Analyze this decision. Separate evidence, assumptions and estimates. Return specific ways to falsify each route. Do not invent market data.\n\n'+JSON.stringify(project,null,2)));
-  $('#exportButton').addEventListener('click',exportProject);
+  $('#exportButton').addEventListener('click',()=>activeTab==='branches'?ideaExplorer.export():exportProject());
   $('#exportSecondary').addEventListener('click',exportProject);
-  $('#importButton').addEventListener('click',()=>$('#importInput').click());
+  $('#importButton').addEventListener('click',()=>activeTab==='branches'?ideaExplorer.import():$('#importInput').click());
   $('#importInput').addEventListener('change',e=>{importFile(e.target.files?.[0]);e.target.value='';});
   $all('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target===d)d.close();}));
 }
-bind();applyPreferences();render();
+bind();applyPreferences();const ideaExplorer=initIdeaExplorer({notice});render();
