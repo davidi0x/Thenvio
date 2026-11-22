@@ -44,7 +44,7 @@ The user's AI host does any research or generation. Thenvio handles constraints,
 
 ## Threat and trust boundaries
 
-- No cloud endpoints, hosted model inference, accounts or tracking in v0.1.
+- No Thenvio backend, accounts or tracking. Since v0.8 the browser may call two third-party APIs, only on explicit user action: `api.anthropic.com` (brainstorm, the user's own API key, billed to them) and `api.github.com` (read-only GET of a shared brain). The worker's CSP `connect-src` allows exactly these two hosts. Keys and tokens live in tab memory only.
 - Browser localStorage is unencrypted and single-project only. Exported JSON is unencrypted.
 - User input and source notes are not externally verified.
 - Import rejects invalid project shapes, missing dependency references and duplicate IDs.
@@ -112,3 +112,8 @@ Uses the File System Access API on a folder the person picks (the handle is reme
 
 ### Minimal canvas UI
 The canvas hides the app sidebar. Header: Brain (with a sync dot), Scan futures, menu. The side panel is closed by default and has one purpose at a time (note, futures, brain, own AI). The coach shows a single next step; `›` skips to the next one for the session.
+
+## Think (v0.8)
+- core/think.mjs (pure): `thinkRequest` builds a Messages API body for `claude-opus-5-5` with structured output (`output_config.format` json_schema `THINK_SCHEMA`: goal, questions, alternatives with parent/impact/effort/mustBeTrue/test, bestPath) and `effort: high`; the user message carries the canvas as Markdown, the goal and up to six shared-brain files. `applyThinkResult` validates, clamps, de-duplicates by title and places notes with freeSlots: options (rated), their assumptions and tests, questions under the focus, and a "Best route" insight under the chosen option, labelled as a hypothesis. The goal is stored as the first `Goal:`/`Cel:` line of the main idea's text.
+- web/ai-think.mjs: the only Anthropic call — raw `fetch` (the app is a dependency-free static client with `script-src 'self'`, so the SDK cannot be loaded) with `anthropic-dangerous-direct-browser-access`, `anthropic-version: 2026-10-21` and server-side refusal fallbacks (`fallbacks: "default"`). Handles 401/429, `refusal` and `max_tokens`.
+- web/github-brain.mjs: read-only GitHub reader (repo metadata, recursive tree, raw contents of canvases and context files). Merges use the same "newer wins, undo kept" rule as the folder sync, with the repository's `pushed_at` as the file time.

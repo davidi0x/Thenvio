@@ -12,7 +12,8 @@ test('the canvas is the whole app: no sidebar, one quiet header, panel closed un
  assert.match(app,/classList\.toggle\('canvas-mode',tab==='branches'\)/);
  const header=between(html,'<header class="board-header">','</header>');
  const visible=header.replace(/<details[\s\S]*<\/details>/,'');
- assert.equal((visible.match(/<button/g)||[]).length,2,'only Brain and Scan futures sit in the header');
+ assert.equal((visible.match(/<button/g)||[]).length,3,'only Brain, Think and Scan futures sit in the header');
+ assert.match(visible,/id="boardThink"/);
  assert.match(visible,/id="boardBrain"/);
  assert.match(visible,/id="boardFutures"/);
  assert.match(html,/<aside id="boardPanel" class="board-panel"[^>]*hidden>/,'the panel starts closed');

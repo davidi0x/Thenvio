@@ -1,6 +1,6 @@
 {
   "name": "thenvio",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "type": "module",
   "private": true,
   "description": "Thenvio: a minimal thinking canvas that keeps a team's shared brain as plain text in a Git repo",
@@ -11,7 +11,7 @@
     "build": "node scripts/build.mjs",
     "dev": "node scripts/dev.mjs",
     "test": "node --test",
-    "check": "node --check core/engine.mjs && node --check core/demo.mjs && node --check core/skills.mjs && node --check web/app.mjs && node --check integrations/mcp/server.mjs && node --check core/visuals.mjs && node --check core/idea-graph.mjs && node --check core/demo-ideas.mjs && node --check web/idea-explorer.mjs && node --check core/brainstorm.mjs && node --check web/idea-flow.mjs && node --check core/board.mjs && node --check web/free-canvas.mjs && node --check web/canvas-smoke.js && node --check core/futures.mjs && node --check core/coach.mjs && node --check core/brain.mjs && node --check core/zip.mjs && node --check scripts/brain.mjs && node --check web/brain-sync.mjs",
+    "check": "node --check core/engine.mjs && node --check core/demo.mjs && node --check core/skills.mjs && node --check web/app.mjs && node --check integrations/mcp/server.mjs && node --check core/visuals.mjs && node --check core/idea-graph.mjs && node --check core/demo-ideas.mjs && node --check web/idea-explorer.mjs && node --check core/brainstorm.mjs && node --check web/idea-flow.mjs && node --check core/board.mjs && node --check web/free-canvas.mjs && node --check web/canvas-smoke.js && node --check core/futures.mjs && node --check core/coach.mjs && node --check core/brain.mjs && node --check core/zip.mjs && node --check scripts/brain.mjs && node --check web/brain-sync.mjs && node --check core/think.mjs && node --check web/ai-think.mjs && node --check web/github-brain.mjs",
     "skills:install": "node scripts/install-skills.mjs",
     "brain": "node scripts/brain.mjs",
     "deploy:cloudflare": "node scripts/deploy-cloudflare.mjs"

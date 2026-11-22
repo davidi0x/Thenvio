@@ -4,11 +4,14 @@
 // All suggestions come from deterministic local heuristics in core/. No model calls, no network.
 import {makeIdea,readIdeaGraph,deleteIdeaBranch,unlinkIdeaBranches,ideaContext} from './core/idea-graph.mjs';
 import {prepareBoard,moveBoardNodes,addBoardNode,updateBoardText,updateBoardMeta,visibleBoardEdges,freeSlots,tidyLayout,setLinkType,connectNotes,detachNote,BOARD_W,BOARD_H,CARD_W,CARD_H} from './core/board.mjs';
-import {thinkNext,brainstormPrompt,parseBrainstormResponse,THINK_MODES} from './core/brainstorm.mjs';
+import {thinkNext,THINK_MODES} from './core/brainstorm.mjs';
 import {coachGraph,nodeAdvice,inferKind,detectLocale,isPlaceholder,skillBrief,defaultModeFor} from './core/coach.mjs';
 import {analyzeFutures,countFutures,findForks,decisionRecord,confidenceLabel} from './core/futures.mjs';
 import {markdownToCanvas,canvasToMarkdown,BRAIN_FOLDERS} from './core/brain.mjs';
 import {createBrainSync} from './brain-sync.mjs';
+import {thinkRequest,applyThinkResult,readGoal,withGoal,THINK_SCHEMA} from './core/think.mjs';
+import {runThink,setKey,hasKey} from './ai-think.mjs';
+import {readGithubBrain,setToken} from './github-brain.mjs';
 
 const $=s=>document.querySelector(s);
 const el=(tag,cls='',txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined&&txt!==null)e.textContent=String(txt);return e;};
@@ -47,8 +50,8 @@ const T={
   copied:'Copied.',clipboardBlocked:'Clipboard blocked.',pillNext:'Next',pillDetails:'Details',noSuggestions:'No new angles here. Write your own with Tab.',
   allBlocked:'Every route is blocked',score:'score',saveFailed:'Unable to save. Export your canvas as JSON.',canvasExported:'Canvas exported.',
   canvasImported:'Canvas imported.',importFailed:'Import failed: {e}',tooLarge:'File is too large.',maxCanvases:'Maximum 50 canvases.',ideasAdded:'Ideas added to canvas.',
-  nothingToImport:'Nothing to import.',brain:'Brain',menuNew:'New canvas',menuImport:'Import file…',menuExport:'Export JSON',menuAi:'Use your own AI…',menuSettings:'Appearance',menuClassic:'More tools',
-  more:'More',connectTo:'Connect to…',panelNote:'Note',panelFutures:'Futures',panelBrain:'Shared brain',panelAi:'Your own AI',
+  nothingToImport:'Nothing to import.',brain:'Brain',menuNew:'New canvas',menuImport:'Import file…',menuExport:'Export JSON',menuAi:'Think with AI…',menuSettings:'Appearance',menuClassic:'More tools',
+  more:'More',connectTo:'Connect to…',panelNote:'Note',panelFutures:'Futures',panelBrain:'Shared brain',panelAi:'Think it through',
   brainLede:'One repo, plain text. Your team and your agents work from the same files.',brainConnect:'Connect a folder',brainDownload:'Download brain (.zip)',brainOpen:'Open a brain folder',
   brainHow:'Put it on GitHub',brainTraits:'Lightweight · Full history · Backed up · Free',brainReconnect:'Reconnect “{name}”',brainDisconnect:'Disconnect folder',
   brainOff:'Not connected. Canvases stay in this browser until you connect a folder or download the brain.',brainSynced:'Saved to <b>{name}</b> at {time} · {n} files. Commit and push to share.',
@@ -56,7 +59,14 @@ const T={
   brainUnsupported:'This browser cannot write to folders. Download the brain and commit it, or open a folder to read its canvases.',
   brainImported:'{n} canvas(es) read from the brain.',brainNothing:'No canvases found in product-data/ideas/.',
   brainStep1:'Create a private repository on GitHub.',brainStep2:'Clone it and connect that folder here — or unzip the download into it.',brainStep3:'Save history: <code>git add . && git commit -m "Update brain" && git push</code>',brainStep4:'Point your agents at the repo. They read <code>AGENTS.md</code> and the same files.',
-  welcomeHint:'Enter saves · Tab adds a branch',bodyPlaceholder:'Context, details, why it matters…',evidencePlaceholder:'Interview note, link, number…',invalidAi:'Invalid AI response: {e}',undoEmpty:'Nothing to undo.'},
+  welcomeHint:'Enter saves · Tab adds a branch',think:'Think',panelThink:'Think it through',goalLabel:'Goal — where do you want to get?',goalPlaceholder:'e.g. 100 paying customers in 6 months',
+  keyLabel:'Your Anthropic API key',keyNote:'Billed to your own account. Kept only in this tab’s memory and sent only to api.anthropic.com when you press Think.',thinkRun:'Think it through',
+  noKey:'No API key? Use any assistant',noKeyNote:'Copy the prompt, paste it into Claude or ChatGPT, then paste the JSON answer here.',copyPrompt:'Copy the prompt',pasteJson:'Paste the JSON answer',addToCanvas:'Add to canvas',close:'Close',
+  scopeAll:'Thinks about the whole canvas{ctx}.',scopeNote:'Focuses on “{t}”{ctx}.',scopeCtx:' with your shared brain as context',thinking:'Thinking it through — questions, alternatives, the best route… (can take a minute)',
+  thinkDone:'{n} notes added. Ranking every combination…',errNoKey:'Paste your API key first.',errBadKey:'The API key was rejected.',errRate:'Rate limited — try again in a moment.',
+  errRefusal:'Claude declined this request.',errTooLong:'The answer was cut off — try a narrower focus.',errNet:'Could not reach the API: {e}',
+  bestRoute:'Best route',questionsTitle:'Questions that would change the decision',altsTitle:'Alternatives',risk:'Risk',planB:'Plan B',
+  ghTitle:'Read from GitHub',ghConnect:'Connect GitHub (read)',ghReading:'Reading {repo}…',ghRead:'Read <b>{repo}</b> ({branch}): {n} canvas(es), {c} context file(s).',ghError:'GitHub: {e}',bodyPlaceholder:'Context, details, why it matters…',evidencePlaceholder:'Interview note, link, number…',invalidAi:'Invalid AI response: {e}',undoEmpty:'Nothing to undo.'},
  pl:{hint:'Kliknij dwukrotnie, by dodać · Przeciągnij kropkę, by połączyć · Tab dodaje gałąź',scan:'Skanuj przyszłości',tabNote:'Notatka',tabCoach:'Co dalej',tabFutures:'Przyszłości',
   noteEmpty:'Wybierz notatkę, aby ją rozwinąć, albo kliknij dwukrotnie canvas, by zacząć nową.',status:'Status',ratings:'Wpływ i wysiłek',evidence:'Dowód lub źródło',
   suggestions:'Podpowiedzi',more:'Inne kąty ↻',addAll:'Dodaj wszystkie',tools:'Narzędzia do podłączenia',toolsNote:'Tylko sugestie. Thenvio nie jest połączone z tymi aplikacjami.',
@@ -80,8 +90,8 @@ const T={
   copied:'Skopiowano.',clipboardBlocked:'Schowek zablokowany.',pillNext:'Dalej',pillDetails:'Szczegóły',noSuggestions:'Brak nowych kątów. Dopisz własny klawiszem Tab.',
   allBlocked:'Wszystkie ścieżki są zablokowane',score:'ocena',saveFailed:'Nie można zapisać. Wyeksportuj canvas do JSON.',canvasExported:'Wyeksportowano canvas.',
   canvasImported:'Zaimportowano canvas.',importFailed:'Import nieudany: {e}',tooLarge:'Plik jest za duży.',maxCanvases:'Maksymalnie 50 canvasów.',ideasAdded:'Dodano pomysły na canvas.',
-  nothingToImport:'Nic do zaimportowania.',brain:'Mózg',menuNew:'Nowy canvas',menuImport:'Importuj plik…',menuExport:'Eksportuj JSON',menuAi:'Użyj własnego AI…',menuSettings:'Wygląd',menuClassic:'Więcej narzędzi',
-  more:'Więcej',connectTo:'Połącz z…',panelNote:'Notatka',panelFutures:'Przyszłości',panelBrain:'Wspólny mózg',panelAi:'Twoje AI',
+  nothingToImport:'Nic do zaimportowania.',brain:'Mózg',menuNew:'Nowy canvas',menuImport:'Importuj plik…',menuExport:'Eksportuj JSON',menuAi:'Pomyśl z AI…',menuSettings:'Wygląd',menuClassic:'Więcej narzędzi',
+  more:'Więcej',connectTo:'Połącz z…',panelNote:'Notatka',panelFutures:'Przyszłości',panelBrain:'Wspólny mózg',panelAi:'Rozkmina',
   brainLede:'Jedno repo, zwykły tekst. Twój zespół i Twoi agenci pracują na tych samych plikach.',brainConnect:'Połącz folder',brainDownload:'Pobierz mózg (.zip)',brainOpen:'Otwórz folder mózgu',
   brainHow:'Wrzuć na GitHuba',brainTraits:'Lekkie · Pełna historia · Kopia zapasowa · Za darmo',brainReconnect:'Połącz ponownie „{name}”',brainDisconnect:'Odłącz folder',
   brainOff:'Nie połączono. Canvasy zostają w tej przeglądarce, dopóki nie połączysz folderu albo nie pobierzesz mózgu.',brainSynced:'Zapisano w <b>{name}</b> o {time} · {n} plików. Zrób commit i push, by udostępnić.',
@@ -89,7 +99,14 @@ const T={
   brainUnsupported:'Ta przeglądarka nie zapisuje do folderów. Pobierz mózg i zrób commit albo otwórz folder, by wczytać canvasy.',
   brainImported:'Wczytano z mózgu: {n} canvas(y).',brainNothing:'Brak canvasów w product-data/ideas/.',
   brainStep1:'Załóż prywatne repozytorium na GitHubie.',brainStep2:'Sklonuj je i połącz ten folder tutaj — albo rozpakuj do niego pobrany plik.',brainStep3:'Zapisz historię: <code>git add . && git commit -m "Aktualizacja mózgu" && git push</code>',brainStep4:'Wskaż agentom repo. Czytają <code>AGENTS.md</code> i te same pliki.',
-  welcomeHint:'Enter zapisuje · Tab dodaje gałąź',bodyPlaceholder:'Kontekst, szczegóły, dlaczego to ważne…',evidencePlaceholder:'Notatka z rozmowy, link, liczba…',invalidAi:'Nieprawidłowa odpowiedź AI: {e}',undoEmpty:'Nie ma czego cofnąć.'}
+  welcomeHint:'Enter zapisuje · Tab dodaje gałąź',think:'Pomyśl',panelThink:'Rozkmina',goalLabel:'Cel — dokąd chcesz dojść?',goalPlaceholder:'np. 100 płacących klientów w 6 miesięcy',
+  keyLabel:'Twój klucz API Anthropic',keyNote:'Rozliczane na Twoim koncie. Trzymany tylko w pamięci tej karty i wysyłany wyłącznie do api.anthropic.com po kliknięciu.',thinkRun:'Rozkmiń to',
+  noKey:'Nie masz klucza? Użyj dowolnego asystenta',noKeyNote:'Skopiuj prompt, wklej do Claude albo ChatGPT, potem wklej tu odpowiedź JSON.',copyPrompt:'Kopiuj prompt',pasteJson:'Wklej odpowiedź JSON',addToCanvas:'Dodaj na canvas',close:'Zamknij',
+  scopeAll:'Myśli o całym canvasie{ctx}.',scopeNote:'Skupia się na „{t}”{ctx}.',scopeCtx:' z Twoim wspólnym mózgiem jako kontekstem',thinking:'Rozkminiam — pytania, alternatywy, najlepsza droga… (może potrwać minutę)',
+  thinkDone:'Dodano notatek: {n}. Porównuję wszystkie kombinacje…',errNoKey:'Najpierw wklej klucz API.',errBadKey:'Klucz API został odrzucony.',errRate:'Limit zapytań — spróbuj za chwilę.',
+  errRefusal:'Claude odmówił tego zapytania.',errTooLong:'Odpowiedź została ucięta — zawęź temat.',errNet:'Nie udało się połączyć z API: {e}',
+  bestRoute:'Najlepsza droga',questionsTitle:'Pytania, które zmieniłyby decyzję',altsTitle:'Alternatywy',risk:'Ryzyko',planB:'Plan B',
+  ghTitle:'Czytaj z GitHuba',ghConnect:'Połącz GitHub (odczyt)',ghReading:'Czytam {repo}…',ghRead:'Wczytano <b>{repo}</b> ({branch}): canvasy: {n}, pliki kontekstu: {c}.',ghError:'GitHub: {e}',bodyPlaceholder:'Kontekst, szczegóły, dlaczego to ważne…',evidencePlaceholder:'Notatka z rozmowy, link, liczba…',invalidAi:'Nieprawidłowa odpowiedź AI: {e}',undoEmpty:'Nie ma czego cofnąć.'}
 };
 
 function portfolioLoad(){
@@ -847,6 +864,8 @@ export function initFreeCanvas({notice=()=>{}}={}){
   $('#boardAiPanel').hidden=panelMode!=='ai';
   $('#boardAi').setAttribute('aria-expanded',String(panelMode==='ai'));
   $('#boardBrain').setAttribute('aria-expanded',String(panelMode==='brain'));
+  $('#boardThink').setAttribute('aria-expanded',String(panelMode==='ai'));
+  if(panelMode==='ai')renderThinkPanel();
   if(panelMode==='note')renderNoteTab();
   if(panelMode==='futures')renderFuturesTab();
   if(panelMode==='brain')renderBrainPanel();
@@ -952,6 +971,89 @@ export function initFreeCanvas({notice=()=>{}}={}){
   connect.textContent=st.mode==='reconnect'?t('brainReconnect',{name}):st.handle?t('brainDisconnect'):t('brainConnect');
   const steps=$('#boardBrainSteps');
   steps.innerHTML=['brainStep1','brainStep2','brainStep3','brainStep4'].map(k=>'<li>'+t(k)+'</li>').join('');
+ }
+ // ── Think: brainstorm with Claude on the person's own key ──
+ let lastThink=null,thinkBusy=false,ghContext=[],ghLast=0;
+ const brainContext=()=>ghContext.length?ghContext:(brain?.state().context||[]);
+ function renderThinkPanel(){
+  const goal=$('#boardGoal');
+  goal.placeholder=t('goalPlaceholder');
+  if(document.activeElement!==goal&&!goal.dataset.dirty)goal.value=readGoal(graph());
+  const n=selectedNode(),ctx=brainContext().length?t('scopeCtx'):'';
+  $('#boardThinkScope').textContent=n&&n.id!==graph().rootId?t('scopeNote',{t:n.title,ctx}):t('scopeAll',{ctx});
+  $('#boardKeyRow').hidden=hasKey();
+  $('#boardThinkRun').disabled=thinkBusy;
+  const host=$('#boardThinkResult');host.replaceChildren();
+  if(!lastThink)return;
+  const r=lastThink,box=el('div','think-result');
+  if(r.bestPath.choice){
+   const best=el('div','think-best');best.append(el('small','',t('bestRoute')),el('strong','',r.bestPath.choice),el('p','',r.bestPath.why));
+   if(r.bestPath.steps.length){const ol=el('ol');for(const s of r.bestPath.steps)ol.append(el('li','',s));best.append(ol);}
+   if(r.bestPath.risk)best.append(el('small','',t('risk')+': '+r.bestPath.risk));
+   if(r.bestPath.planB)best.append(el('p','',t('planB')+': '+r.bestPath.planB));
+   box.append(best);
+  }
+  if(r.questions.length){box.append(el('h4','',t('questionsTitle')));const ul=el('ul');for(const q of r.questions){const li=el('li','',q.question);li.title=q.why;ul.append(li);}box.append(ul);}
+  if(r.alternatives.length){box.append(el('h4','',t('altsTitle')));const ul=el('ul');for(const a of r.alternatives)ul.append(el('li','',a.title+(a.impact?' · ↑'+a.impact+' ⚒'+(a.effort||'–'):'')));box.append(ul);}
+  host.append(box);
+ }
+ function thinkStatus(text,error=false){const st=$('#boardThinkStatus');st.textContent=text;st.classList.toggle('error',error);}
+ function saveGoal(){
+  const goal=$('#boardGoal').value.trim();
+  if(goal!==readGoal(graph())){try{commit(withGoal(graph(),goal,{locale}));}catch(err){notice(err.message);}}
+  $('#boardGoal').dataset.dirty='';
+  return goal;
+ }
+ function placeThink(result){
+  const g=graph(),focus=selected&&selected!==g.rootId?selected:null;
+  const out=applyThinkResult(g,result,{focusId:focus,locale});
+  const from=disp.get(focus||g.rootId);
+  for(const id of out.added){const n=out.graph.nodes.find(x=>x.id===id);spawnFrom.set(id,from?{...from}:{x:n.x,y:n.y});}
+  commit(out.graph,{select:focus||null});
+  lastThink=out.result;
+  thinkStatus(t('thinkDone',{n:out.added.length}));
+  renderThinkPanel();
+  fitTo([focus||g.rootId,...out.added]);
+  if(out.added.length)setTimeout(()=>{if(!scanning)scanFutures();},reducedMotion()?0:900);
+  return out;
+ }
+ async function think(){
+  if(thinkBusy)return;
+  const key=$('#boardApiKey').value.trim();if(key){setKey(key);$('#boardApiKey').value='';}
+  if(!hasKey()){thinkStatus(t('errNoKey'),true);$('#boardApiKey').focus();return;}
+  const goal=saveGoal();
+  thinkBusy=true;$('#boardThink').classList.add('is-busy');thinkStatus(t('thinking'));renderThinkPanel();
+  try{
+   const g=graph(),focus=selected&&selected!==g.rootId?selected:null;
+   const {result}=await runThink(g,{focusId:focus,goal,context:brainContext(),locale});
+   placeThink(result);
+   if(panelMode!=='futures')openPanel('ai');
+  }catch(err){
+   const m=err.message;
+   thinkStatus(m==='BAD_KEY'?t('errBadKey'):m==='RATE_LIMIT'?t('errRate'):m==='REFUSAL'?t('errRefusal'):m==='TOO_LONG'?t('errTooLong'):m==='NO_KEY'?t('errNoKey'):t('errNet',{e:m}),true);
+   if(m==='BAD_KEY')setKey('');
+  }finally{thinkBusy=false;$('#boardThink').classList.remove('is-busy');if(panelMode==='ai')renderThinkPanel();}
+ }
+ function manualPrompt(){
+  const g=graph(),req=thinkRequest(g,{focusId:selected&&selected!==g.rootId?selected:null,goal:$('#boardGoal').value.trim(),context:brainContext(),locale});
+  return req.system+'\n\n'+req.messages[0].content+'\n\nReturn ONLY a JSON object (no markdown) that matches this JSON Schema:\n'+JSON.stringify(THINK_SCHEMA);
+ }
+ async function connectGithub(auto=false){
+  const repo=$('#boardGhRepo').value.trim()||localStorage.getItem('thenvio-github-repo')||'';
+  if(!repo)return;
+  const status=$('#boardGhStatus');
+  const tok=$('#boardGhToken').value.trim();if(tok){setToken(tok);$('#boardGhToken').value='';}
+  status.textContent=t('ghReading',{repo});
+  try{
+   const res=await readGithubBrain(repo);
+   ghContext=res.context;ghLast=Date.now();
+   try{localStorage.setItem('thenvio-github-repo',res.repo);}catch{}
+   $('#boardGhRepo').value=res.repo;
+   const meta=Object.fromEntries(res.files.map(f=>[f.path,f]));
+   mergeFromBrain(res.canvases.map(c=>({graph:c,content:meta[res.paths[c.id]].content,lastModified:meta[res.paths[c.id]].lastModified})));
+   status.innerHTML=t('ghRead',{repo:res.repo.replace(/[<>&]/g,''),branch:res.branch.replace(/[<>&]/g,''),n:res.canvases.length,c:res.context.length});
+   for(const e of res.errors)notice(e.path+': '+e.message);
+  }catch(err){status.textContent=t('ghError',{e:err.message});if(!auto)notice(t('ghError',{e:err.message}));}
  }
  function brainStatus(st){
   const dot=$('#boardBrainDot');
@@ -1233,23 +1335,21 @@ export function initFreeCanvas({notice=()=>{}}={}){
   catch(err){notice(t('importFailed',{e:err.message}));}
   e.target.value='';
  });
- $('#boardCopyPrompt').addEventListener('click',()=>copy(brainstormPrompt(graph(),selected||graph().rootId,{mode:thinkMode||'explore',locale})));
+ $('#boardThink').addEventListener('click',()=>panelMode==='ai'?closePanel():openPanel('ai'));
+ $('#boardThinkRun').addEventListener('click',think);
+ $('#boardGoal').addEventListener('input',e=>{e.target.dataset.dirty='1';});
+ $('#boardGoal').addEventListener('change',saveGoal);
+ $('#boardApiKey').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();think();}});
+ $('#boardCopyPrompt').addEventListener('click',()=>copy(manualPrompt()));
  $('#boardImportAi').addEventListener('click',()=>{
   try{
-   const seeds=parseBrainstormResponse($('#boardAiJson').value),parent=selected||graph().rootId;
-   let current=graph(),added=[];
-   const slots=freeSlots(current,parent,Math.min(seeds.length,24));
-   const from=disp.get(parent);
-   for(const [i,s] of seeds.entries()){
-    if(current.nodes.length>=400||!slots[i])break;
-    const made=addBoardNode(current,{title:s.title,parentId:parent,kind:s.kind,description:s.description,free:false,x:slots[i].x,y:slots[i].y});
-    current=made.graph;added.push(made.id);spawnFrom.set(made.id,from?{...from}:slots[i]);
-   }
-   if(!added.length){notice(t('nothingToImport'));return;}
-   commit(current,{select:parent});
-   $('#boardAiJson').value='';closePanel();fitTo([parent,...added]);notice(t('ideasAdded'));
+   let text=$('#boardAiJson').value.trim();
+   text=text.replace(/^```(?:json)?\s*/i,'').replace(/```$/,'').trim();
+   if(!text){notice(t('nothingToImport'));return;}
+   placeThink(text);$('#boardAiJson').value='';
   }catch(err){notice(t('invalidAi',{e:err.message}));}
  });
+ $('#boardGhConnect').addEventListener('click',()=>connectGithub(false));
  document.addEventListener('keydown',e=>{
   if(!view.classList.contains('active'))return;
   const target=e.target instanceof Element?e.target:document.body;
@@ -1297,7 +1397,8 @@ export function initFreeCanvas({notice=()=>{}}={}){
  render();
  requestAnimationFrame(initialCamera);
  brain.restore().catch(()=>{});
- document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')brain.refresh();});
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible')return;brain.refresh();if(ghLast&&Date.now()-ghLast>60000)connectGithub(true);});
+ try{const repo=localStorage.getItem('thenvio-github-repo');if(repo){$('#boardGhRepo').value=repo;connectGithub(true);}}catch{}
  return {
   show(){if(needsCamera)requestAnimationFrame(initialCamera);else applyCamera();renderPanel();},
   create:newCanvas,

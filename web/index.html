@@ -28,7 +28,7 @@
       </nav>
       <div class="sidebar-spacer"></div>
       <div class="sidebar-help"><span class="sidebar-help-title">A space for any thought.</span><span>No prescribed path.</span></div>
-      <div class="side-footer"><span class="live-dot"></span> LOCAL CANVAS <span>v0.7</span></div>
+      <div class="side-footer"><span class="live-dot"></span> LOCAL CANVAS <span>v0.8</span></div>
     </aside>
     <div class="workspace">
       <header class="topbar">
@@ -54,6 +54,7 @@
               </div>
               <div class="board-header-actions">
                 <button type="button" class="board-brain-button" id="boardBrain" aria-controls="boardPanel" aria-expanded="false" title="Shared brain: one repo, plain text"><span class="board-brain-dot" id="boardBrainDot" aria-hidden="true"></span><span data-i18n="brain">Brain</span></button>
+                <button type="button" class="board-think-button" id="boardThink" aria-controls="boardPanel" aria-expanded="false" title="Brainstorm alternatives and the best route with Claude"><span aria-hidden="true">✦</span><span data-i18n="think">Think</span></button>
                 <button type="button" class="board-futures-button" id="boardFutures" title="Compare every combination of your choices"><span class="board-futures-glyph" aria-hidden="true"></span><span data-i18n="scan">Scan futures</span></button>
                 <details id="boardMenuDetails" class="board-menu">
                   <summary aria-label="Menu" title="Menu">···</summary>
@@ -61,7 +62,7 @@
                     <button type="button" id="boardNew" data-i18n="menuNew">New canvas</button>
                     <button type="button" id="boardMenuImport" data-i18n="menuImport">Import file…</button>
                     <button type="button" id="boardMenuExport" data-i18n="menuExport">Export JSON</button>
-                    <button type="button" id="boardAi" aria-expanded="false" aria-controls="boardAiPanel" data-i18n="menuAi">Use your own AI…</button>
+                    <button type="button" id="boardAi" aria-expanded="false" aria-controls="boardAiPanel" data-i18n="menuAi">Think with AI…</button>
                     <button type="button" id="boardMenuSettings" data-i18n="menuSettings">Appearance</button>
                     <div class="board-menu-sep" role="separator"></div>
                     <span class="board-menu-label" data-i18n="menuClassic">More tools</span>
@@ -151,6 +152,13 @@
                     <button type="button" class="futures-secondary" id="boardBrainDownload" data-i18n="brainDownload">Download brain (.zip)</button>
                     <button type="button" class="futures-secondary" id="boardBrainOpen" data-i18n="brainOpen">Open a brain folder</button>
                   </div>
+                  <div class="brain-github">
+                    <span class="board-field-label" data-i18n="ghTitle">Read from GitHub</span>
+                    <input id="boardGhRepo" placeholder="owner/repository" autocomplete="off" spellcheck="false" aria-label="GitHub repository">
+                    <input id="boardGhToken" type="password" placeholder="Read-only token (private repo only)" autocomplete="off" spellcheck="false" aria-label="GitHub read-only token">
+                    <button type="button" class="futures-secondary" id="boardGhConnect" data-i18n="ghConnect">Connect GitHub (read)</button>
+                    <p class="brain-status" id="boardGhStatus" role="status"></p>
+                  </div>
                   <details class="brain-how">
                     <summary data-i18n="brainHow">Put it on GitHub</summary>
                     <ol id="boardBrainSteps"></ol>
@@ -159,13 +167,27 @@
                   <input id="boardBrainFolder" type="file" webkitdirectory multiple hidden>
                 </div>
                 <div class="board-tabpanel board-ai-panel" id="boardAiPanel" hidden>
-                  <p>No model connected. Copy a focused prompt into your own ChatGPT, Claude or other assistant, then paste its JSON answer back here.</p>
-                  <button type="button" class="board-ai-primary" id="boardCopyPrompt">Copy focused prompt</button>
-                  <a class="board-ai-external" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">Open ChatGPT <span aria-hidden="true">↗</span></a>
-                  <label for="boardAiJson">Paste AI suggestions (JSON)</label>
-                  <textarea id="boardAiJson" rows="6" placeholder='{"branches":[{"title":"Another angle","kind":"direction","description":"…"}]}'></textarea>
-                  <button type="button" class="board-ai-secondary" id="boardImportAi">Add to canvas</button>
-                  <button type="button" class="board-text-button" id="boardAiClose">Close</button>
+                  <label class="board-field-label" for="boardGoal" data-i18n="goalLabel">Goal — where do you want to get?</label>
+                  <textarea id="boardGoal" rows="2" maxlength="300"></textarea>
+                  <p class="board-fineprint" id="boardThinkScope"></p>
+                  <div id="boardKeyRow" class="think-key">
+                    <label class="board-field-label" for="boardApiKey" data-i18n="keyLabel">Your Anthropic API key</label>
+                    <input id="boardApiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
+                    <p class="board-fineprint" data-i18n="keyNote">Billed to your own account. Kept only in this tab's memory and sent only to api.anthropic.com when you press Think.</p>
+                  </div>
+                  <button type="button" class="board-ai-primary" id="boardThinkRun" data-i18n="thinkRun">Think it through</button>
+                  <p class="think-status" id="boardThinkStatus" role="status"></p>
+                  <div id="boardThinkResult"></div>
+                  <details class="brain-how think-manual">
+                    <summary data-i18n="noKey">No API key? Use any assistant</summary>
+                    <p class="board-fineprint" data-i18n="noKeyNote">Copy the prompt, paste it into Claude or ChatGPT, then paste the JSON answer here.</p>
+                    <button type="button" class="futures-secondary" id="boardCopyPrompt" data-i18n="copyPrompt">Copy the prompt</button>
+                    <a class="board-ai-external" href="https://claude.ai/new" target="_blank" rel="noopener noreferrer">Open Claude <span aria-hidden="true">↗</span></a>
+                    <label for="boardAiJson" class="board-field-label" data-i18n="pasteJson">Paste the JSON answer</label>
+                    <textarea id="boardAiJson" rows="5" placeholder='{"goal":"…","questions":[…],"alternatives":[…],"bestPath":{…}}'></textarea>
+                    <button type="button" class="futures-secondary" id="boardImportAi" data-i18n="addToCanvas">Add to canvas</button>
+                  </details>
+                  <button type="button" class="board-text-button" id="boardAiClose" data-i18n="close">Close</button>
                 </div>
               </aside>
             </div>

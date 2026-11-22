@@ -148,3 +148,55 @@ test('shared brain: connect a folder, autosave plain text, pick up an agent edit
   assert.deepEqual(errors,[]);
  }finally{await browser.close();server.close();}
 });
+
+test('think: own API key, Claude answer placed on the canvas, futures ranked; GitHub brain read',{skip:!playwright&&'Playwright is not installed'},async t=>{
+ const browser=await launch();
+ if(!browser){t.skip('Chromium is not available');return;}
+ const server=await serve();
+ const {SAMPLE}=await import('./fixtures/think-sample.mjs');
+ try{
+  const page=await browser.newPage({viewport:{width:1366,height:860}});
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  let sent=null;
+  await page.route('https://api.anthropic.com/v1/messages',async route=>{
+   sent={headers:route.request().headers(),body:JSON.parse(route.request().postData())};
+   await route.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},
+    body:JSON.stringify({id:'msg_test',type:'message',role:'assistant',model:'claude-opus-5-5',stop_reason:'end_turn',content:[{type:'text',text:JSON.stringify(SAMPLE)}],usage:{input_tokens:1,output_tokens:1}})});
+  });
+  const canvasMd='# Coffee brain idea <!-- id=r1 x=1500 y=950 -->\n- [option] Kiosk mode <!-- id=k1 x=1812 y=950 -->\n- [option] Delivery\n';
+  await page.route('https://api.github.com/**',async route=>{
+   const url=route.request().url();const json=b=>route.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(b)});
+   if(url.endsWith('/repos/acme/brain'))return json({default_branch:'main',private:false,pushed_at:'2030-01-01T00:00:00Z'});
+   if(url.includes('/git/trees/'))return json({tree:[{type:'blob',path:'product-data/ideas/coffee.md'},{type:'blob',path:'brand/README.md'}]});
+   if(url.includes('/contents/product-data/ideas/coffee.md'))return route.fulfill({status:200,contentType:'text/plain',headers:{'access-control-allow-origin':'*'},body:canvasMd});
+   if(url.includes('/contents/brand/README.md'))return route.fulfill({status:200,contentType:'text/plain',headers:{'access-control-allow-origin':'*'},body:'# Brand\nFor independent cafes.'});
+   return route.fulfill({status:404,body:'{}'});
+  });
+  await page.goto('http://127.0.0.1:'+server.address().port+'/');
+  await page.waitForSelector('.board-note.root textarea.board-note-inline');
+  await page.keyboard.type('Phone payments for cafes');await page.keyboard.press('Enter');
+  // GitHub: read a public brain repo
+  await page.click('#boardBrain');
+  await page.fill('#boardGhRepo','acme/brain');
+  await page.click('#boardGhConnect');
+  await page.waitForFunction(()=>/acme\/brain/.test(document.querySelector('#boardGhStatus').textContent)&&/1/.test(document.querySelector('#boardGhStatus').textContent));
+  assert.match(await page.textContent('#boardSelect'),/Coffee brain idea/,'the canvas from GitHub is available');
+  // Think on the current canvas with the person's key
+  await page.selectOption('#boardSelect',{label:'Phone payments for cafes'});
+  await page.click('#boardThink');
+  await page.fill('#boardGoal','100 paying cafes in 6 months');
+  await page.fill('#boardApiKey','sk-ant-test-key');
+  await page.click('#boardThinkRun');
+  await page.waitForFunction(()=>[...document.querySelectorAll('.board-note-title')].some(n=>n.textContent==='QR sticker instead of a terminal'));
+  assert.equal(sent.headers['x-api-key'],'sk-ant-test-key');
+  assert.equal(sent.headers['anthropic-dangerous-direct-browser-access'],'true');
+  assert.equal(sent.body.model,'claude-opus-5-5');
+  assert.match(sent.body.messages[0].content,/independent cafes/,'GitHub brain files are used as context');
+  assert.equal(await page.inputValue('#boardApiKey'),'','the key field is cleared after use');
+  await page.waitForFunction(()=>document.querySelector('#boardHud.is-done'),null,{timeout:8000});
+  assert.match(await page.textContent('#boardHudText'),/Best of/);
+  const stored=await page.evaluate(()=>JSON.stringify(localStorage));
+  assert.doesNotMatch(stored,/sk-ant-test-key/,'the key is never stored');
+  assert.deepEqual(errors,[]);
+ }finally{await browser.close();server.close();}
+});

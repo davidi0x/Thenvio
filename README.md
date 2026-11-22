@@ -1,5 +1,11 @@
 # Thenvio
 
+## v0.8 — real brainstorming, connected to your GitHub brain
+
+- **Think (Pomyśl).** Set a goal and press *Think it through*. Claude (on **your own Anthropic API key**) reads the canvas plus your shared brain (`AGENTS.md`, `how-we-work/`, `brand/`) and returns the questions that would change the decision, 4–7 genuinely different ways to reach the goal (rated for impact and effort, each with what must be true and the cheapest pass/fail test), and the best route with steps, risk and plan B. Everything lands on the canvas as notes, then the futures scan ranks every combination. No key? *Copy the prompt* into any assistant and paste its JSON answer back.
+- **Read from GitHub.** In *Brain*, enter `owner/repository` (plus a read-only token for a private repo): Thenvio reads `product-data/ideas/*.md` and the context files, merges newer canvases, and re-reads when you come back to the tab.
+- **Privacy.** The key and token stay in the tab's memory only — never stored, never in the bundle. Network calls happen only on your action and only to `api.anthropic.com` and `api.github.com` (read-only), enforced by the Content-Security-Policy. Costs go to your own Anthropic account. AI output is labelled as hypotheses, not facts.
+
 ## v0.7 — one shared brain, a canvas anyone can use
 
 **Don't keep your thinking in Notion, ClickUp or Obsidian. Keep it in a repo.** Thenvio now works as the front end of a team's *shared brain*: one Git repository, plain text, that people and AI agents read and write together.

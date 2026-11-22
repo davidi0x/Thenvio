@@ -32,7 +32,7 @@ async function writeText(root,path,content){
 // getGraphs(): canvases to save; merge(canvases, meta): apply canvases read from the brain;
 // status(state): UI callback. locale(): 'en' | 'pl'.
 export function createBrainSync({getGraphs,merge,status=()=>{},locale=()=>'en'}){
- const state={supported:typeof window!=='undefined'&&'showDirectoryPicker' in window,handle:null,name:'',mode:'off',savedAt:null,error:'',files:0};
+ const state={context:[],supported:typeof window!=='undefined'&&'showDirectoryPicker' in window,handle:null,name:'',mode:'off',savedAt:null,error:'',files:0};
  const written=new Map();let paths={},timer=null,busy=null;
  const emit=()=>status({...state});
  async function load(){
@@ -44,6 +44,8 @@ export function createBrainSync({getGraphs,merge,status=()=>{},locale=()=>'en'})
    files.push({path:IDEAS_DIR+name,content:await file.text(),lastModified:file.lastModified});
   }
   const r=readBrain(files);
+  state.context=[];
+  for(const path of ['AGENTS.md','how-we-work/README.md','brand/README.md']){const t=await readText(state.handle,path);if(t)state.context.push({path,content:t.content});}
   paths={...paths,...r.paths};
   const meta=Object.fromEntries(files.map(f=>[f.path,f]));
   for(const [id,path] of Object.entries(r.paths))written.set(path,meta[path].content);

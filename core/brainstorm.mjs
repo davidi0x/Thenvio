@@ -100,7 +100,7 @@ export function thinkNext(graph,nodeId,{mode='explore',round=0,locale='pl',count
     :l(lang,plQuestion,enQuestion);
   const answer=l(lang,plAnswer,enAnswer);
   return {id:mode+'_'+id,title,question,answer,kind:typeFor[mode],
-   description:[question,answer,l(lang,'Rozwijany wątek: ','Focused on: ')+compact(focus.title,100)].join('\n\n'),
+   description:[question,answer].join('\n\n'),
    source:'structured-heuristic'};
  }).filter(card=>!existing.has(norm(card.title)));
  if(!items.length)return [];

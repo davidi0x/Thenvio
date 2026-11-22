@@ -371,3 +371,22 @@ body.canvas-mode .workspace{min-height:0;height:100dvh}
  .board-mark{display:none}
  .board-next{top:10px;left:10px;right:10px;max-width:none}
 }
+
+/* Think */
+.board-think-button{display:flex;align-items:center;gap:7px;border:1px solid var(--line-strong);background:var(--surface);color:var(--text);padding:8px 13px;border-radius:10px;font-size:12px;font-weight:700}
+.board-think-button:hover,.board-think-button[aria-expanded=true]{background:var(--soft)}
+.board-think-button.is-busy span:first-child{animation:futures-spin 1.2s linear infinite;display:inline-block}
+.board-ai-panel textarea,.board-ai-panel input,.brain-github input{width:100%;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);font-size:13px;padding:10px 12px;margin:6px 0 4px}
+.think-key{margin-top:12px}
+.think-status{font-size:12px;color:var(--sub);margin:10px 0;line-height:1.5}
+.think-status.error{color:var(--danger)}
+.think-result h4{font-size:10px;font-weight:760;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin:14px 0 6px}
+.think-result ul,.think-result ol{margin:0;padding-left:18px;display:grid;gap:5px;font-size:12.5px;line-height:1.5}
+.think-result .think-best{border:1px solid var(--accent);border-radius:12px;padding:12px;box-shadow:0 0 0 3px var(--accent-soft)}
+.think-result .think-best strong{display:block;font-size:14px;margin-bottom:4px}
+.think-result small{color:var(--sub);font-size:11.5px}
+.think-manual{margin-top:18px}
+.think-manual .futures-secondary,.think-manual .board-ai-external{width:100%;margin-top:8px}
+.brain-github{margin-top:16px;display:grid;gap:2px}
+.brain-github button{width:100%;margin-top:6px;padding:10px 12px}
+@media(max-width:690px){.board-think-button{padding:7px 9px}}

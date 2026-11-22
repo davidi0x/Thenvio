@@ -169,7 +169,7 @@ export function coachGraph(graph,{locale='en',futures=null,limit=6}={}){
  const naked=attached.find(n=>n.kind==='direction'&&!isPlaceholder(n.title)&&!kids(n.id).some(k=>k.kind==='assumption'||k.kind==='experiment'));
  if(naked)push(62,'must:'+naked.id,'△',L(locale,'Co musi być prawdą dla „'+short(naked.title)+'”?','What must be true for “'+short(naked.title)+'”?'),
   L(locale,'Każda opcja opiera się na założeniach. Nazwij najważniejsze.','Every option rests on assumptions. Name the key one.'),
-  {type:'add',parentId:naked.id,seed:{title:L(locale,'Musi być prawdą: ','Must be true: ')+short(naked.title,100),kind:'assumption',description:''}});
+  {type:'add',parentId:naked.id,seed:{title:L(locale,'Co musi być prawdą, żeby „','What must be true for “')+short(naked.title,90)+L(locale,'” zadziałało?','” to work?'),kind:'question',description:''}});
  const forkCount=new Set(attached.filter(n=>n.kind==='direction').map(n=>n.parentId)).size;
  const hasFork=graph.nodes.some(p=>kids(p.id).filter(k=>k.kind==='direction').length>=2);
  if(hasFork&&!futures)push(60,'scan','◎',L(locale,'Przeskanuj możliwe przyszłości','Scan the possible futures'),

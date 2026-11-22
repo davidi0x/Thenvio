@@ -10,5 +10,5 @@ test('optional local suggestion engine remains deterministic and context-aware',
  const next=thinkNext(result.graph,first,{mode:'explore',count:4,locale:'pl'});
  assert.equal(next.length,4);
  assert.ok(next.every(s=>!root.some(t=>t.title===s.title)));
- assert.ok(next.every(s=>s.description.includes(result.graph.nodes.find(n=>n.id===first).title)));
+ assert.ok(next.every(s=>s.question&&s.description.startsWith(s.question)));
 });

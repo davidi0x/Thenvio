@@ -8,7 +8,8 @@ test('social ideas produce domain-aware hypotheses, not empty generic branches',
  const ideas=thinkNext(g,g.rootId,{locale:'pl'});
  assert.equal(ideas.length,4);
  assert.ok(ideas.some(x=>/grup|spotkan|znajom/i.test(x.title+x.answer)));
- assert.ok(ideas.every(x=>x.question&&x.answer&&x.description.includes(g.title)));
+ assert.ok(ideas.every(x=>x.question&&x.answer&&x.description.includes(x.question)));
+ assert.ok(ideas.every(x=>!/Rozwijany wątek|Focused on/.test(x.description)),'no filler lines pasted into notes');
  assert.ok(ideas.every(x=>x.source==='structured-heuristic'));
 });
 test('all modes give structured question, candidate answer, challenge and test',()=>{

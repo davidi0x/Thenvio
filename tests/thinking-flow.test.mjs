@@ -13,15 +13,21 @@ test('the open canvas does not require the old brainstorming flow',async()=>{
  assert.doesNotMatch(html,/data-think="explore"/);
 });
 
-test('AI is clearly optional and does not claim a live connector',async()=>{
+test('AI runs only on the person\'s own key, on click, to Anthropic only; GitHub is read-only',async()=>{
  const html=await file('web/index.html');
- const code=await file('web/free-canvas.mjs');
- assert.match(html,/No model connected/);
- assert.match(html,/href="https:\/\/chatgpt\.com\/"/);
- assert.match(code,/brainstormPrompt/);
- assert.match(code,/parseBrainstormResponse/);
- assert.match(code,/navigator\.clipboard\.writeText/);
- assert.doesNotMatch(code,/fetch\(/);
+ const canvas=await file('web/free-canvas.mjs');
+ const ai=await file('web/ai-think.mjs');
+ const gh=await file('web/github-brain.mjs');
+ const worker=await file('scripts/cloudflare-worker.mjs');
+ assert.doesNotMatch(canvas,/fetch\(/,'the canvas itself makes no network calls');
+ assert.equal((ai.match(/fetch\(/g)||[]).length,1);
+ assert.match(ai,/fetch\('https:\/\/api\.anthropic\.com\/v1\/messages'/);
+ assert.doesNotMatch(ai+gh,/localStorage|sessionStorage|indexedDB/,'keys and tokens are never stored');
+ assert.match(gh,/https:\/\/api\.github\.com/);
+ assert.doesNotMatch(gh,/method:\s*'(POST|PUT|PATCH|DELETE)'/,'GitHub access is read-only');
+ assert.match(html,/Billed to your own account/);
+ assert.match(html,/id="boardCopyPrompt"/,'works without a key via any assistant');
+ assert.match(worker,/connect-src https:\/\/api\.anthropic\.com https:\/\/api\.github\.com/);
 });
 
 test('tap or drag a note acts on the note rather than panning the whole canvas',async()=>{
