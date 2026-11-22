@@ -180,13 +180,16 @@ export function initFreeCanvas({notice=()=>{}}={}){
   editor.hidden=false;populateEditor();
  }
  function select(id){
+  if(linkSource==='__await_source__'){
+   linkSource=id;selected=id;renderNotes();notice('Now choose a second note to connect.');
+   return;
+  }
   if(linkSource){
    if(id!==linkSource){
     try{commit(linkIdeaBranches(graph(),linkSource,id),{select:id});notice('Notes connected.');}
     catch(e){notice(e.message);}
    }
-   linkSource=null;render();
-   return;
+   linkSource=null;render();return;
   }
   selected=id;renderNotes();showEditor();
  }
@@ -258,10 +261,8 @@ export function initFreeCanvas({notice=()=>{}}={}){
  $('#boardAdd').addEventListener('click',()=>makeNode());
  $('#boardChild').addEventListener('click',()=>{if(selected)makeNode(selected,true);});
  $('#boardLink').addEventListener('click',()=>{
-  linkSource=linkSource?null:(selected||'pick');
-  if(linkSource==='pick')linkSource=null;
-  // With no selection, the next node click chooses the source.
-  if(!selected)linkSource='__await_source__';
+  linkSource=linkSource?null:(selected||'__await_source__');
+  // With no selection, the next note chooses the connection source.
   editor.hidden=true;renderNotes();
   $('#boardLink').classList.toggle('is-active',!!linkSource);
   viewport.classList.toggle('is-linking',!!linkSource);
