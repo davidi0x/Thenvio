@@ -18,11 +18,11 @@ What is implemented in the primary **Idea branches** view:
 This is the product's core experience. Workspaces are stored in browser localStorage, not synced. Export regularly. A native ChatGPT remote connector, collaboration and autonomous AI branching are not implemented yet.
 
 
-**Think in paths. Decide with evidence.**
+**One idea. Infinite directions.**
 
-Thenvio is a local-first decision-intelligence workspace. Users can combine their existing AI assistants with a deterministic engine that checks constraints, dependencies and what changes the recommendation. There is **no hosted model**, no shared paid model API, and no operator-funded tokens.
+Thenvio is a local-first space for growing ideas into a connected tree of directions, questions, assumptions, experiments and learnings. Start with one thought, develop branches and connect related concepts. The old decision scoring engine is **optional secondary analysis**, not the primary product. Use your existing AI assistant for language and research; this preview never silently pays for model tokens.
 
-## What works in v0.1
+## Earlier decision-analysis foundation (secondary)
 
 - Responsive dark-mode web application with editable decisions, paths and assumptions
 - Transparent score breakdown, explicit blockers, sensitivity to budget/time/risk
