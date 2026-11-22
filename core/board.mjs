@@ -6,7 +6,10 @@ export const CARD_W=224,CARD_H=104;
 const valid=(n)=>typeof n==='number'&&Number.isFinite(n)&&n>=0&&n<=20000;
 export function prepareBoard(graph){
  assertIdeaGraph(graph);
- const layout=layoutIdeaGraph(graph,{cardWidth:CARD_W,cardHeight:CARD_H,gapX:78,stepY:165});
+ // Older Thenvio versions could collapse nodes, but the free canvas shows ALL notes.
+ // Layout the fully expanded structure once when migrating, preventing overlaps.
+ const expanded={...graph,nodes:graph.nodes.map(n=>({...n,collapsed:false}))};
+ const layout=layoutIdeaGraph(expanded,{cardWidth:CARD_W,cardHeight:CARD_H,gapX:78,stepY:165});
  const coords=new Map(layout.nodes.map(n=>[n.id,{x:n.x+1500,y:n.y+850}]));
  const nodes=graph.nodes.map((n,i)=>{
   if(valid(n.x)&&valid(n.y))return n;
