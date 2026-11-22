@@ -37,3 +37,12 @@ test('title and notes edit preserves graph identity, deletion cascading',()=>{
  assert.equal(graph.nodes.find(n=>n.id===child.id).description,'No rigid category');
  assert.equal(deleteIdeaBranch(graph,child.id).nodes.length,1);
 });
+
+
+test('collapsed legacy branches also receive distinct positions during migration',async()=>{
+ const {demoIdeas}=await import('../core/demo-ideas.mjs');
+ const graph=prepareBoard(demoIdeas);
+ const coords=new Set(graph.nodes.map(n=>n.x+':'+n.y));
+ assert.equal(coords.size,graph.nodes.length);
+ assert.equal(prepareBoard(graph).nodes.length,demoIdeas.nodes.length);
+});
