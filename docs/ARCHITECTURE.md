@@ -48,3 +48,7 @@ The user's AI host does any research or generation. Thenvio handles constraints,
 - No raw AI API keys are handled.
 
 The 2MB browser import cap is a usability guard, not a comprehensive defense. Independent source provenance and robust collaborative security are future milestones.
+
+## Studio design (v0.2)
+The interface is an editorial, light-first decision canvas. Visuals are computed from core/visuals.mjs (pure model) and rendered as inline SVG in web/app.mjs (no chart dependencies). Views are landscape (cost and score), score contributions, and stress-tested leading path. User-selected colors, density, theme and motion are stored under a separate preferences key in localStorage. Browser light/dark system mode and reduced-motion preference are respected. On-screen values remain heuristic, not evidence.
+

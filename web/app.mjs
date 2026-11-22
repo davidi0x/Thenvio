@@ -1,6 +1,7 @@
 import {evaluate,stressTest,emptyProject,loadProject} from './core/engine.mjs';
 import {demoProject} from './core/demo.mjs';
 import {SKILLS,skillPrompt} from './core/skills.mjs';
+import {chartModel} from './core/visuals.mjs';
 
 const $=selector=>document.querySelector(selector);
 const $all=selector=>[...document.querySelectorAll(selector)];
@@ -50,7 +51,7 @@ function navigate(tab){
   activeTab=tab;
   $all('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+tab));
   $all('.nav-item').forEach(v=>{const on=v.dataset.tab===tab;v.classList.toggle('active',on);if(on)v.setAttribute('aria-current','page');else v.removeAttribute('aria-current');});
-  $('#breadcrumb').textContent={overview:'Decision lab',assumptions:'Assumptions',skills:'Founder skills',integrations:'Integrations'}[tab];
+  $('#breadcrumb').textContent={overview:'Studio',assumptions:'Assumptions',skills:'Founder skills',integrations:'Connections'}[tab];
   window.scrollTo({top:0,behavior:'instant'});
   render();
 }
@@ -90,7 +91,7 @@ function renderRoutes(report){
     root.append(empty);return;
   }
   report.paths.forEach((p,index)=>{
-    const row=button('','route'+(p.id===selectedPath?' active':'')+(p.feasible?'':' blocked'),()=>{selectedPath=p.id;renderRoutes(report);renderDetail(report);});
+    const row=button('','route'+(p.id===selectedPath?' active':'')+(p.feasible?'':' blocked'),()=>{selectedPath=p.id;renderRoutes(report);renderDetail(report);renderViz(report);});
     row.setAttribute('aria-label',p.name+', '+p.status+', score '+p.score);
     row.setAttribute('aria-pressed',String(p.id===selectedPath));
     const letter=node('div','route-letter',String.fromCharCode(65+index));
@@ -175,12 +176,177 @@ function renderSkills(){
     root.append(card);
   }
 }
+// ─────────────────────────────────────────────────────────────
+// Decision visualizations. All plotted numbers come from the deterministic
+// evaluation report; visuals never silently call or impersonate an AI model.
+// ─────────────────────────────────────────────────────────────
+const svgNS='http://www.w3.org/2000/svg';
+function svgElement(tag,attributes={},text){
+  const element=document.createElementNS(svgNS,tag);
+  for(const [name,value] of Object.entries(attributes)){
+    if(value!==undefined && value!==null)element.setAttribute(name,String(value));
+  }
+  if(text!==undefined)element.textContent=String(text);
+  return element;
+}
+function draw(parent,tag,attributes={},text){
+  const element=svgElement(tag,attributes,text);
+  parent.append(element);return element;
+}
+function axesText(parent,x,y,value,anchor='start',extra=''){
+  return draw(parent,'text',{x,y,'text-anchor':anchor,class:'viz-text'+(extra?' '+extra:'')},value);
+}
+function showPathFromChart(id,report){
+  if(!project.paths.some(p=>p.id===id))return;
+  selectedPath=id;
+  renderRoutes(report);renderDetail(report);renderViz(report);
+}
+function attachChartAction(group,id,label,report){
+  group.setAttribute('role','button');
+  group.setAttribute('tabindex','0');
+  group.setAttribute('aria-label',label);
+  group.style.cursor='pointer';
+  group.addEventListener('click',()=>showPathFromChart(id,report));
+  group.addEventListener('keydown',event=>{
+    if(event.key==='Enter'||event.key===' '){event.preventDefault();showPathFromChart(id,report);}
+  });
+}
+function clipName(name,limit=19){
+  return name.length>limit?name.slice(0,limit-1)+'…':name;
+}
+function renderLandscape(svg,model,report,mobile){
+  const W=mobile?440:920,H=mobile?320:348;
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  const x0=mobile?49:66,x1=W-(mobile?19:31);
+  const y0=31,y1=H-62;
+  const scaleX=cost=>x0+(x1-x0)*(cost/model.maxCost);
+  const scaleY=score=>y1-(y1-y0)*score/100;
+  const budgetLine=Math.min(x1,scaleX(model.budget));
+  draw(svg,'rect',{x:x0,y:y0,width:Math.max(0,budgetLine-x0),height:y1-y0,class:'viz-band',rx:3});
+  for(let tick=0;tick<=100;tick+=25){
+    const y=scaleY(tick);
+    draw(svg,'line',{x1:x0,y1:y,x2:x1,y2:y,class:'viz-grid'});
+    axesText(svg,x0-12,y+4,String(tick),'end');
+  }
+  for(let tick=0;tick<=4;tick++){
+    const cost=model.maxCost*tick/4,x=scaleX(cost);
+    draw(svg,'line',{x1:x,y1:y1,x2:x,y2:y1+5,class:'viz-axis'});
+    axesText(svg,x,y1+22,formatMoney(cost,project.currency),'middle');
+  }
+  draw(svg,'line',{x1:budgetLine,y1:y0,x2:budgetLine,y2:y1,class:'viz-crosshair'});
+  axesText(svg,Math.max(x0+34,Math.min(x1-35,budgetLine)),y0-13,'Budget','middle','emphasis');
+  axesText(svg,x0,y0-13,'Score','start');
+  axesText(svg,(x0+x1)/2,H-12,'Estimated investment','middle');
+  for(const [index,p] of model.points.entries()){
+    const x=scaleX(p.cost),y=scaleY(p.score),selected=selectedPath===p.id;
+    const g=draw(svg,'g',{'data-path-id':p.id});
+    attachChartAction(g,p.id,p.name+', score '+p.score+', estimated cost '+formatMoney(p.cost,project.currency)+(p.blocked?', blocked':'') ,report);
+    draw(g,'circle',{cx:x,cy:y,r:mobile?14:15,fill:'transparent','pointer-events':'all'});
+    if(selected)draw(g,'circle',{cx:x,cy:y,r:mobile?12:14,fill:'none',stroke:'var(--accent)','stroke-width':1.4,opacity:.5});
+    draw(g,'circle',{cx:x,cy:y,r:p.leading?8:6.5,class:'viz-dot'+(p.blocked?' blocked':'')+(selected?' selected':'')});
+    if(!mobile||selected){
+      const offset=(index%2===0?-14:22);
+      const anchor=x>x1-95?'end':x<x0+65?'start':'middle';
+      const xx=anchor==='end'?x-3:anchor==='start'?x+3:x;
+      draw(g,'text',{x:xx,y:Math.max(y0+13,Math.min(y1-5,y+offset)),'text-anchor':anchor,class:'viz-hover-label'},clipName(p.name,mobile?17:24));
+    }
+    draw(g,'title',{},p.name+' — '+p.score+'/100; '+formatMoney(p.cost,project.currency));
+  }
+}
+function renderDrivers(svg,model,report,mobile){
+  const W=mobile?560:920;
+  const row=58,top=69,H=Math.max(255,top+row*model.rows.length+38);
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  if(mobile)svg.classList.add('viz-wide');
+  const labelX=15,start=mobile?187:230,barW=W-start-65;
+  const colors=['var(--accent)','var(--sub)','var(--muted)','var(--line-strong)','var(--soft2)'];
+  for(let tick=0;tick<=100;tick+=25){
+    const x=start+barW*tick/100;
+    draw(svg,'line',{x1:x,y1:36,x2:x,y2:H-35,class:'viz-grid'});
+    axesText(svg,x,26,String(tick),'middle');
+  }
+  model.rows.forEach((p,index)=>{
+    const y=top+index*row,group=draw(svg,'g',{'data-path-id':p.id});
+    attachChartAction(group,p.id,p.name+' score '+p.score,report);
+    const chosen=selectedPath===p.id;
+    if(chosen)draw(group,'rect',{x:0,y:y-26,width:W,height:row-3,class:'viz-band',rx:8});
+    axesText(group,labelX,y-4,clipName(p.name,mobile?22:31),'start','emphasis');
+    axesText(group,labelX,y+13,p.blocked?'Blocked · estimates':'Estimates · relative','start');
+    let running=0;
+    for(const [i,piece] of p.contributions.entries()){
+      const x=start+running*barW/100,w=Math.max(0,piece.value*barW/100);
+      draw(group,'rect',{x,y:y-13,width:w,height:20,rx:2,fill:colors[i],opacity:chosen?1:.74});
+      running+=piece.value;
+    }
+    const penalty=Math.min(p.penalty,running),penaltyW=penalty*barW/100;
+    if(penaltyW>0)draw(group,'rect',{x:start+(running-penalty)*barW/100,y:y-13,width:penaltyW,height:20,fill:'var(--surface)',opacity:.83});
+    axesText(group,W-12,y+2,Math.round(p.score)+'/100','end','emphasis');
+    draw(group,'title',{},p.name+' — '+p.score+'/100; evidence penalty -'+p.penalty);
+  });
+  axesText(svg,start,H-10,'Transparent weighted heuristic contributions','start');
+}
+function renderResilience(svg,model,report,mobile){
+  const W=mobile?570:920,rowH=48,top=72,H=Math.max(340,top+model.rows.length*rowH+30);
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  if(mobile)svg.classList.add('viz-wide');
+  const left=mobile?152:190,barW=W-left-150;
+  for(let tick=0;tick<=100;tick+=25){
+    const x=left+barW*tick/100;
+    draw(svg,'line',{x1:x,y1:40,x2:x,y2:H-35,class:'viz-grid'});
+    axesText(svg,x,28,String(tick),'middle');
+  }
+  model.rows.forEach((item,i)=>{
+    const y=top+i*rowH,g=draw(svg,'g',{});
+    if(item.pathId)attachChartAction(g,item.pathId,item.label+': '+item.pathName+', score '+item.score,report);
+    if(item.baseline)draw(g,'rect',{x:3,y:y-21,width:W-6,height:rowH-3,rx:7,class:'viz-band'});
+    axesText(g,8,y-2,clipName(item.label,24),'start','emphasis');
+    axesText(g,8,y+13,item.changed?'Changes leader':item.baseline?'Current':'Same leader','start');
+    draw(g,'rect',{x:left,y:y-13,width:barW,height:17,class:'viz-band',rx:3});
+    if(item.score>0)draw(g,'rect',{x:left,y:y-13,width:item.score/100*barW,height:17,rx:3,fill:item.changed?'var(--sub)':'var(--accent)',opacity:item.baseline?1:.7});
+    axesText(g,left+barW+13,y,Math.round(item.score)+'/100','start','emphasis');
+    axesText(g,W-8,y+14,clipName(item.pathName,mobile?13:24),'end');
+    draw(g,'title',{},item.label+': '+item.pathName+' — '+item.score+'/100');
+  });
+  axesText(svg,left,H-9,'Leading feasible path per scenario','start');
+}
+function renderViz(report){
+  const host=$('#vizHost'),footer=$('#vizFooter');
+  if(!host||!footer)return;
+  host.replaceChildren();footer.replaceChildren();
+  $all('[data-viz]').forEach(btn=>{
+    const active=btn.dataset.viz===vizMode;
+    btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));
+  });
+  const model=chartModel(project,report,vizMode);
+  if(!project.paths.length){
+    host.append(node('div','viz-empty','Add a path to see your decisions become visual.'));
+    footer.append(node('span','','No estimates have been added yet.'));
+    return;
+  }
+  const mobile=window.matchMedia('(max-width: 700px)').matches;
+  const svg=svgElement('svg',{class:'viz-svg',viewBox:'0 0 920 348','aria-label':vizMode==='map'?'Trade-off chart by score and cost':vizMode==='drivers'?'Score breakdown chart':'Scenario resilience chart',role:'img'});
+  if(vizMode==='map')renderLandscape(svg,model,report,mobile);
+  else if(vizMode==='drivers')renderDrivers(svg,model,report,mobile);
+  else renderResilience(svg,model,report,mobile);
+  host.append(svg);
+  const legend=node('div','viz-key');
+  if(vizMode==='map'){
+    legend.append(node('span','viz-key-item','Feasible'),node('span','viz-key-item blocked','Blocked'));
+    footer.append(legend,node('span','','Dashed line: budget limit · Hover or select a path to inspect.'));
+  }else if(vizMode==='drivers'){
+    footer.append(node('span','','Components: upside, learning, risk-fit, cost-fit, speed-fit. Source gaps reduce the total.'));
+  }else{
+    footer.append(node('span','','What-if scenarios are deterministic recalculations, not predictions of real-world success.'));
+  }
+}
+
 function render(){
   const report=evaluate(project);
   $('#projectTitle').textContent=project.title;
+  $('#projectGoal').textContent=project.goal;
   $('#demoLabel').textContent=project.id==='demo'?'ILLUSTRATIVE DEMO':'LOCAL PROJECT';
   renderMetrics(report);renderControls();renderRoutes(report);renderDetail(report);renderNext(report);
-  renderAssumptions();renderSkills();
+  renderAssumptions();renderSkills();renderViz(report);
 }
 function openDialog(id){const dialog=$('#'+id);if(!dialog.open)dialog.showModal();}
 function closeDialog(id){$('#'+id).close();}
@@ -247,11 +413,68 @@ async function importFile(file){
   try{const data=loadProject(await file.text());setProject(data);navigate('overview');notice('Project imported');}
   catch(error){notice('Import rejected: '+error.message);}
 }
+// ─────────────────────────────────────────────────────────────
+// Local, user-controlled UI preferences. No account or network required.
+// ─────────────────────────────────────────────────────────────
+const PREF_STORAGE='thenvio-preferences-v2';
+const PREF_DEFAULTS={theme:'light',accent:'ink',density:'comfortable',motion:'on',chart:'map'};
+function readPreferences(){
+  let stored={};
+  try{stored=JSON.parse(localStorage.getItem(PREF_STORAGE)||'{}')||{};}
+  catch{stored={};}
+  const out={...PREF_DEFAULTS};
+  for(const [field,allowed] of Object.entries({
+    theme:['light','dark','system'],
+    accent:['ink','blue','sage','violet'],
+    density:['comfortable','compact'],
+    motion:['on','off'],
+    chart:['map','drivers','resilience']
+  }))if(allowed.includes(stored[field]))out[field]=stored[field];
+  if(stored.motion===undefined && window.matchMedia('(prefers-reduced-motion: reduce)').matches)out.motion='off';
+  return out;
+}
+const preferences=readPreferences();
+let vizMode=preferences.chart;
+function storePreferences(){
+  try{localStorage.setItem(PREF_STORAGE,JSON.stringify(preferences));}
+  catch{notice('Cannot save appearance settings on this device.');}
+}
+function applyPreferences(){
+  const resolved=preferences.theme==='system'
+    ?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')
+    :preferences.theme;
+  document.documentElement.dataset.theme=resolved;
+  document.documentElement.dataset.accent=preferences.accent;
+  document.documentElement.dataset.density=preferences.density;
+  document.documentElement.dataset.motion=preferences.motion;
+  const meta=$('meta[name="theme-color"]');
+  if(meta)meta.content=resolved==='dark'?'#101111':'#fafaf9';
+  $all('[data-theme-choice]').forEach(b=>{const selected=b.dataset.themeChoice===preferences.theme;b.classList.toggle('is-selected',selected);b.setAttribute('aria-pressed',String(selected));});
+  $all('[data-accent-choice]').forEach(b=>{const selected=b.dataset.accentChoice===preferences.accent;b.classList.toggle('is-selected',selected);b.setAttribute('aria-pressed',String(selected));});
+  $all('[data-density-choice]').forEach(b=>{const selected=b.dataset.densityChoice===preferences.density;b.classList.toggle('is-selected',selected);b.setAttribute('aria-pressed',String(selected));});
+  $('#motionToggle').checked=preferences.motion==='on';
+}
+function setPreference(key,value){
+  preferences[key]=value;
+  storePreferences();
+  applyPreferences();
+  if(key==='chart')vizMode=value;
+  renderViz(evaluate(project));
+}
+
 function bind(){
   $all('[data-tab]').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.tab)));
   $all('[data-close]').forEach(el=>el.addEventListener('click',()=>closeDialog(el.dataset.close)));
   $('#brand').addEventListener('click',e=>{e.preventDefault();navigate('overview');});
   $('#newDecision').addEventListener('click',()=>openProject());
+  $('#settingsButton').addEventListener('click',()=>{applyPreferences();openDialog('settingsDialog');});
+  $all('[data-viz]').forEach(b=>b.addEventListener('click',()=>setPreference('chart',b.dataset.viz)));
+  $all('[data-theme-choice]').forEach(b=>b.addEventListener('click',()=>setPreference('theme',b.dataset.themeChoice)));
+  $all('[data-accent-choice]').forEach(b=>b.addEventListener('click',()=>setPreference('accent',b.dataset.accentChoice)));
+  $all('[data-density-choice]').forEach(b=>b.addEventListener('click',()=>setPreference('density',b.dataset.densityChoice)));
+  $('#motionToggle').addEventListener('change',e=>setPreference('motion',e.target.checked?'on':'off'));
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(preferences.theme==='system')applyPreferences();});
+  window.addEventListener('resize',()=>{if(activeTab==='overview')renderViz(evaluate(project));},{passive:true});
   $('#mobileNew').addEventListener('click',()=>openProject());
   $('#editProject').addEventListener('click',()=>openProject(true));
   $('#addPath').addEventListener('click',()=>openPath());
@@ -300,4 +523,4 @@ function bind(){
   $('#importInput').addEventListener('change',e=>{importFile(e.target.files?.[0]);e.target.value='';});
   $all('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target===d)d.close();}));
 }
-bind();render();
+bind();applyPreferences();render();
