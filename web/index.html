@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="./ideas.css">
   <link rel="stylesheet" href="./board.css">
 </head>
-<body>
+<body class="canvas-mode">
   <div class="app">
     <aside class="sidebar" aria-label="Primary">
       <a class="brand" href="#" aria-label="Thenvio home" id="brand">
@@ -21,11 +21,11 @@
       <div class="sidebar-divider"></div>
       <div class="side-section-label">YOUR WORKSPACE</div>
       <nav class="navigation" aria-label="Main navigation">
-        <button type="button" class="nav-item active" data-tab="branches"><span class="nav-icon" aria-hidden="true">⌁</span> Canvas</button>
-        <button type="button" class="nav-item" data-tab="overview"><span class="nav-icon" aria-hidden="true">◈</span> Decision analysis</button>
-        <button type="button" class="nav-item" data-tab="assumptions"><span class="nav-icon" aria-hidden="true">◎</span> Assumptions</button>
-        <button type="button" class="nav-item" data-tab="skills"><span class="nav-icon" aria-hidden="true">⌘</span> Founder skills <span class="nav-count">24</span></button>
-        <button type="button" class="nav-item" data-tab="integrations"><span class="nav-icon" aria-hidden="true">⇄</span> Connections</button>
+        <button type="button" class="nav-item active" data-tab="branches" aria-label="Canvas" title="Canvas"><span class="nav-icon" aria-hidden="true">⌁</span> Canvas</button>
+        <button type="button" class="nav-item" data-tab="overview" aria-label="Decision analysis" title="Decision analysis"><span class="nav-icon" aria-hidden="true">◈</span> Decision analysis</button>
+        <button type="button" class="nav-item" data-tab="assumptions" aria-label="Assumptions" title="Assumptions"><span class="nav-icon" aria-hidden="true">◎</span> Assumptions</button>
+        <button type="button" class="nav-item" data-tab="skills" aria-label="Founder skills" title="Founder skills"><span class="nav-icon" aria-hidden="true">⌘</span> Founder skills <span class="nav-count">24</span></button>
+        <button type="button" class="nav-item" data-tab="integrations" aria-label="Connections" title="Connections"><span class="nav-icon" aria-hidden="true">⇄</span> Connections</button>
       </nav>
       <div class="sidebar-spacer"></div>
       <div class="sidebar-help"><span class="sidebar-help-title">A space for any thought.</span><span>No prescribed path.</span></div>
@@ -57,7 +57,19 @@
                 <button type="button" class="board-icon" id="boardUndo" aria-label="Undo" title="Undo">↶</button>
                 <button type="button" class="board-icon" id="boardRedo" aria-label="Redo" title="Redo">↷</button>
                 <div class="board-split"></div>
+                <button type="button" class="board-icon board-header-export" id="boardImport" aria-label="Import canvas" title="Import">↥</button>
+                <button type="button" class="board-icon board-header-export" id="boardExport" aria-label="Export canvas" title="Export">↧</button>
+                <button type="button" class="board-icon" id="boardSettings" aria-label="Canvas appearance" title="Appearance">⚙</button>
+                <div class="board-split"></div>
                 <button type="button" class="board-ai-button" id="boardAi" aria-expanded="false"><span aria-hidden="true">✦</span> AI</button>
+                <details id="boardMenuDetails" class="board-menu">
+                  <summary aria-label="More canvas actions" title="More">···</summary>
+                  <div class="board-menu-popup">
+                    <button type="button" id="boardMenuImport">Import</button>
+                    <button type="button" id="boardMenuExport">Export</button>
+                    <button type="button" id="boardMenuSettings">Appearance</button>
+                  </div>
+                </details>
               </div>
             </header>
             <div class="board-body">

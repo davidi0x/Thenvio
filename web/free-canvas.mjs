@@ -286,6 +286,12 @@ export function initFreeCanvas({notice=()=>{}}={}){
  $('#boardZoomIn').addEventListener('click',()=>zoom(1.2));
  $('#boardZoomOut').addEventListener('click',()=>zoom(1/1.2));
  $('#boardFit').addEventListener('click',fit);
+ $('#boardImport').addEventListener('click',()=>$('#importInput').click());
+ $('#boardExport').addEventListener('click',saveExport);
+ $('#boardSettings').addEventListener('click',()=>$('#settingsButton').click());
+ $('#boardMenuImport').addEventListener('click',()=>{$('#boardMenuDetails').open=false;$('#importInput').click();});
+ $('#boardMenuExport').addEventListener('click',()=>{$('#boardMenuDetails').open=false;saveExport();});
+ $('#boardMenuSettings').addEventListener('click',()=>{$('#boardMenuDetails').open=false;$('#settingsButton').click();});
  $('#boardAi').addEventListener('click',toggleAi);
  $('#boardAiClose').addEventListener('click',()=>{ai.hidden=true;$('#boardAi').setAttribute('aria-expanded','false');});
  $('#boardCopyPrompt').addEventListener('click',()=>copy(brainstormPrompt(graph(),selected||graph().rootId,{mode:'explore',locale:navigator.language?.startsWith('pl')?'pl':'en'})));

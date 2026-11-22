@@ -50,6 +50,7 @@ function setProject(next){
 function navigate(tab){
   if(!['branches','overview','assumptions','skills','integrations'].includes(tab))return;
   activeTab=tab;
+  document.body.classList.toggle('canvas-mode',tab==='branches');
   $all('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+tab));
   $all('.nav-item').forEach(v=>{const on=v.dataset.tab===tab;v.classList.toggle('active',on);if(on)v.setAttribute('aria-current','page');else v.removeAttribute('aria-current');});
   $('#breadcrumb').textContent={branches:'Canvas',overview:'Decision analysis',assumptions:'Assumptions',skills:'Founder skills',integrations:'Connections'}[tab];
