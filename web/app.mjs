@@ -112,7 +112,7 @@ function renderDetail(report){
   const scoreline=node('div','detail-scoreline');
   append(scoreline,node('span','', 'Comparative score'),node('strong','',p.score+'/100'));root.append(scoreline);
   const grid=node('div','detail-grid');
-  for(const [label,value] of [['Cost',formatMoney(p.cost,project.currency)],['Time',p.weeks+' weeks'],['Upside',p.upside+' / 100'],['Learning',p.learning+' / 100'],['Risk',p.risk+' / 100'],['Budget left',formatMoney(p.headroom.budget,project.currency)]){
+  for(const [label,value] of [['Cost',formatMoney(p.cost,project.currency)],['Time',p.weeks+' weeks'],['Upside',p.upside+' / 100'],['Learning',p.learning+' / 100'],['Risk',p.risk+' / 100'],['Budget left',formatMoney(p.headroom.budget,project.currency)]]){
     append(grid,append(node('div'),node('span','',label),node('strong','',value)));
   }
   root.append(grid);
