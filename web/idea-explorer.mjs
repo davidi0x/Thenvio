@@ -106,6 +106,21 @@ export function initIdeaExplorer({notice=()=>{}}={}){
     pan={x:(bounds.width-graphLayout.width*zoom)/2,y:(bounds.height-graphLayout.height*zoom)/2};
     positionCanvas();
   }
+  function initialPosition(){
+    if(!graphLayout)return;
+    if(window.innerWidth>690){fit();return;}
+    // A mobile viewport cannot show a 3-level tree legibly at once.
+    // Open at readable card size, anchored on the root; Fit remains a full overview.
+    zoom=.86;
+    const root=graphLayout.nodes.find(n=>n.id===active().rootId);
+    if(root){
+      pan={
+        x:20-(root.x+60)*zoom,
+        y:viewport.clientHeight*.47-(root.y+graphLayout.cardHeight/2)*zoom
+      };
+    }
+    positionCanvas();
+  }
   function centerNode(id){
     if(mode!=='map'||!graphLayout)return;
     const branch=graphLayout.nodes.find(n=>n.id===id);
@@ -246,9 +261,9 @@ export function initIdeaExplorer({notice=()=>{}}={}){
   }
   function render({fit:fitRequested=false,focus=null}={}){
     renderPortfolio();drawMap();drawOutline();drawInspector();updateModes();
-    if(fitRequested)requestAnimationFrame(fit);
+    if(fitRequested)requestAnimationFrame(initialPosition);
     else if(focus)requestAnimationFrame(()=>centerNode(focus));
-    if(initialFit){initialFit=false;requestAnimationFrame(fit);}
+    if(initialFit){initialFit=false;requestAnimationFrame(initialPosition);}
   }
   function newIdea(){
     createMode='root';createParent=null;
@@ -436,10 +451,10 @@ export function initIdeaExplorer({notice=()=>{}}={}){
     }
     if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='y'){event.preventDefault();replacement(null,false);}
   });
-  window.addEventListener('resize',()=>{if(mode==='map'&&$('#view-branches').classList.contains('active'))fit();},{passive:true});
+  window.addEventListener('resize',()=>{if(mode==='map'&&$('#view-branches').classList.contains('active'))initialPosition();},{passive:true});
   render();
   return {
-    show(){renderPortfolio();requestAnimationFrame(fit);},
+    show(){renderPortfolio();requestAnimationFrame(()=>{if(!graphLayout)return;positionCanvas();});},
     create:newIdea,
     import(){ $('#ideaImportInput').click();},
     export:exportIdeas,
