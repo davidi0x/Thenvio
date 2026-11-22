@@ -16,6 +16,20 @@ Thenvio is a local-first decision-intelligence workspace. Users can combine thei
 
 The initial example is labeled **SYNTHETIC DEMO**. All cost, risk, learning and upside scores are illustrative estimates, not market facts or forecast probabilities. Source notes are not independently validated.
 
+## Live preview
+
+**[Open Thenvio preview](https://thenvio-preview-v01.iwaniuk-dawid.workers.dev/)**
+
+Thenvio is deployed as a static client on Cloudflare Workers. All decision data stays in browser localStorage. There is no hosted AI inference, user database, or API key. This is a preview, not a production service for sensitive information.
+
+Redeploy explicitly after editing source code:
+
+    export CLOUDFLARE_ACCOUNT_ID='your-cloudflare-account-id'
+    export CLOUDFLARE_API_TOKEN='your-scoped-workers-edit-token'
+    npm run deploy:cloudflare
+
+Optional CLOUDFLARE_WORKER_NAME defaults to thenvio-preview-v01. The deployment script creates a standalone Worker from current files. No third-party libraries are necessary. Never commit your token. GitHub commits **do not automatically redeploy Cloudflare**; the operator must run this command.
+
 ## Start
 
 Requires Node.js 20+; no npm install is necessary.
@@ -32,7 +46,7 @@ Check the project:
     npm test
     npm run build
 
-The static website is generated under dist/ and can be deployed to GitHub Pages or a static hosting service. There is a GitHub Pages workflow for main; GitHub Pages must be enabled in repository settings before a deployment is live.
+The static website is generated under dist/ and can be deployed to GitHub Pages or a static hosting service. There is an optional manual GitHub Pages workflow; GitHub Pages must be enabled in repository settings before running it.
 
 ## Real product workflow
 
