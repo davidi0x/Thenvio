@@ -3,7 +3,8 @@ import {readFile,stat} from 'node:fs/promises';
 import {resolve,sep,extname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {spawnSync} from 'node:child_process';
-const base=fileURLToPath(new URL('../dist/',import.meta.url));
+// resolve() drops the trailing slash so the containment check below compares like with like.
+const base=resolve(fileURLToPath(new URL('../dist/',import.meta.url)));
 const build=spawnSync(process.execPath,[fileURLToPath(new URL('./build.mjs',import.meta.url))],{stdio:'inherit'});
 if(build.status!==0)process.exit(build.status||1);
 const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.svg':'image/svg+xml','.json':'application/json'};

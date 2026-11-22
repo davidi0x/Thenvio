@@ -1,5 +1,20 @@
 # Thenvio
 
+## Thinking canvas v0.6 — test ideas, get the next move, scan the futures
+
+Thenvio is a brainstorming space that thinks with you. Write one idea and the canvas keeps proposing where to go next, which assumption to test, which tool is worth connecting, and — once there are real choices on the board — which combination of choices is the strongest route.
+
+- **Fluid canvas.** Notes glide instead of jumping: new notes fly out of their parent, children follow when you drag a parent (hold Alt to move one note), undo and Arrange animate, the camera eases. Pinch to zoom and double-tap on phones.
+- **Connect by dragging.** Drag a note's dot onto another note to connect them; release on empty space to grow a branch there; click it for a new branch. Click a connection to mark it *supports*, *conflicts* or remove it. A loose note dropped onto the tree joins it.
+- **Keyboard flow.** Enter edits, Tab adds a branch, Shift+Enter a sibling, arrows move between notes, Delete removes (Ctrl/⌘ Z undoes).
+- **Suggestions on the canvas.** Select a note and three translucent suggestions appear next to it — Explore, Answer, Challenge or Test. One click turns one into a real note. Kinds (Option, Question, Assumption, Test, Insight) are inferred from what you type and can be changed.
+- **Next moves.** A coach reads the whole canvas and ranks what to do next: name the idea, ask who it is for, test the most foundational assumption, define what result counts, pivot from refuted evidence, connect loose notes… Each move is one click.
+- **Tools worth connecting.** For the selected note Thenvio suggests tool categories with examples (payments, surveys, landing pages, prototypes, analytics, automation, hosting…) and why. These are suggestions only — Thenvio is not connected to any of these apps.
+- **Founder skills in context.** The matching skill from the 24-skill catalog, with a brief to paste into your own assistant.
+- **Scan futures.** Every note with two or more options is a fork; every combination of choices is a possible future. Thenvio counts them all, checks each against your ratings (impact, effort), evidence, refuted assumptions and conflicts, animates through them on the canvas and lands on the strongest route — with why it wins, the weakest link, plan B if that link breaks, the next move, and a one-click decision record.
+
+All of this runs locally from deterministic, tested heuristics in `core/` (`futures.mjs`, `coach.mjs`, `board.mjs`). **No model calls, no network, no accounts.** Scores rank your own notes against each other; they are not probabilities or forecasts. The UI follows the language you write in (Polish or English). Formula and schema: docs/ARCHITECTURE.md.
+
 ## Canvas v0.5 — open thinking without forced steps
 
 The main product is now an **open freeform canvas** rather than a rigid automatically laid-out idea tree or a dashboard. Older user canvases are retained and spatial coordinates are added without a breaking import/export format change.

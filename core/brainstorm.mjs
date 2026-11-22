@@ -6,7 +6,7 @@ const norm=s=>tidy(s).toLowerCase().replace(/[.,!?]+$/g,'');
 const compact=(s,n=100)=>s.length>n?s.slice(0,n-1).trimEnd()+'…':s;
 const l=(language,pl,en)=>language==='en'?en:pl;
 const domainRules=[
- ['social',/(znajom|przyja|spotkan|relacj|randk|grup|samotn|community|friend|meet|social|dating|people|relationship)/i],
+ ['social',/(znajom|przyja|spotkan|relacj|randk|grup|samotn|pozna[wćj]|ludzi\b|community|friend|meet|social|dating|people|relationship)/i],
  ['travel',/(podróż|wyjazd|wakacj|hotel|loty|turyst|zwiedz|trip|travel|tour|flight|holiday|destination|esim)/i],
  ['health',/(zdrow|lekarz|szpital|trening|fitnes|dieta|health|doctor|clinic|fitness|workout|sleep|medical|wellness)/i],
  ['learning',/(nauk|edukac|uczen|szkoł|kurs|język|study|learn|education|teach|school|course|language)/i],

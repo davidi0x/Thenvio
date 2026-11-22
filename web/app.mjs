@@ -453,7 +453,7 @@ async function importFile(file){
 // Local, user-controlled UI preferences. No account or network required.
 // ─────────────────────────────────────────────────────────────
 const PREF_STORAGE='thenvio-preferences-v2';
-const PREF_DEFAULTS={theme:'light',accent:'ink',density:'comfortable',motion:'on',chart:'map'};
+const PREF_DEFAULTS={theme:'dark',accent:'ink',density:'comfortable',motion:'on',chart:'map'};
 function readPreferences(){
   let stored={};
   try{stored=JSON.parse(localStorage.getItem(PREF_STORAGE)||'{}')||{};}

@@ -3,6 +3,10 @@
 export const IDEA_SCHEMA_VERSION=1;
 export const IDEA_KINDS=Object.freeze(['idea','direction','question','assumption','experiment','insight']);
 export const IDEA_STATES=Object.freeze(['open','exploring','supported','refuted']);
+// Optional, backward-compatible extensions (absent = not set):
+// node.impact / node.effort: integer 1–5 user ratings; link.type: how two notes relate.
+export const LINK_TYPES=Object.freeze(['relates','supports','conflicts']);
+const rating=v=>v===undefined||(Number.isInteger(v)&&v>=1&&v<=5);
 const MAX_NODES=400, MAX_LINKS=800;
 const limits={title:150,description:4000,evidence:4000};
 const safeId=id=>typeof id==='string'&&/^[a-zA-Z0-9_-]{1,80}$/.test(id);
@@ -37,6 +41,7 @@ export function validateIdeaGraph(graph){
     if(!IDEA_STATES.includes(n.status))errors.push('Invalid branch state.');
     if(typeof n.collapsed!=='boolean')errors.push('Invalid branch collapsed state.');
     if(n.parentId!==null&&!safeId(n.parentId))errors.push('Invalid parent ID.');
+    if(!rating(n.impact)||!rating(n.effort))errors.push('Invalid impact or effort rating.');
   }
   if(!byId.has(graph.rootId))errors.push('Root does not exist.');
   const roots=graph.nodes.filter(n=>n.parentId===null);
@@ -61,6 +66,7 @@ export function validateIdeaGraph(graph){
   const linkIds=new Set();
   for(const link of graph.links){
     if(!link||!safeId(link.from)||!safeId(link.to)||!byId.has(link.from)||!byId.has(link.to)||link.from===link.to)errors.push('Invalid cross-connection.');
+    else if(link.type!==undefined&&!LINK_TYPES.includes(link.type))errors.push('Invalid connection type.');
     else {const key=link.from+'>'+link.to;if(linkIds.has(key))errors.push('Duplicate connection.');linkIds.add(key);}
   }
   return errors;
@@ -87,7 +93,7 @@ export function addIdeaBranch(graph,parentId,data){
 export function updateIdeaBranch(graph,id,patch){
   assertIdeaGraph(graph);
   if(!graph.nodes.some(n=>n.id===id))throw Error('Branch not found.');
-  const allowed=['title','description','kind','status','evidence','collapsed'];
+  const allowed=['title','description','kind','status','evidence','collapsed','impact','effort'];
   const safe=Object.fromEntries(Object.entries(patch||{}).filter(([k])=>allowed.includes(k)));
   const now=new Date().toISOString();
   const nodes=graph.nodes.map(n=>n.id===id?{...n,...safe,updatedAt:now}:n);

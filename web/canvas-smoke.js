@@ -3,6 +3,7 @@
 (() => {
  if(new URLSearchParams(location.search).get('__canvas_qa')!=='1')return;
  let retries=0;
+ const key=(target,k)=>target.dispatchEvent(new KeyboardEvent('keydown',{key:k,bubbles:true,cancelable:true}));
  const run=()=>{
   if(!document.querySelector('#boardNodes .board-note')){
    if(retries++<50)setTimeout(run,100);
@@ -10,26 +11,30 @@
   }
   const result={};
   try{
-   const count=()=>document.querySelectorAll('#boardNodes .board-note').length;
+   const count=()=>document.querySelectorAll('#boardNodes .board-note:not(.is-leaving)').length;
+   const titles=()=>[...document.querySelectorAll('#boardNodes .board-note-title')].map(n=>n.textContent);
    const start=count();
    document.querySelector('#boardAdd').click();
-   result.create=count()===start+1&&!document.querySelector('#boardPanel').hidden;
-   const title=document.querySelector('#boardEditTitle');
-   const body=document.querySelector('#boardEditBody');
-   title.value='Canvas QA note';body.value='Editable free text';
-   document.querySelector('#boardEditForm').requestSubmit();
-   result.edit=[...document.querySelectorAll('.board-note-title')].some(n=>n.textContent==='Canvas QA note');
+   const inline=document.querySelector('.board-note-inline');
+   result.create=count()===start+1&&!!inline;
+   inline.value='Canvas QA note';key(inline,'Enter');
+   result.edit=titles().includes('Canvas QA note');
    const afterCreate=count();
    document.querySelector('#boardUndo').click();
-   result.undo=count()===afterCreate&&[...document.querySelectorAll('.board-note-title')].some(n=>n.textContent==='New thought');
+   result.undo=count()===afterCreate-1;
    document.querySelector('#boardRedo').click();
-   result.redo=count()===afterCreate&&[...document.querySelectorAll('.board-note-title')].some(n=>n.textContent==='Canvas QA note');
-   document.querySelector('.board-note.root .board-note-plus').click();
+   result.redo=count()===afterCreate&&titles().includes('Canvas QA note');
+   document.querySelector('.board-note.root .board-note-plus').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,button:0,pointerId:7}));
+   document.querySelector('.board-note.root .board-note-plus').dispatchEvent(new PointerEvent('pointerup',{bubbles:true,button:0,pointerId:7}));
+   const child=document.querySelector('.board-note-inline');
+   if(child){child.value='QA branch';key(child,'Enter');}
    result.child=count()===afterCreate+1&&document.querySelectorAll('.board-edge').length>=1;
    document.querySelector('#boardAi').click();
    result.optionalAI=document.querySelector('#boardAi').getAttribute('aria-expanded')==='true'&&!document.querySelector('#boardAiPanel').hidden;
    document.querySelector('#boardAiClose').click();
    result.closeAI=document.querySelector('#boardAiPanel').hidden;
+   document.querySelector('#boardFutures').click();
+   result.futures=!document.querySelector('#boardFuturesPanel').hidden;
    const local=JSON.parse(localStorage.getItem('thenvio-ideas-portfolio-v1'));
    result.saved=local?.graphs?.some(g=>g.nodes?.length>=afterCreate+1);
   }catch(e){result.error=e.message;}
