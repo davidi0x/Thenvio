@@ -49,8 +49,8 @@
           <header class="ideas-heading">
             <div class="ideas-head-copy">
               <div class="eyebrow"><span class="ideas-eyebrow-line"></span> IDEAS, EXPLORED</div>
-              <h1>One idea. <span>Infinite directions.</span></h1>
-              <p>Start with a thought. Follow every possibility, challenge your assumptions, and see where it leads.</p>
+              <h1>Follow the thought. <span>See where it goes.</span></h1>
+              <p>Questions, possible answers, new angles. Pick what matters — each click grows your idea.</p>
             </div>
             <button type="button" class="primary-button ideas-new" id="ideaNew"><span aria-hidden="true">+</span> New idea</button>
           </header>
@@ -86,6 +86,7 @@
                   <div class="ideas-node-layer" id="ideaNodes"></div>
                 </div>
                 <div class="ideas-map-watermark">THENVIO <span> / </span> EXPLORE</div>
+                <button type="button" class="idea-open-flow" id="ideaOpenFlow">Explore this thought <span aria-hidden="true">↗</span></button>
               </div>
               <div class="ideas-outline" id="ideaOutline" hidden aria-label="Idea outline"></div>
               <footer class="ideas-map-footer">
@@ -93,13 +94,44 @@
                 <div><button type="button" id="ideaExpandAll">Expand all</button><button type="button" id="ideaCollapseAll">Collapse branches</button></div>
               </footer>
             </section>
-            <aside class="ideas-inspector" aria-label="Selected branch editor">
+            <div id="ideaSheetBackdrop" class="idea-sheet-backdrop" hidden></div>
+            <aside class="ideas-inspector" aria-label="Develop the selected idea branch">
               <div class="ideas-inspector-top">
-                <span class="ideas-inspector-eyebrow">BRANCH DETAILS</span>
-                <span id="ideaDepth" class="ideas-depth">LEVEL 01</span>
+                <span class="ideas-inspector-eyebrow">EXPLORE THIS THOUGHT</span>
+                <div class="ideas-inspector-top-actions"><span id="ideaDepth" class="ideas-depth">LEVEL 01</span><button type="button" id="ideaSheetClose" class="idea-sheet-close" aria-label="Close suggestions">×</button></div>
               </div>
               <div id="ideaTrail" class="ideas-trail" aria-label="Branch ancestry"></div>
-              <form id="ideaInspectorForm" class="ideas-inspector-form">
+              <section class="idea-flow" aria-label="Next thoughts">
+                <h2 class="idea-flow-title" id="ideaFlowTitle">Where could this go?</h2>
+                <p class="idea-flow-description">Choose a suggestion or write your own. The map grows immediately.</p>
+                <div class="idea-thinking-modes" role="group" aria-label="Thinking approach">
+                  <button type="button" data-think="explore" class="active" aria-pressed="true">Discover</button>
+                  <button type="button" data-think="answer" aria-pressed="false">Answer</button>
+                  <button type="button" data-think="challenge" aria-pressed="false">Challenge</button>
+                  <button type="button" data-think="test" aria-pressed="false">Test</button>
+                </div>
+                <div class="idea-suggestions" id="ideaSuggestList" aria-live="polite"></div>
+                <div class="idea-suggestions-actions">
+                  <button type="button" id="ideaMore" class="idea-more"><span aria-hidden="true">↻</span> Other angles</button>
+                  <button type="button" id="ideaAddAll" class="idea-add-all">Add all <span aria-hidden="true">↗</span></button>
+                </div>
+                <form id="ideaQuickForm" class="idea-quick-form">
+                  <label for="ideaOwnInput">YOUR OWN THOUGHT</label>
+                  <div class="idea-quick-entry">
+                    <input id="ideaOwnInput" required maxlength="150" autocomplete="off" placeholder="An answer, idea, question…">
+                    <button type="submit" id="ideaOwnSubmit" aria-label="Add your thought">↗</button>
+                  </div>
+                  <div class="idea-kind-quick" role="group" aria-label="What kind of thought">
+                    <button type="button" data-quick-kind="direction" aria-pressed="true" class="active">Idea</button>
+                    <button type="button" data-quick-kind="question" aria-pressed="false">Question</button>
+                    <button type="button" data-quick-kind="assumption" aria-pressed="false">Assumption</button>
+                    <button type="button" data-quick-kind="experiment" aria-pressed="false">Test</button>
+                  </div>
+                </form>
+              </section>
+              <details id="ideaAdvanced" class="ideas-advanced">
+                <summary>Edit branch details <span aria-hidden="true">⌄</span></summary>
+                <form id="ideaInspectorForm" class="ideas-inspector-form">
                 <label for="ideaTitleInput">Title<input id="ideaTitleInput" name="title" maxlength="150" required></label>
                 <div class="ideas-inspector-fields">
                   <label for="ideaKindInput">Type<select id="ideaKindInput" name="kind">
@@ -115,14 +147,15 @@
                 <label for="ideaDescriptionInput">Thinking / context<textarea id="ideaDescriptionInput" name="description" rows="4" maxlength="4000" placeholder="What are you exploring here?"></textarea></label>
                 <label for="ideaEvidenceInput">Evidence / notes<textarea id="ideaEvidenceInput" name="evidence" rows="3" maxlength="4000" placeholder="What have you learned? Keep facts separate from guesses."></textarea></label>
                 <button type="submit" class="ideas-save">Save changes <span aria-hidden="true">↗</span></button>
-              </form>
+                </form>
+              </details>
               <div class="ideas-inspector-divider"></div>
-              <div class="ideas-inspector-section-heading">TAKE IT FURTHER</div>
+              <div class="ideas-inspector-section-heading">MORE TOOLS</div>
               <div class="ideas-branch-buttons">
                 <button type="button" class="ideas-add-branch" id="ideaAddChild"><span aria-hidden="true">+</span> Add a branch</button>
                 <button type="button" class="ideas-develop" id="ideaDevelop"><span aria-hidden="true">⌁</span> Develop ideas</button>
               </div>
-              <p class="ideas-guidance">“Develop ideas” adds editable exploration prompts. It does not invent AI research.</p>
+              <p class="ideas-guidance">Suggested directions are structured hypotheses, not verified market facts.</p>
               <div class="ideas-inspector-divider"></div>
               <div class="ideas-inspector-section-heading">CONNECT THINKING</div>
               <div class="ideas-connect-row">
@@ -131,7 +164,15 @@
               </div>
               <div id="ideaConnectionsList" class="ideas-connections-list"></div>
               <div class="ideas-inspector-divider"></div>
-              <button type="button" class="ideas-copy" id="ideaCopy"><span aria-hidden="true">⌘</span> Copy this reasoning for AI <span aria-hidden="true">↗</span></button>
+              <details class="idea-ai-tools" id="ideaAiTools">
+                <summary>Develop with your AI assistant <span aria-hidden="true">↗</span></summary>
+                <p>Copy a focused brief into your own AI, then paste its JSON suggestions back. No AI account or model token is charged by Thenvio.</p>
+                <button type="button" class="idea-ai-copy" id="ideaCopyPrompt">Copy AI brief ↗</button>
+                <label for="ideaAiResponse">Paste the AI response</label>
+                <textarea id="ideaAiResponse" rows="4" placeholder='{"branches":[{"title":"…","kind":"direction","description":"…"}]}'></textarea>
+                <button type="button" class="idea-ai-import" id="ideaImportAi">Add AI suggestions to branches</button>
+              </details>
+              <button type="button" class="ideas-copy" id="ideaCopy"><span aria-hidden="true">⌘</span> Copy reasoning context <span aria-hidden="true">↗</span></button>
               <button type="button" class="ideas-delete" id="ideaDelete">Delete this branch</button>
             </aside>
           </div>
