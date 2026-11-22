@@ -26,7 +26,7 @@ function getStored(){
   return clone(demoProject);
 }
 let project=getStored();
-let selectedPath=project.paths[0]?.id||null;
+let selectedPath=evaluate(project).winners.recommended||project.paths[0]?.id||null;
 let activeTab='overview';
 let editingProject=false;
 let editingAssumption=null;
@@ -249,7 +249,7 @@ function renderLandscape(svg,model,report,mobile){
     const dot=draw(g,'circle',{cx:before?.x??x,cy:before?.y??y,r:p.leading?8:6.5,class:'viz-dot'+(p.blocked?' blocked':'')+(selected?' selected':'')});
     if(before && preferences.motion==='on')requestAnimationFrame(()=>{dot.setAttribute('cx',String(x));dot.setAttribute('cy',String(y));});
     nextCoordinates.set(p.id,{x,y});
-    if(!mobile||selected){
+    if(selected){
       const offset=(index%2===0?-14:22);
       const anchor=x>x1-95?'end':x<x0+65?'start':'middle';
       const xx=anchor==='end'?x-3:anchor==='start'?x+3:x;
@@ -336,6 +336,20 @@ function renderViz(report){
   else if(vizMode==='drivers')renderDrivers(svg,model,report,mobile);
   else renderResilience(svg,model,report,mobile);
   host.append(svg);
+  if(vizMode==='map'){
+    const collection=node('div','viz-route-legend');
+    for(const point of model.points){
+      const active=selectedPath===point.id;
+      const item=button('','viz-legend-button'+(active?' active':''),()=>showPathFromChart(point.id,report));
+      item.setAttribute('aria-pressed',String(active));
+      item.setAttribute('aria-label',point.name+', score '+point.score+(point.blocked?', blocked':''));
+      append(item,node('span','viz-legend-mark'+(point.blocked?' blocked':'')),
+        node('span','viz-legend-name',point.name),
+        node('span','viz-legend-value',Math.round(point.score)));
+      collection.append(item);
+    }
+    host.append(collection);
+  }
   const legend=node('div','viz-key');
   if(vizMode==='map'){
     legend.append(node('span','viz-key-item','Feasible'),node('span','viz-key-item blocked','Blocked'));

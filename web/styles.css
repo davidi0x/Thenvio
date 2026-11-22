@@ -414,3 +414,16 @@ html[data-density="compact"] .active-brief{margin-bottom:17px}
  .visual-panel{margin-bottom:22px}
  .controls-panel{margin-top:21px}
 }
+
+
+/* Compact route legend: no overlapping in-chart labels. */
+.viz-route-legend{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:6px 0 17px}
+.viz-legend-button{background:transparent;color:var(--sub);border:1px solid transparent;border-radius:8px;display:flex;gap:7px;align-items:center;text-align:left;min-width:0;padding:8px 9px;font-size:10px;transition:background .16s ease,border-color .16s ease}
+.viz-legend-button:hover{background:var(--soft)}
+.viz-legend-button.active{border-color:var(--line);background:var(--soft);color:var(--text)}
+.viz-legend-mark{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.viz-legend-mark.blocked{background:var(--muted)}
+.viz-legend-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:550}
+.viz-legend-value{font-size:11px;font-weight:700;color:var(--text)}
+@media(max-width:900px){.viz-route-legend{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:690px){.viz-route-legend{gap:4px;margin:3px 0 11px}.viz-legend-button{padding:9px 5px;font-size:10px}.viz-legend-value{font-size:10px}}
