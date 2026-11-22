@@ -293,7 +293,7 @@ function bind(){
   const categories=[...new Set(SKILLS.map(s=>s.category))].sort();
   for(const cat of categories){const opt=node('option','',cat);opt.value=cat;$('#skillCategory').append(opt);}
   $('#copySkill').addEventListener('click',()=>copyText($('#skillPrompt').value));
-  $('#copyContext').addEventListener('click',()=>copyText('Analyze this decision. Separate evidence, assumptions and estimates. Return specific ways to falsify each route. Do not invent market data.\\n\\n'+JSON.stringify(project,null,2)));
+  $('#copyContext').addEventListener('click',()=>copyText('Analyze this decision. Separate evidence, assumptions and estimates. Return specific ways to falsify each route. Do not invent market data.\n\n'+JSON.stringify(project,null,2)));
   $('#exportButton').addEventListener('click',exportProject);
   $('#exportSecondary').addEventListener('click',exportProject);
   $('#importButton').addEventListener('click',()=>$('#importInput').click());
