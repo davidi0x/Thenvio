@@ -181,6 +181,7 @@ function renderSkills(){
 // evaluation report; visuals never silently call or impersonate an AI model.
 // ─────────────────────────────────────────────────────────────
 const svgNS='http://www.w3.org/2000/svg';
+let previousChartCoordinates=new Map();
 function svgElement(tag,attributes={},text){
   const element=document.createElementNS(svgNS,tag);
   for(const [name,value] of Object.entries(attributes)){
@@ -222,6 +223,7 @@ function renderLandscape(svg,model,report,mobile){
   const scaleX=cost=>x0+(x1-x0)*(cost/model.maxCost);
   const scaleY=score=>y1-(y1-y0)*score/100;
   const budgetLine=Math.min(x1,scaleX(model.budget));
+  const nextCoordinates=new Map();
   draw(svg,'rect',{x:x0,y:y0,width:Math.max(0,budgetLine-x0),height:y1-y0,class:'viz-band',rx:3});
   for(let tick=0;tick<=100;tick+=25){
     const y=scaleY(tick);
@@ -243,7 +245,10 @@ function renderLandscape(svg,model,report,mobile){
     attachChartAction(g,p.id,p.name+', score '+p.score+', estimated cost '+formatMoney(p.cost,project.currency)+(p.blocked?', blocked':'') ,report);
     draw(g,'circle',{cx:x,cy:y,r:mobile?14:15,fill:'transparent','pointer-events':'all'});
     if(selected)draw(g,'circle',{cx:x,cy:y,r:mobile?12:14,fill:'none',stroke:'var(--accent)','stroke-width':1.4,opacity:.5});
-    draw(g,'circle',{cx:x,cy:y,r:p.leading?8:6.5,class:'viz-dot'+(p.blocked?' blocked':'')+(selected?' selected':'')});
+    const before=previousChartCoordinates.get(p.id);
+    const dot=draw(g,'circle',{cx:before?.x??x,cy:before?.y??y,r:p.leading?8:6.5,class:'viz-dot'+(p.blocked?' blocked':'')+(selected?' selected':'')});
+    if(before && preferences.motion==='on')requestAnimationFrame(()=>{dot.setAttribute('cx',String(x));dot.setAttribute('cy',String(y));});
+    nextCoordinates.set(p.id,{x,y});
     if(!mobile||selected){
       const offset=(index%2===0?-14:22);
       const anchor=x>x1-95?'end':x<x0+65?'start':'middle';
@@ -252,6 +257,7 @@ function renderLandscape(svg,model,report,mobile){
     }
     draw(g,'title',{},p.name+' — '+p.score+'/100; '+formatMoney(p.cost,project.currency));
   }
+  previousChartCoordinates=nextCoordinates;
 }
 function renderDrivers(svg,model,report,mobile){
   const W=mobile?560:920;
@@ -324,7 +330,8 @@ function renderViz(report){
     return;
   }
   const mobile=window.matchMedia('(max-width: 700px)').matches;
-  const svg=svgElement('svg',{class:'viz-svg',viewBox:'0 0 920 348','aria-label':vizMode==='map'?'Trade-off chart by score and cost':vizMode==='drivers'?'Score breakdown chart':'Scenario resilience chart',role:'img'});
+  const svg=svgElement('svg',{class:'viz-svg',viewBox:'0 0 920 348','aria-label':vizMode==='map'?'Trade-off chart by score and cost':vizMode==='drivers'?'Score breakdown chart':'Scenario resilience chart',role:'group'});
+  if(vizMode!=='map')previousChartCoordinates.clear();
   if(vizMode==='map')renderLandscape(svg,model,report,mobile);
   else if(vizMode==='drivers')renderDrivers(svg,model,report,mobile);
   else renderResilience(svg,model,report,mobile);
@@ -350,6 +357,18 @@ function render(){
 }
 function openDialog(id){const dialog=$('#'+id);if(!dialog.open)dialog.showModal();}
 function closeDialog(id){$('#'+id).close();}
+function openQuickDecision(){
+  const initial=$('#quickGoal')?.value?.trim()||'';
+  openProject();
+  if(initial){
+    const form=$('#projectForm');
+    form.elements.namedItem('goal').value=initial;
+    form.elements.namedItem('title').value=initial.slice(0,177);
+    form.elements.namedItem('title').focus();
+    form.elements.namedItem('title').select();
+  }
+}
+
 function openProject(edit=false){
   editingProject=edit;
   $('#projectDialogTitle').textContent=edit?'Edit decision':'New decision';
@@ -466,7 +485,8 @@ function bind(){
   $all('[data-tab]').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.tab)));
   $all('[data-close]').forEach(el=>el.addEventListener('click',()=>closeDialog(el.dataset.close)));
   $('#brand').addEventListener('click',e=>{e.preventDefault();navigate('overview');});
-  $('#newDecision').addEventListener('click',()=>openProject());
+  $('#newDecision').addEventListener('click',openQuickDecision);
+  $('#quickGoal').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();openQuickDecision();}});
   $('#settingsButton').addEventListener('click',()=>{applyPreferences();openDialog('settingsDialog');});
   $all('[data-viz]').forEach(b=>b.addEventListener('click',()=>setPreference('chart',b.dataset.viz)));
   $all('[data-theme-choice]').forEach(b=>b.addEventListener('click',()=>setPreference('theme',b.dataset.themeChoice)));
@@ -488,7 +508,7 @@ function bind(){
       const data={title:fields.namedItem('title').value.trim(),goal:fields.namedItem('goal').value.trim(),
         budget:number(fields.namedItem('budget').value),deadlineWeeks:number(fields.namedItem('weeks').value,1)};
       const next=editingProject?{...project,...data}:emptyProject(data.title,data.goal,data.budget,data.deadlineWeeks);
-      setProject(next);closeDialog('projectDialog');navigate('overview');notice(editingProject?'Decision updated':'New decision created — add your paths');
+      setProject(next);closeDialog('projectDialog');if(!editingProject)$('#quickGoal').value='';navigate('overview');notice(editingProject?'Decision updated':'New decision created — add your paths');
     }catch(error){notice(error.message);}
   });
   $('#pathForm').addEventListener('submit',e=>{

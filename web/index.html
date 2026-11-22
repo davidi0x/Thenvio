@@ -45,14 +45,16 @@
       <main>
         <section class="view active" id="view-overview" aria-label="Decision lab">
           <div class="studio-intro">
-            <div class="eyebrow">YOUR THINKING SPACE <span class="eyebrow-dot"></span> STUDIO</div>
-            <div class="intro-line">
-              <div>
-                <h1>Clarity changes<br><span class="muted-heading">everything.</span></h1>
-                <p class="lead">Bring your ideas. Explore the alternatives. See what actually changes the decision.</p>
-              </div>
-              <button type="button" class="primary-button" id="newDecision"><span class="button-plus" aria-hidden="true">+</span> New decision</button>
+            <div class="eyebrow">THENVIO STUDIO <span class="eyebrow-dot"></span> THINK IN POSSIBILITIES</div>
+            <h1>What are you deciding?</h1>
+            <p class="lead">Start with a question. Make the choices visible, then test what changes your mind.</p>
+            <div class="quick-entry">
+              <span class="quick-entry-mark" aria-hidden="true">⌁</span>
+              <label class="sr-only" for="quickGoal">Describe your decision</label>
+              <input id="quickGoal" type="text" maxlength="3000" autocomplete="off" placeholder="Describe what you're trying to figure out…">
+              <button type="button" class="primary-button" id="newDecision" aria-label="Start a new decision"><span class="button-label">Start a decision</span><span class="button-arrow" aria-hidden="true">↗</span></button>
             </div>
+            <p class="composer-hint">No AI call is made. You choose the question and refine the conditions.</p>
           </div>
           <section class="active-brief" aria-labelledby="projectTitle">
             <div class="brief-kicker"><span class="brief-indicator" aria-hidden="true"></span> IN FOCUS</div>
@@ -65,20 +67,9 @@
             </div>
             <div class="metric-grid" id="metricGrid" aria-label="Decision summary"></div>
           </section>
-          <section class="controls-panel" aria-labelledby="conditionsTitle">
-            <div class="section-head">
-              <div><span class="section-index">01 / CONDITIONS</span><h2 id="conditionsTitle">Explore the variables</h2></div>
-              <span class="quiet-caption"><span class="pulse-mark"></span> Updates live, without AI calls</span>
-            </div>
-            <div class="control-grid">
-              <div class="control"><label for="budgetRange">Available budget <strong id="budgetLabel">$12,000</strong></label><input id="budgetRange" type="range" min="0" max="50000" step="100"><div class="range-ends"><span>$0</span><span id="budgetMax">$50,000</span></div></div>
-              <div class="control"><label for="weeksRange">Time to decision <strong id="weeksLabel">12 weeks</strong></label><input id="weeksRange" type="range" min="1" max="52" step="1"><div class="range-ends"><span>1 week</span><span>52 weeks</span></div></div>
-              <div class="control"><label for="riskRange">Risk tolerance <strong id="riskLabel">40 / 100</strong></label><input id="riskRange" type="range" min="0" max="100" step="1"><div class="range-ends"><span>Conservative</span><span>Exploratory</span></div></div>
-            </div>
-          </section>
           <section class="visual-panel" aria-labelledby="chartTitle">
             <div class="section-head visual-head">
-              <div><span class="section-index">02 / DECISION LANDSCAPE</span><h2 id="chartTitle">See the trade-offs.</h2><p class="section-sub">These charts use your estimates — never invented market data.</p></div>
+              <div><span class="section-index">01 / DECISION LANDSCAPE</span><h2 id="chartTitle">See the trade-offs.</h2><p class="section-sub">These charts use your estimates — never invented market data.</p></div>
               <div class="view-switch" role="group" aria-label="Chart view">
                 <button type="button" class="switch-item active" data-viz="map" aria-pressed="true">Landscape</button>
                 <button type="button" class="switch-item" data-viz="drivers" aria-pressed="false">Score drivers</button>
@@ -87,6 +78,17 @@
             </div>
             <div id="vizHost" class="viz-host" aria-live="polite"></div>
             <div class="viz-footer" id="vizFooter"></div>
+          </section>
+          <section class="controls-panel" aria-labelledby="conditionsTitle">
+            <div class="section-head">
+              <div><span class="section-index">02 / VARIABLES</span><h2 id="conditionsTitle">Explore the variables</h2></div>
+              <span class="quiet-caption"><span class="pulse-mark"></span> Updates live, without AI calls</span>
+            </div>
+            <div class="control-grid">
+              <div class="control"><label for="budgetRange">Available budget <strong id="budgetLabel">$12,000</strong></label><input id="budgetRange" type="range" min="0" max="50000" step="100"><div class="range-ends"><span>$0</span><span id="budgetMax">$50,000</span></div></div>
+              <div class="control"><label for="weeksRange">Time to decision <strong id="weeksLabel">12 weeks</strong></label><input id="weeksRange" type="range" min="1" max="52" step="1"><div class="range-ends"><span>1 week</span><span>52 weeks</span></div></div>
+              <div class="control"><label for="riskRange">Risk tolerance <strong id="riskLabel">40 / 100</strong></label><input id="riskRange" type="range" min="0" max="100" step="1"><div class="range-ends"><span>Conservative</span><span>Exploratory</span></div></div>
+            </div>
           </section>
           <div class="studio-bottom">
             <section class="routes-panel" aria-labelledby="pathsTitle">
