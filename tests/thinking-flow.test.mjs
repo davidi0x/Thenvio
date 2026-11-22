@@ -27,7 +27,7 @@ test('AI runs only on the person\'s own key, on click, to Anthropic only; GitHub
  assert.doesNotMatch(gh,/method:\s*'(POST|PUT|PATCH|DELETE)'/,'GitHub access is read-only');
  assert.match(html,/Billed to your own account/);
  assert.match(html,/id="boardCopyPrompt"/,'works without a key via any assistant');
- assert.match(worker,/connect-src https:\/\/api\.anthropic\.com https:\/\/api\.github\.com/);
+ assert.match(worker,/connect-src 'self' https:\/\/api\.anthropic\.com https:\/\/api\.github\.com/);
 });
 
 test('tap or drag a note acts on the note rather than panning the whole canvas',async()=>{

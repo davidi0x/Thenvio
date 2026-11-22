@@ -28,7 +28,7 @@
       </nav>
       <div class="sidebar-spacer"></div>
       <div class="sidebar-help"><span class="sidebar-help-title">A space for any thought.</span><span>No prescribed path.</span></div>
-      <div class="side-footer"><span class="live-dot"></span> LOCAL CANVAS <span>v0.8</span></div>
+      <div class="side-footer"><span class="live-dot"></span> LOCAL CANVAS <span>v0.9</span></div>
     </aside>
     <div class="workspace">
       <header class="topbar">
@@ -167,25 +167,40 @@
                   <input id="boardBrainFolder" type="file" webkitdirectory multiple hidden>
                 </div>
                 <div class="board-tabpanel board-ai-panel" id="boardAiPanel" hidden>
+                  <p class="board-lede-big" data-i18n="thinkLede">The thinking happens in your own Claude or ChatGPT — on your subscription.</p>
                   <label class="board-field-label" for="boardGoal" data-i18n="goalLabel">Goal — where do you want to get?</label>
                   <textarea id="boardGoal" rows="2" maxlength="300"></textarea>
                   <p class="board-fineprint" id="boardThinkScope"></p>
-                  <div id="boardKeyRow" class="think-key">
-                    <label class="board-field-label" for="boardApiKey" data-i18n="keyLabel">Your Anthropic API key</label>
-                    <input id="boardApiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
-                    <p class="board-fineprint" data-i18n="keyNote">Billed to your own account. Kept only in this tab's memory and sent only to api.anthropic.com when you press Think.</p>
-                  </div>
-                  <button type="button" class="board-ai-primary" id="boardThinkRun" data-i18n="thinkRun">Think it through</button>
+                  <section class="think-way" id="boardWayMcp">
+                    <h4 data-i18n="wayMcp">Thenvio inside Claude or ChatGPT</h4>
+                    <p class="board-fineprint" id="boardMcpInfo"></p>
+                    <button type="button" class="board-ai-primary" id="boardCopyAsk" data-i18n="copyAsk">Copy the request for the chat</button>
+                    <div class="think-row">
+                      <button type="button" class="futures-secondary" id="boardCopyClaudeConfig" data-i18n="copyClaudeConfig">Claude Desktop setup</button>
+                      <button type="button" class="futures-secondary" id="boardCopyMcpUrl" data-i18n="copyMcpUrl">ChatGPT setup</button>
+                    </div>
+                  </section>
+                  <section class="think-way">
+                    <h4 data-i18n="wayChat">No setup: copy, paste, paste back</h4>
+                    <div class="think-row">
+                      <button type="button" class="futures-secondary" id="boardCopyPrompt" data-i18n="copyPrompt">Copy the prompt</button>
+                      <a class="futures-secondary" href="https://claude.ai/new" target="_blank" rel="noopener noreferrer">Claude ↗</a>
+                      <a class="futures-secondary" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">ChatGPT ↗</a>
+                    </div>
+                    <label for="boardAiJson" class="board-field-label" data-i18n="pasteJson">Paste the JSON answer</label>
+                    <textarea id="boardAiJson" rows="4" placeholder='{"goal":"…","questions":[…],"alternatives":[…],"bestPath":{…}}'></textarea>
+                    <button type="button" class="futures-secondary" id="boardImportAi" data-i18n="addToCanvas">Add to canvas</button>
+                  </section>
                   <p class="think-status" id="boardThinkStatus" role="status"></p>
                   <div id="boardThinkResult"></div>
                   <details class="brain-how think-manual">
-                    <summary data-i18n="noKey">No API key? Use any assistant</summary>
-                    <p class="board-fineprint" data-i18n="noKeyNote">Copy the prompt, paste it into Claude or ChatGPT, then paste the JSON answer here.</p>
-                    <button type="button" class="futures-secondary" id="boardCopyPrompt" data-i18n="copyPrompt">Copy the prompt</button>
-                    <a class="board-ai-external" href="https://claude.ai/new" target="_blank" rel="noopener noreferrer">Open Claude <span aria-hidden="true">↗</span></a>
-                    <label for="boardAiJson" class="board-field-label" data-i18n="pasteJson">Paste the JSON answer</label>
-                    <textarea id="boardAiJson" rows="5" placeholder='{"goal":"…","questions":[…],"alternatives":[…],"bestPath":{…}}'></textarea>
-                    <button type="button" class="futures-secondary" id="boardImportAi" data-i18n="addToCanvas">Add to canvas</button>
+                    <summary data-i18n="wayKey">Optional: run it here with an API key</summary>
+                    <div id="boardKeyRow" class="think-key">
+                      <label class="board-field-label" for="boardApiKey" data-i18n="keyLabel">Your Anthropic API key</label>
+                      <input id="boardApiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
+                      <p class="board-fineprint" data-i18n="keyNote">Billed to your own account. Kept only in this tab's memory and sent only to api.anthropic.com when you press Think.</p>
+                    </div>
+                    <button type="button" class="futures-secondary" id="boardThinkRun" data-i18n="thinkRun">Think it through</button>
                   </details>
                   <button type="button" class="board-text-button" id="boardAiClose" data-i18n="close">Close</button>
                 </div>

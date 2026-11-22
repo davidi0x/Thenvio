@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "thenvio": {
+      "command": "node",
+      "args": [
+        "integrations/mcp/server.mjs"
+      ]
+    }
+  }
+}

@@ -199,7 +199,7 @@ export function coachGraph(graph,{locale='en',futures=null,limit=6}={}){
  if(learned)push(42,'apply:'+learned.id,'→',L(locale,'Co zmienia „'+short(learned.title)+'”?','What does “'+short(learned.title)+'” change?'),
   L(locale,'Wniosek bez działania to tylko notatka.','A learning without an action is just a note.'),
   {type:'add',parentId:learned.id,seed:{title:L(locale,'Zmiana po wniosku: ','Change after learning: ')+short(learned.title,100),kind:'direction',description:''}});
- const pool=attached.filter(n=>!isPlaceholder(n.title));
+ const pool=attached.filter(n=>!isPlaceholder(n.title)&&!/^(najlepsza droga|best route|decyzja|decision)\s*:/i.test(n.title));
  outer:for(let i=0;i<pool.length;i++)for(let j=i+1;j<pool.length;j++){
   if(similarity(pool[i].title,pool[j].title)>=.6){
    push(36,'similar:'+pool[i].id,'≈',L(locale,'Połącz lub rozróżnij: „'+short(pool[i].title,30)+'” i „'+short(pool[j].title,30)+'”','Merge or differentiate “'+short(pool[i].title,30)+'” and “'+short(pool[j].title,30)+'”'),

@@ -48,7 +48,7 @@ export const THINK_SCHEMA=Object.freeze({
  }
 });
 
-const SYSTEM=`You are a sharp brainstorming partner inside Thenvio, a thinking canvas. The person wants to reach a goal and pick the most efficient way there.
+export const THINK_GUIDE=`You are a sharp brainstorming partner inside Thenvio, a thinking canvas. The person wants to reach a goal and pick the most efficient way there.
 
 Think like a strategist, not a template:
 - Start from the goal and work backwards: what has to be true right before it is reached?
@@ -78,7 +78,7 @@ export function thinkRequest(graph,{focusId=null,goal='',context=[],locale='en',
  return {
   model,max_tokens:16000,
   output_config:{effort:'high',format:{type:'json_schema',schema:THINK_SCHEMA}},
-  system:SYSTEM,
+  system:THINK_GUIDE,
   messages:[{role:'user',content:text}]
  };
 }

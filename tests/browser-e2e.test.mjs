@@ -18,7 +18,7 @@ function serve(){
    const path=new URL(req.url,'http://x').pathname;
    const file=path==='/'?'web/index.html':path.startsWith('/core/')?path.slice(1):'web'+path;
    if(file.includes('..')){res.writeHead(404);res.end();return;}
-   try{res.writeHead(200,{'content-type':types[extname(file)]||'text/plain'});res.end(await readFile(root+file));}
+   try{const data=await readFile(root+file);res.writeHead(200,{'content-type':types[extname(file)]||'text/plain'});res.end(data);}
    catch{res.writeHead(404);res.end();}
   }).listen(0,'127.0.0.1',()=>resolve(server));
  });
@@ -185,6 +185,7 @@ test('think: own API key, Claude answer placed on the canvas, futures ranked; Gi
   await page.selectOption('#boardSelect',{label:'Phone payments for cafes'});
   await page.click('#boardThink');
   await page.fill('#boardGoal','100 paying cafes in 6 months');
+  await page.click('.think-manual summary');
   await page.fill('#boardApiKey','sk-ant-test-key');
   await page.click('#boardThinkRun');
   await page.waitForFunction(()=>[...document.querySelectorAll('.board-note-title')].some(n=>n.textContent==='QR sticker instead of a terminal'));

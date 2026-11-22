@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Thenvio canvas</title>
+<style>
+:root{--bg:#fafaf9;--surface:#fff;--text:#1e1f1f;--sub:#696d6d;--line:#e2e3e0;--edge:#c9ccc7;--accent:#202222;--accent-c:#fff;--ok:#2f7a55;--bad:#b85c55;--warn:#a67a3e;color-scheme:light dark;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+@media(prefers-color-scheme:dark){:root{--bg:#121313;--surface:#1b1c1c;--text:#f2f2ee;--sub:#a3a6a3;--line:#303332;--edge:#454947;--accent:#eceee9;--accent-c:#111312;--ok:#8fd3a6;--bad:#ee9c94;--warn:#d2aa70}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-size:13px}
+header{padding:14px 16px 10px;display:grid;gap:4px}
+h1{font-size:16px;margin:0;letter-spacing:-.3px}
+.goal{color:var(--sub);font-size:12px}
+.route{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}
+.chip{border:1px solid var(--accent);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:650}
+.score{font-weight:750;font-size:13px}
+.meta{font-size:11.5px;color:var(--sub)}
+.stage{position:relative;height:340px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden}
+svg{width:100%;height:100%;display:block}
+.edge{fill:none;stroke:var(--edge);stroke-width:2}.edge.lit{stroke:var(--accent);stroke-width:3}
+.note rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5;rx:12}
+.note.root rect{fill:var(--accent);stroke:var(--accent)}.note.root text{fill:var(--accent-c)}
+.note.lit rect{stroke:var(--accent);stroke-width:3}.note.dim{opacity:.32}
+.note.sel rect{stroke:var(--ok);stroke-width:3}
+.note text{fill:var(--text);font-size:15px;font-weight:620}.note .k{font-size:11px;fill:var(--sub);letter-spacing:1px;font-weight:700}
+.note.refuted .t{text-decoration:line-through;fill:var(--bad)}.note.supported .k{fill:var(--ok)}
+.note{cursor:pointer}
+footer{padding:10px 16px 14px;display:grid;gap:8px}
+.actions{display:flex;flex-wrap:wrap;gap:6px}
+button,a.btn{font:inherit;font-size:12px;font-weight:650;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:9px;padding:7px 11px;cursor:pointer;text-decoration:none}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-c)}
+button:disabled{opacity:.4;cursor:default}
+.next{font-size:12px}.next b{font-weight:700}
+.empty{padding:40px 16px;color:var(--sub);text-align:center}
+.status{font-size:11.5px;color:var(--sub);min-height:1em}
+</style>
+</head>
+<body>
+<div id="app"><p class="empty" id="wait">Thenvio…</p></div>
+<script type="module">
+const $=s=>document.querySelector(s);
+const pl=t=>/[ąćęłńóśźż]/i.test(t);
+let data=null,selected=null,rid=0;const pending=new Map();
+const L=(p,e)=>data&&pl(data.canvas.title+data.canvas.nodes.map(n=>n.title).join(' '))?p:e;
+const KIND={idea:['POMYSŁ','IDEA'],direction:['OPCJA','OPTION'],question:['PYTANIE','QUESTION'],assumption:['ZAŁOŻENIE','ASSUMPTION'],experiment:['TEST','TEST'],insight:['WNIOSEK','INSIGHT']};
+// MCP Apps bridge (JSON-RPC over postMessage) with the ChatGPT window.openai fallback.
+function rpc(method,params){return new Promise((resolve,reject)=>{const id=++rid;pending.set(id,{resolve,reject});parent.postMessage({jsonrpc:'2.0',id,method,params},'*');setTimeout(()=>{if(pending.delete(id))reject(Error('No answer from the chat app'));},30000);});}
+const notify=(method,params)=>parent.postMessage({jsonrpc:'2.0',method,params},'*');
+window.addEventListener('message',e=>{
+ if(e.source!==window.parent)return;const m=e.data;if(!m||m.jsonrpc!=='2.0')return;
+ if(m.id!==undefined&&!m.method&&pending.has(m.id)){const p=pending.get(m.id);pending.delete(m.id);m.error?p.reject(Error(m.error.message)):p.resolve(m.result);return;}
+ if(m.method==='ui/notifications/tool-result'&&m.params?.structuredContent)render(m.params.structuredContent);
+});
+if(window.parent!==window)rpc('ui/initialize',{protocolVersion:'2026-01-26',appInfo:{name:'Thenvio',version:'0.9.0'},appCapabilities:{}}).then(()=>notify('ui/notifications/initialized',{})).catch(()=>{});
+const fromOpenAI=()=>{const o=window.openai?.toolOutput;if(o&&o.canvas)render(o);};
+window.addEventListener('openai:set_globals',fromOpenAI);fromOpenAI();
+async function callTool(name,args){
+ if(window.openai?.callTool){const r=await window.openai.callTool(name,args);return r?.structuredContent||r;}
+ const r=await rpc('tools/call',{name,arguments:args});return r?.structuredContent;
+}
+async function say(text){
+ if(window.openai?.sendFollowUpMessage)return window.openai.sendFollowUpMessage({prompt:text});
+ return rpc('ui/message',{role:'user',content:[{type:'text',text}]});
+}
+window.thenvioRender=v=>render(v); // used by the localhost preview and tests
+const W=224,H=104,clip=(s,n)=>s.length>n?s.slice(0,n-1)+'…':s;
+function wrap(t){const words=t.split(' ');const lines=[''];for(const w of words){if((lines.at(-1)+' '+w).trim().length>24&&lines.at(-1))lines.push(w);else lines[lines.length-1]=(lines.at(-1)+' '+w).trim();}return lines.slice(0,2).map((l,i,a)=>i===1&&lines.length>2?clip(l,22)+'…':l);}
+function render(v){
+ if(!v||!v.canvas)return;data=v;
+ const c=v.canvas,w=v.futures?.winner,lit=new Set(w?.nodes||[]);
+ const nodes=c.nodes.filter(n=>Number.isFinite(n.x)),by=new Map(nodes.map(n=>[n.id,n]));
+ const minX=Math.min(...nodes.map(n=>n.x))-30,minY=Math.min(...nodes.map(n=>n.y))-30,maxX=Math.max(...nodes.map(n=>n.x+W))+30,maxY=Math.max(...nodes.map(n=>n.y+H))+30;
+ const esc=s=>String(s??'').replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+ let edges='';
+ for(const n of nodes){if(!n.parentId||n.free||!by.has(n.parentId))continue;const p=by.get(n.parentId);const sx=p.x+W,sy=p.y+H/2,tx=n.x,ty=n.y+H/2,b=Math.max(40,(tx-sx)*.45);
+  edges+=`<path class="edge${lit.has(n.id)&&lit.has(p.id)?' lit':''}" d="M${sx} ${sy} C${sx+b} ${sy} ${tx-b} ${ty} ${tx} ${ty}"/>`;}
+ let cards='';
+ for(const n of nodes){const k=KIND[n.kind]||KIND.direction;const lines=wrap(n.title);
+  const cls=['note',n.id===c.nodes[0]?.id&&!n.parentId?'root':'',lit.has(n.id)?'lit':'',w&&!lit.has(n.id)?'dim':'',n.status,n.id===selected?'sel':''].join(' ');
+  cards+=`<g class="${cls}" data-id="${esc(n.id)}" tabindex="0" role="button" aria-label="${esc(L(k[0],k[1])+': '+n.title)}"><rect x="${n.x}" y="${n.y}" width="${W}" height="${H}" rx="12"/>
+  <text class="k" x="${n.x+14}" y="${n.y+24}">${esc(L(k[0],k[1]))}${n.impact?' · ↑'+n.impact+' ⚒'+(n.effort||'–'):''}</text>
+  ${lines.map((l,i)=>`<text class="t" x="${n.x+14}" y="${n.y+52+i*20}">${esc(l)}</text>`).join('')}</g>`;}
+ const sel=c.nodes.find(n=>n.id===selected);
+ $('#app').innerHTML=`<header><h1>${esc(c.title)}</h1>${c.goal?`<div class="goal">${esc(L('Cel: ','Goal: ')+c.goal)}</div>`:''}
+  <div class="route">${w?`<span class="score">${w.score}/100</span>${w.choices.map(ch=>`<span class="chip">${esc(ch.optionTitle)}</span>`).join('<span class="meta">→</span>')}<span class="meta">${esc(L('najlepsza z ','best of ')+v.futures.total)}</span>`:`<span class="meta">${esc(v.futures?.nextMove?.title||'')}</span>`}</div>
+  ${v.futures?.weakest?`<div class="meta">${esc(L('Najsłabsze ogniwo: ','Weakest link: ')+v.futures.weakest.title)}</div>`:''}</header>
+  <div class="stage"><svg viewBox="${minX} ${minY} ${maxX-minX} ${maxY-minY}" preserveAspectRatio="xMidYMid meet">${edges}${cards}</svg></div>
+  <footer><div class="next"><b>${esc(L('Dalej: ','Next: '))}</b>${esc((v.nextMoves||[]).slice(0,2).join(' · '))}</div>
+  <div class="actions">
+   <button class="primary" id="deeper">${esc(sel?L('Rozkmiń „'+clip(sel.title,30)+'”','Brainstorm “'+clip(sel.title,30)+'”'):L('Rozkmiń dalej','Brainstorm further'))}</button>
+   ${sel&&sel.kind==='assumption'?`<button id="yes">${esc(L('Potwierdzone','Supported'))}</button><button id="no">${esc(L('Obalone','Refuted'))}</button>`:''}
+   ${v.openUrl?`<a class="btn" href="${esc(v.openUrl)}" target="_blank" rel="noopener">${esc(L('Otwórz pełny canvas ↗','Open full canvas ↗'))}</a>`:''}
+  </div><div class="status" id="status" role="status"></div>
+  <div class="meta">${esc(v.futures?.disclaimer||'')}</div></footer>`;
+ for(const g of document.querySelectorAll('.note')){const pick=()=>{selected=selected===g.dataset.id?null:g.dataset.id;render(data);};g.addEventListener('click',pick);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();}});}
+ $('#deeper').addEventListener('click',async()=>{
+  const text=sel?L(`Rozkmiń dalej notatkę „${sel.title}” na canvasie „${c.title}”: znajdź alternatywy, pytania i najtańsze testy, potem zapisz wynik przez thenvio_brainstorm (focus: „${sel.title}”).`,`Brainstorm the note “${sel.title}” on the canvas “${c.title}”: alternatives, questions and the cheapest tests, then save it with thenvio_brainstorm (focus: “${sel.title}”).`)
+   :L(`Rozkmiń dalej canvas „${c.title}”: szukaj alternatyw, które jeszcze nie padły, i najlepszej drogi do celu. Zapisz wynik przez thenvio_brainstorm.`,`Keep brainstorming the canvas “${c.title}”: find alternatives not yet considered and the best route to the goal. Save it with thenvio_brainstorm.`);
+  try{await say(text);$('#status').textContent=L('Wysłano do czatu.','Sent to the chat.');}catch(e){$('#status').textContent=e.message;}
+ });
+ for(const [id,status] of [['yes','supported'],['no','refuted']]){const b=document.getElementById(id);if(b)b.addEventListener('click',async()=>{
+  b.disabled=true;try{const r=await callTool('thenvio_update_note',{canvas:c.id,note:sel.id,status});if(r&&r.canvas)render(r);}catch(e){$('#status').textContent=e.message;}finally{b.disabled=false;}});}
+}
+</script>
+</body>
+</html>

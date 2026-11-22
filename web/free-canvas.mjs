@@ -12,6 +12,7 @@ import {createBrainSync} from './brain-sync.mjs';
 import {thinkRequest,applyThinkResult,readGoal,withGoal,THINK_SCHEMA} from './core/think.mjs';
 import {runThink,setKey,hasKey} from './ai-think.mjs';
 import {readGithubBrain,setToken} from './github-brain.mjs';
+import {detectLocalBrain,createLocalBrain} from './local-brain.mjs';
 
 const $=s=>document.querySelector(s);
 const el=(tag,cls='',txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined&&txt!==null)e.textContent=String(txt);return e;};
@@ -66,6 +67,13 @@ const T={
   thinkDone:'{n} notes added. Ranking every combination…',errNoKey:'Paste your API key first.',errBadKey:'The API key was rejected.',errRate:'Rate limited — try again in a moment.',
   errRefusal:'Claude declined this request.',errTooLong:'The answer was cut off — try a narrower focus.',errNet:'Could not reach the API: {e}',
   bestRoute:'Best route',questionsTitle:'Questions that would change the decision',altsTitle:'Alternatives',risk:'Risk',planB:'Plan B',
+  thinkLede:'The thinking happens in your own Claude or ChatGPT — on your subscription.',wayMcp:'Thenvio inside Claude or ChatGPT',copyAsk:'Copy the request for the chat',
+  copyClaudeConfig:'Claude Desktop setup',copyMcpUrl:'ChatGPT setup',wayChat:'No setup: copy, paste, paste back',wayKey:'Optional: run it here with an API key',
+  mcpLocal:'Connected to the local brain ({dir}). In a chat that has Thenvio, paste the request: the chat brainstorms, the notes appear here live and the canvas opens in the chat.',
+  mcpStatic:'Run Thenvio locally (npm start) to use it inside Claude Desktop, Claude Code or ChatGPT. The copy-paste way below works everywhere.',
+  askText:'Use Thenvio. Brainstorm the canvas “{title}”{goal}: read it with thenvio_canvas, look for genuinely different alternatives, the questions that would change the decision and the cheapest tests, then save it with thenvio_brainstorm and tell me the best route and the first test.',
+  askGoal:' with the goal “{goal}”',configCopied:'Claude Desktop config copied — paste it into Settings → Developer → Edit config and restart Claude.',
+  chatgptCopied:'ChatGPT steps copied.',localSynced:'Live with the local brain <b>{dir}</b>{time}. Claude and ChatGPT edits appear here automatically.',localError:'Local brain: {e}',liveUpdated:'Canvas updated from the brain.',
   ghTitle:'Read from GitHub',ghConnect:'Connect GitHub (read)',ghReading:'Reading {repo}…',ghRead:'Read <b>{repo}</b> ({branch}): {n} canvas(es), {c} context file(s).',ghError:'GitHub: {e}',bodyPlaceholder:'Context, details, why it matters…',evidencePlaceholder:'Interview note, link, number…',invalidAi:'Invalid AI response: {e}',undoEmpty:'Nothing to undo.'},
  pl:{hint:'Kliknij dwukrotnie, by dodać · Przeciągnij kropkę, by połączyć · Tab dodaje gałąź',scan:'Skanuj przyszłości',tabNote:'Notatka',tabCoach:'Co dalej',tabFutures:'Przyszłości',
   noteEmpty:'Wybierz notatkę, aby ją rozwinąć, albo kliknij dwukrotnie canvas, by zacząć nową.',status:'Status',ratings:'Wpływ i wysiłek',evidence:'Dowód lub źródło',
@@ -106,6 +114,13 @@ const T={
   thinkDone:'Dodano notatek: {n}. Porównuję wszystkie kombinacje…',errNoKey:'Najpierw wklej klucz API.',errBadKey:'Klucz API został odrzucony.',errRate:'Limit zapytań — spróbuj za chwilę.',
   errRefusal:'Claude odmówił tego zapytania.',errTooLong:'Odpowiedź została ucięta — zawęź temat.',errNet:'Nie udało się połączyć z API: {e}',
   bestRoute:'Najlepsza droga',questionsTitle:'Pytania, które zmieniłyby decyzję',altsTitle:'Alternatywy',risk:'Ryzyko',planB:'Plan B',
+  thinkLede:'Rozkmina dzieje się w Twoim Claude albo ChatGPT — na Twojej subskrypcji.',wayMcp:'Thenvio w Claude albo ChatGPT',copyAsk:'Kopiuj polecenie do czatu',
+  copyClaudeConfig:'Ustaw w Claude Desktop',copyMcpUrl:'Ustaw w ChatGPT',wayChat:'Bez instalacji: kopiuj, wklej, wklej z powrotem',wayKey:'Opcjonalnie: uruchom tutaj z kluczem API',
+  mcpLocal:'Połączono z lokalnym mózgiem ({dir}). W czacie z Thenvio wklej polecenie: czat robi rozkminę, notatki pojawiają się tu na żywo, a canvas otwiera się w czacie.',
+  mcpStatic:'Uruchom Thenvio lokalnie (npm start), żeby używać go w Claude Desktop, Claude Code albo ChatGPT. Sposób „kopiuj-wklej” poniżej działa wszędzie.',
+  askText:'Użyj Thenvio. Rozkmiń canvas „{title}”{goal}: przeczytaj go przez thenvio_canvas, poszukaj naprawdę różnych alternatyw, pytań, które zmieniłyby decyzję, i najtańszych testów, potem zapisz to przez thenvio_brainstorm i powiedz mi, jaka jest najlepsza droga i pierwszy test.',
+  askGoal:' z celem „{goal}”',configCopied:'Skopiowano konfigurację Claude Desktop — wklej w Ustawienia → Developer → Edit config i zrestartuj Claude.',
+  chatgptCopied:'Skopiowano kroki dla ChatGPT.',localSynced:'Na żywo z lokalnym mózgiem <b>{dir}</b>{time}. Zmiany z Claude i ChatGPT pojawiają się tu same.',localError:'Lokalny mózg: {e}',liveUpdated:'Canvas zaktualizowany z mózgu.',
   ghTitle:'Czytaj z GitHuba',ghConnect:'Połącz GitHub (odczyt)',ghReading:'Czytam {repo}…',ghRead:'Wczytano <b>{repo}</b> ({branch}): canvasy: {n}, pliki kontekstu: {c}.',ghError:'GitHub: {e}',bodyPlaceholder:'Kontekst, szczegóły, dlaczego to ważne…',evidencePlaceholder:'Notatka z rozmowy, link, liczba…',invalidAi:'Nieprawidłowa odpowiedź AI: {e}',undoEmpty:'Nie ma czego cofnąć.'}
 };
 
@@ -140,7 +155,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
  const graph=()=>portfolio.graphs.find(g=>g.id===portfolio.activeId);
  const nodeById=id=>graph().nodes.find(n=>n.id===id)||null;
  const selectedNode=()=>selected?nodeById(selected):null;
- const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(portfolio));}catch{notice(t('saveFailed'));}brain?.schedule();};
+ const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(portfolio));}catch{notice(t('saveFailed'));}brain?.schedule();const g=graph();if(local&&g&&!(isPlaceholder(g.title)&&g.nodes.length===1))local.schedule(g);};
  let brain=null;
  const signature=g=>g.nodes.map(n=>[n.id,n.parentId,n.kind,n.status,n.impact||0,n.effort||0,n.free?1:0,n.title].join('\u0001')).join('\u0002')+'|'+g.links.map(l=>l.from+'>'+l.to+':'+(l.type||'')).join(',');
  const fmtBig=v=>{try{return BigInt(v).toLocaleString(locale==='pl'?'pl-PL':'en-US');}catch{return String(v);}};
@@ -965,8 +980,11 @@ export function initFreeCanvas({notice=()=>{}}={}){
    :st.mode==='reconnect'?t('brainNeedsAccess',{name})
    :st.mode==='error'?t('brainError',{e:st.error.replace(/[<>&"]/g,'')})
    :t('brainOff');
+  if(local&&localState){
+   status.innerHTML=localState.mode==='error'?t('localError',{e:localState.error.replace(/[<>&]/g,'')}):t('localSynced',{dir:local.info.dir.replace(/[<>&]/g,''),time:localState.savedAt?' · '+localState.savedAt.toLocaleTimeString(locale==='pl'?'pl-PL':'en-US',{hour:'2-digit',minute:'2-digit'}):''});
+  }
   const connect=$('#boardBrainConnect');
-  connect.hidden=!st.supported;
+  connect.hidden=!st.supported||!!local;
   connect.className=st.handle&&st.mode!=='reconnect'?'futures-secondary':'futures-primary';
   connect.textContent=st.mode==='reconnect'?t('brainReconnect',{name}):st.handle?t('brainDisconnect'):t('brainConnect');
   const steps=$('#boardBrainSteps');
@@ -974,7 +992,8 @@ export function initFreeCanvas({notice=()=>{}}={}){
  }
  // ── Think: brainstorm with Claude on the person's own key ──
  let lastThink=null,thinkBusy=false,ghContext=[],ghLast=0;
- const brainContext=()=>ghContext.length?ghContext:(brain?.state().context||[]);
+ let local=null,localContext=[],localState=null;
+ const brainContext=()=>ghContext.length?ghContext:localContext.length?localContext:(brain?.state().context||[]);
  function renderThinkPanel(){
   const goal=$('#boardGoal');
   goal.placeholder=t('goalPlaceholder');
@@ -982,6 +1001,8 @@ export function initFreeCanvas({notice=()=>{}}={}){
   const n=selectedNode(),ctx=brainContext().length?t('scopeCtx'):'';
   $('#boardThinkScope').textContent=n&&n.id!==graph().rootId?t('scopeNote',{t:n.title,ctx}):t('scopeAll',{ctx});
   $('#boardKeyRow').hidden=hasKey();
+  $('#boardMcpInfo').textContent=local?t('mcpLocal',{dir:local.info.dir}):t('mcpStatic');
+  $('#boardCopyClaudeConfig').hidden=$('#boardCopyMcpUrl').hidden=$('#boardCopyAsk').hidden=!local;
   $('#boardThinkRun').disabled=thinkBusy;
   const host=$('#boardThinkResult');host.replaceChildren();
   if(!lastThink)return;
@@ -1055,6 +1076,19 @@ export function initFreeCanvas({notice=()=>{}}={}){
    for(const e of res.errors)notice(e.path+': '+e.message);
   }catch(err){status.textContent=t('ghError',{e:err.message});if(!auto)notice(t('ghError',{e:err.message}));}
  }
+ function localStatusUpdate(st){
+  localState=st;
+  $('#boardBrainDot').className='board-brain-dot '+st.mode;
+  $('#boardBrain').title=st.dir;
+  if(panelMode==='brain')renderBrainPanel();
+ }
+ function mergeFromLocal(graphs){
+  return mergeFromBrain(graphs.map(g=>({graph:prepareBoard(readIdeaGraph(g)),content:canvasToMarkdown(g),lastModified:Date.parse(g.updatedAt)||0})));
+ }
+ function askForChat(){
+  const g=graph(),goal=$('#boardGoal').value.trim()||readGoal(g);
+  return t('askText',{title:g.title,goal:goal?t('askGoal',{goal}):''});
+ }
  function brainStatus(st){
   const dot=$('#boardBrainDot');
   dot.className='board-brain-dot'+(st.handle?' '+st.mode:'');
@@ -1076,7 +1110,11 @@ export function initFreeCanvas({notice=()=>{}}={}){
    }
   }
   if(!added&&!updated)return {added,updated};
-  if(starterEmpty&&added&&portfolio.graphs.length>1){portfolio.graphs=portfolio.graphs.filter(x=>x.id!==starter.id);switchGraph(items[0].graph.id);}
+  if(starterEmpty&&added&&portfolio.graphs.length>1){
+   if(inline)finishInline(false);
+   const next=items.find(x=>portfolio.graphs.some(g=>g.id===x.graph.id))?.graph.id;
+   portfolio.activeId=next;portfolio.graphs=portfolio.graphs.filter(x=>x.id!==starter.id);switchGraph(next);
+  }
   else{persist();render();}
   notice(t('brainImported',{n:added+updated}));
   return {added,updated};
@@ -1350,6 +1388,26 @@ export function initFreeCanvas({notice=()=>{}}={}){
   }catch(err){notice(t('invalidAi',{e:err.message}));}
  });
  $('#boardGhConnect').addEventListener('click',()=>connectGithub(false));
+ $('#boardCopyAsk').addEventListener('click',()=>{saveGoal();copy(askForChat());});
+ $('#boardCopyClaudeConfig').addEventListener('click',async()=>{
+  if(!local)return;
+  const cfg={mcpServers:{thenvio:local.info.mcp.stdio}};
+  try{await navigator.clipboard.writeText(JSON.stringify(cfg,null,2));notice(t('configCopied'));}catch{copy(JSON.stringify(cfg,null,2));}
+ });
+ $('#boardCopyMcpUrl').addEventListener('click',()=>{
+  if(!local)return;
+  const steps=(locale==='pl'?['ChatGPT potrzebuje publicznego adresu HTTPS do Twojego lokalnego Thenvio:',
+    '1. Zatrzymaj Thenvio i uruchom z tokenem:  THENVIO_MCP_TOKEN=<długi-losowy-ciąg> npm start',
+    '2. Wystaw port przez tunel, np.:  npx cloudflared tunnel --url http://localhost:'+new URL(local.info.mcp.http).port,
+    '3. W ChatGPT: Plugins → + → Add custom MCP server, adres:  https://<adres-tunelu>/mcp?key=<token>',
+    '4. W czacie wybierz Thenvio i wklej polecenie z przycisku „Kopiuj polecenie do czatu”.']
+   :['ChatGPT needs a public HTTPS address for your local Thenvio:',
+    '1. Restart Thenvio with a token:  THENVIO_MCP_TOKEN=<long-random-string> npm start',
+    '2. Expose the port through a tunnel, e.g.:  npx cloudflared tunnel --url http://localhost:'+new URL(local.info.mcp.http).port,
+    '3. In ChatGPT: Plugins → + → Add custom MCP server, URL:  https://<tunnel-address>/mcp?key=<token>',
+    '4. Pick Thenvio in a chat and paste the request from “Copy the request for the chat”.']).join('\n');
+  copy(steps);notice(t('chatgptCopied'));
+ });
  document.addEventListener('keydown',e=>{
   if(!view.classList.contains('active'))return;
   const target=e.target instanceof Element?e.target:document.body;
@@ -1398,6 +1456,16 @@ export function initFreeCanvas({notice=()=>{}}={}){
  requestAnimationFrame(initialCamera);
  brain.restore().catch(()=>{});
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible')return;brain.refresh();if(ghLast&&Date.now()-ghLast>60000)connectGithub(true);});
+ detectLocalBrain().then(async info=>{
+  if(!info)return;
+  local=createLocalBrain(info,{merge:mergeFromLocal,status:localStatusUpdate});
+  try{await local.start();}catch(err){notice(t('localError',{e:err.message}));}
+  localContext=await local.context();
+  for(const g of portfolio.graphs)if(!(isPlaceholder(g.title)&&g.nodes.length===1)&&!info.canvases.some(c=>c.id===g.id))local.schedule(g);
+  const want=new URLSearchParams(location.search).get('canvas');
+  if(want&&portfolio.graphs.some(g=>g.id===want)&&want!==portfolio.activeId)switchGraph(want);
+  if(panelMode==='ai')renderThinkPanel();
+ });
  try{const repo=localStorage.getItem('thenvio-github-repo');if(repo){$('#boardGhRepo').value=repo;connectGithub(true);}}catch{}
  return {
   show(){if(needsCamera)requestAnimationFrame(initialCamera);else applyCamera();renderPanel();},

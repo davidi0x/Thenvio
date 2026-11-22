@@ -1,5 +1,22 @@
 # Thenvio
 
+## v0.9 — Thenvio inside Claude and ChatGPT (no API key)
+
+Your own Claude or ChatGPT does the thinking, on your subscription. Thenvio gives it the canvas, the shared brain and the futures scan, and shows the canvas in the chat and live on localhost.
+
+```
+npm start            # http://localhost:4173 + MCP, brain folder ~/thenvio-brain (or --brain <folder>)
+```
+
+- **Claude Code** — open this repository; `.mcp.json` registers the Thenvio MCP server. Ask: *"Use Thenvio and brainstorm my idea X with the goal Y."*
+- **Claude Desktop** — in Thenvio press **Think → Claude Desktop setup**, paste the copied config into Settings → Developer → Edit config, restart Claude, and ask the same in a chat.
+- **ChatGPT / claude.ai (web)** — they need a public HTTPS address: start with `THENVIO_MCP_TOKEN=<long random string> npm start`, expose the port with a tunnel (e.g. `npx cloudflared tunnel --url http://localhost:4173`), and add `https://<tunnel>/mcp?key=<token>` as a custom MCP server (ChatGPT: Plugins → + → Add custom MCP server). **Think → ChatGPT setup** copies these steps.
+- **No setup at all** — Think → *Copy the prompt*, paste into any chat, paste the JSON answer back.
+
+What happens: the chat reads the canvas (`thenvio_canvas`), brainstorms — goal, the questions that would change the decision, genuinely different alternatives with impact/effort, assumptions and pass/fail tests, best route with steps, risk and plan B — and saves it with `thenvio_brainstorm`. The notes land in the brain folder as Markdown, appear **live** in the open localhost canvas, and the chat shows an interactive canvas view (MCP Apps) where you can mark assumptions supported/refuted or ask it to dig into one note. Your own edits in the canvas are what the chat reads next time.
+
+Security: the server listens on 127.0.0.1; `/mcp` accepts only localhost unless `THENVIO_MCP_TOKEN` is set, and then only with that token. The browser API accepts only same-machine requests from the app. Nothing is deleted; git stays your own action.
+
 ## v0.8 — real brainstorming, connected to your GitHub brain
 
 - **Think (Pomyśl).** Set a goal and press *Think it through*. Claude (on **your own Anthropic API key**) reads the canvas plus your shared brain (`AGENTS.md`, `how-we-work/`, `brand/`) and returns the questions that would change the decision, 4–7 genuinely different ways to reach the goal (rated for impact and effort, each with what must be true and the cheapest pass/fail test), and the best route with steps, risk and plan B. Everything lands on the canvas as notes, then the futures scan ranks every combination. No key? *Copy the prompt* into any assistant and paste its JSON answer back.
