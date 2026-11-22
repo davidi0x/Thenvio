@@ -1,41 +1,41 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-const root=new URL('../',import.meta.url);
-const file=async p=>readFile(new URL(p,root),'utf8');
+const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8');
 
-test('branches are primary product entry; decision analysis is secondary',async()=>{
- const html=await file('web/index.html');
- const app=await file('web/app.mjs');
- assert.match(html,/class="view active ideas-view" id="view-branches"/);
+test('freeform spatial canvas is the default entry, and analysis remains optional',async()=>{
+ const html=await read('web/index.html'),app=await read('web/app.mjs');
+ assert.match(html,/class="view active board-view" id="view-branches"/);
  assert.ok(html.indexOf('id="view-branches"')<html.indexOf('id="view-overview"'));
- assert.match(html,/data-tab="branches"/);
- assert.match(html,/data-tab="overview"/);
- assert.match(app,/let activeTab='branches'/);
- assert.match(app,/initIdeaExplorer/);
- assert.match(html,/id="ideaViewport"/);
- assert.match(html,/id="ideaNodes"/);
- assert.match(html,/id="ideaInspectorForm"/);
- assert.match(html,/id="ideaCreateDialog"/);
+ assert.match(html,/id="boardViewport"/);
+ assert.match(html,/id="boardNodes"/);
+ assert.match(html,/id="boardEdges"/);
+ assert.match(html,/id="boardAdd"/);
+ assert.match(html,/id="boardLink"/);
+ assert.match(app,/initFreeCanvas/);
+ assert.doesNotMatch(html,/id="ideaSuggestList"/);
+ assert.doesNotMatch(html,/id="ideaInspectorForm"/);
 });
 
-test('idea map has actual editing and connection handlers instead of empty controls',async()=>{
- const source=await file('web/idea-explorer.mjs');
- for(const id of ['ideaNew','ideaProjectSelect','ideaUndo','ideaRedo','ideaAddChild','ideaDevelop','ideaDelete',
-   'ideaInspectorForm','ideaCreateForm','ideaLink','ideaCopy','ideaSearch','ideaZoomIn','ideaZoomOut','ideaFit',
-   'ideaExpandAll','ideaCollapseAll','ideaImportInput']){
-   assert.match(source,new RegExp("['\"]#"+id+"['\"]"));
- }
- assert.match(source,/pointerdown/);
- assert.match(source,/pointermove/);
- assert.match(source,/wheel/);
- assert.match(source,/localStorage/);
- assert.match(source,/makeIdea/);
+test('visible canvas controls are bound to real editing or navigation actions',async()=>{
+ const s=await read('web/free-canvas.mjs');
+ for(const id of ['boardSelect','boardNew','boardCreateForm','boardAdd','boardChild','boardLink','boardPanelClose',
+   'boardEditForm','boardDelete','boardUndo','boardRedo','boardZoomIn','boardZoomOut','boardFit',
+   'boardAi','boardAiClose','boardCopyPrompt','boardImportAi'])
+  assert.match(s,new RegExp("['\"]#"+id+"['\"]"));
+ assert.match(s,/pointerdown/);
+ assert.match(s,/pointermove/);
+ assert.match(s,/pointerup/);
+ assert.match(s,/dblclick/);
+ assert.match(s,/moveBoardNode/);
+ assert.match(s,/localStorage/);
 });
 
-test('build and cloudflare source include all idea assets',async()=>{
- const build=await file('scripts/build.mjs');
- const worker=await file('scripts/cloudflare-worker.mjs');
- for(const path of ['idea-graph.mjs','demo-ideas.mjs']){assert.ok(build.includes(path));assert.ok(worker.includes(path));}
- for(const path of ['ideas.css','idea-explorer.mjs'])assert.ok(worker.includes(path));
+test('Cloudflare build includes board CSS, canvas module and spatial graph core',async()=>{
+ const html=await read('web/index.html'),worker=await read('scripts/cloudflare-worker.mjs'),build=await read('scripts/build.mjs');
+ assert.match(html,/\.\/board\.css/);
+ assert.match(worker,/free-canvas\.mjs/);
+ assert.match(worker,/board\.css/);
+ assert.match(worker,/core\/board\.mjs/);
+ assert.match(build,/board\.mjs/);
 });

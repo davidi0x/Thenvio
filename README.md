@@ -1,5 +1,17 @@
 # Thenvio
 
+## Canvas v0.5 — open thinking without forced steps
+
+The main product is now an **open freeform canvas** rather than a rigid automatically laid-out idea tree or a dashboard. Older user canvases are retained and spatial coordinates are added without a breaking import/export format change.
+
+- Move notes freely by dragging a note. Move the entire canvas by dragging empty space. Scroll to pan; Ctrl/⌘ + wheel to zoom, or use the compact floating dock.
+- **Double-click anywhere** to create a note; use **+ Note** in the dock on touchscreens; tap the small + on an existing note to create a connected note. No required "question/assumption/experiment" categories.
+- Tap/click any note to edit its free text in a minimal panel. All node positions, titles and body notes persist locally and are exported/imported as JSON.
+- **Connect** lets you link any two notes explicitly, without forcing a parent-child connection. Notes can be loose or attached. Undo/redo, delete, new canvases, zoom-to-fit and multiple canvases work.
+- **AI is optional**: a separate panel copies a focused prompt for ChatGPT or other assistants, opens ChatGPT externally and imports validated JSON suggestions from the user's own model account. There is NO live ChatGPT account connection, no hosted inference, and no operator-funded AI requests.
+- Earlier decision analysis and skills remain available separately without dominating canvas.
+
+
 ## Thenvio Flow v0.4 — thinking that moves
 
 The primary idea map now **offers the next question, possible answer, counterargument or experiment immediately**. A person should not have to create empty branches or open several forms before thinking can continue.

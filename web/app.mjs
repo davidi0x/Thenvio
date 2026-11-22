@@ -2,7 +2,7 @@ import {evaluate,stressTest,emptyProject,loadProject} from './core/engine.mjs';
 import {demoProject} from './core/demo.mjs';
 import {SKILLS,skillPrompt} from './core/skills.mjs';
 import {chartModel} from './core/visuals.mjs';
-import {initIdeaExplorer} from './idea-explorer.mjs';
+import {initFreeCanvas} from './free-canvas.mjs';
 
 const $=selector=>document.querySelector(selector);
 const $all=selector=>[...document.querySelectorAll(selector)];
@@ -52,7 +52,7 @@ function navigate(tab){
   activeTab=tab;
   $all('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+tab));
   $all('.nav-item').forEach(v=>{const on=v.dataset.tab===tab;v.classList.toggle('active',on);if(on)v.setAttribute('aria-current','page');else v.removeAttribute('aria-current');});
-  $('#breadcrumb').textContent={branches:'Idea branches',overview:'Decision analysis',assumptions:'Assumptions',skills:'Founder skills',integrations:'Connections'}[tab];
+  $('#breadcrumb').textContent={branches:'Canvas',overview:'Decision analysis',assumptions:'Assumptions',skills:'Founder skills',integrations:'Connections'}[tab];
   window.scrollTo({top:0,behavior:'instant'});
   render();
   if(tab==='branches')ideaExplorer.show();
@@ -556,7 +556,7 @@ function bind(){
   $('#exportButton').addEventListener('click',()=>activeTab==='branches'?ideaExplorer.export():exportProject());
   $('#exportSecondary').addEventListener('click',exportProject);
   $('#importButton').addEventListener('click',()=>activeTab==='branches'?ideaExplorer.import():$('#importInput').click());
-  $('#importInput').addEventListener('change',e=>{importFile(e.target.files?.[0]);e.target.value='';});
+  $('#importInput').addEventListener('change',e=>{if(activeTab==='branches')ideaExplorer.importFile(e.target.files?.[0]);else importFile(e.target.files?.[0]);e.target.value='';});
   $all('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target===d)d.close();}));
 }
-bind();applyPreferences();const ideaExplorer=initIdeaExplorer({notice});render();
+bind();applyPreferences();const ideaExplorer=initFreeCanvas({notice});render();

@@ -2,14 +2,14 @@
 import {readFile} from 'node:fs/promises';
 const fileMap={
  '/':'web/index.html','/index.html':'web/index.html',
- '/styles.css':'web/styles.css','/ideas.css':'web/ideas.css','/app.mjs':'web/app.mjs','/idea-explorer.mjs':'web/idea-explorer.mjs','/idea-flow.mjs':'web/idea-flow.mjs','/favicon.svg':'web/favicon.svg',
- '/core/engine.mjs':'core/engine.mjs','/core/demo.mjs':'core/demo.mjs','/core/skills.mjs':'core/skills.mjs','/core/visuals.mjs':'core/visuals.mjs','/core/idea-graph.mjs':'core/idea-graph.mjs','/core/demo-ideas.mjs':'core/demo-ideas.mjs','/core/brainstorm.mjs':'core/brainstorm.mjs'
+ '/styles.css':'web/styles.css','/board.css':'web/board.css','/ideas.css':'web/ideas.css','/app.mjs':'web/app.mjs','/free-canvas.mjs':'web/free-canvas.mjs','/idea-explorer.mjs':'web/idea-explorer.mjs','/idea-flow.mjs':'web/idea-flow.mjs','/favicon.svg':'web/favicon.svg',
+ '/core/engine.mjs':'core/engine.mjs','/core/demo.mjs':'core/demo.mjs','/core/skills.mjs':'core/skills.mjs','/core/visuals.mjs':'core/visuals.mjs','/core/idea-graph.mjs':'core/idea-graph.mjs','/core/demo-ideas.mjs':'core/demo-ideas.mjs','/core/brainstorm.mjs':'core/brainstorm.mjs','/core/board.mjs':'core/board.mjs'
 };
 const mime={
  '/':'text/html; charset=utf-8','/index.html':'text/html; charset=utf-8',
- '/styles.css':'text/css; charset=utf-8','/ideas.css':'text/css; charset=utf-8','/app.mjs':'text/javascript; charset=utf-8','/idea-explorer.mjs':'text/javascript; charset=utf-8','/idea-flow.mjs':'text/javascript; charset=utf-8',
+ '/styles.css':'text/css; charset=utf-8','/board.css':'text/css; charset=utf-8','/ideas.css':'text/css; charset=utf-8','/app.mjs':'text/javascript; charset=utf-8','/free-canvas.mjs':'text/javascript; charset=utf-8','/idea-explorer.mjs':'text/javascript; charset=utf-8','/idea-flow.mjs':'text/javascript; charset=utf-8',
  '/favicon.svg':'image/svg+xml','/core/engine.mjs':'text/javascript; charset=utf-8',
- '/core/demo.mjs':'text/javascript; charset=utf-8','/core/skills.mjs':'text/javascript; charset=utf-8','/core/visuals.mjs':'text/javascript; charset=utf-8','/core/idea-graph.mjs':'text/javascript; charset=utf-8','/core/demo-ideas.mjs':'text/javascript; charset=utf-8','/core/brainstorm.mjs':'text/javascript; charset=utf-8'
+ '/core/demo.mjs':'text/javascript; charset=utf-8','/core/skills.mjs':'text/javascript; charset=utf-8','/core/visuals.mjs':'text/javascript; charset=utf-8','/core/idea-graph.mjs':'text/javascript; charset=utf-8','/core/demo-ideas.mjs':'text/javascript; charset=utf-8','/core/brainstorm.mjs':'text/javascript; charset=utf-8','/core/board.mjs':'text/javascript; charset=utf-8'
 };
 export async function makeWorkerSource() {
  const pairs=await Promise.all(Object.entries(fileMap).map(async ([route,file])=>[
