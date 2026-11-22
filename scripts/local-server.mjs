@@ -7,6 +7,7 @@
 // set THENVIO_MCP_TOKEN before exposing /mcp through a tunnel and give the URL as /mcp?key=<token>.
 import http from 'node:http';
 import {readFile,stat} from 'node:fs/promises';
+import {readFileSync} from 'node:fs';
 import {resolve,sep,extname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {spawnSync} from 'node:child_process';
@@ -48,7 +49,7 @@ const server=http.createServer(async(req,res)=>{
    if(token?!sameToken(auth):!localHost(req.headers.host))return json(res,401,{error:'Set THENVIO_MCP_TOKEN and send it as a Bearer token or ?key= to use /mcp outside localhost.'});
    if(req.method!=='POST'){res.writeHead(405,{allow:'POST'});return res.end();}
    let msg;try{msg=JSON.parse(await body(req));}catch{return json(res,400,{jsonrpc:'2.0',id:null,error:{code:-32700,message:'Invalid JSON'}});}
-   const ctx={store};
+   const ctx={store,uiHtml:readFileSync(new URL('../web/mcp-app.html',import.meta.url),'utf8')};
    if(Array.isArray(msg)){const out=(await Promise.all(msg.map(m=>handleRequest(m,ctx)))).filter(Boolean);if(!out.length){res.writeHead(202);return res.end();}return json(res,200,out);}
    const out=await handleRequest(msg,ctx);
    if(!out){res.writeHead(202);return res.end();}

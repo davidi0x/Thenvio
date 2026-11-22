@@ -1,5 +1,13 @@
 # Thenvio
 
+## v1.0 — one connector URL for Claude and ChatGPT
+
+1. Open the Thenvio site → **Think → Create my connector**. You get a personal URL: `https://<site>/mcp/<your-brain-id>`.
+2. Paste it once as a custom connector — **Claude**: Settings → Connectors → Add custom connector. **ChatGPT**: Settings → Apps & Connectors → add a custom connector (MCP), no authentication.
+3. In any chat: *"Use Thenvio and brainstorm my idea … with the goal …"*. The chat brainstorms on your subscription, saves it to your brain, shows the canvas in the chat, and the canvas on the site updates by itself. The "Open the canvas" link from the chat connects any browser to the same brain.
+
+The URL is the key to that brain (128-bit random, created in your browser): keep it private. Each brain is its own Cloudflare Durable Object. Deploy with `npm run deploy:cloudflare` (token with Workers Scripts Edit).
+
 ## v0.9 — Thenvio inside Claude and ChatGPT (no API key)
 
 Your own Claude or ChatGPT does the thinking, on your subscription. Thenvio gives it the canvas, the shared brain and the futures scan, and shows the canvas in the chat and live on localhost.

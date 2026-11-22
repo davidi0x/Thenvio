@@ -12,7 +12,7 @@ import {createBrainSync} from './brain-sync.mjs';
 import {thinkRequest,applyThinkResult,readGoal,withGoal,THINK_SCHEMA} from './core/think.mjs';
 import {runThink,setKey,hasKey} from './ai-think.mjs';
 import {readGithubBrain,setToken} from './github-brain.mjs';
-import {detectLocalBrain,createLocalBrain} from './local-brain.mjs';
+import {detectLocalBrain,createLocalBrain,isCloud,cloudBrainId,createCloudBrainId,cloudInfo} from './local-brain.mjs';
 
 const $=s=>document.querySelector(s);
 const el=(tag,cls='',txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined&&txt!==null)e.textContent=String(txt);return e;};
@@ -74,6 +74,10 @@ const T={
   askText:'Use Thenvio. Brainstorm the canvas “{title}”{goal}: read it with thenvio_canvas, look for genuinely different alternatives, the questions that would change the decision and the cheapest tests, then save it with thenvio_brainstorm and tell me the best route and the first test.',
   askGoal:' with the goal “{goal}”',configCopied:'Claude Desktop config copied — paste it into Settings → Developer → Edit config and restart Claude.',
   chatgptCopied:'ChatGPT steps copied.',localSynced:'Live with the local brain <b>{dir}</b>{time}. Claude and ChatGPT edits appear here automatically.',localError:'Local brain: {e}',liveUpdated:'Canvas updated from the brain.',
+  connectorLabel:'Your connector URL',copy:'Copy',connectorSecret:'This URL is the key to your brain — anyone who has it can read and change it. Keep it private.',createConnector:'Create my connector',
+  cloudCreate:'Create your personal MCP connector. Paste it once into Claude or ChatGPT — from then on you brainstorm in the chat and this canvas updates by itself.',
+  cloudLede:'Your connector is live. Add it once, then ask in any chat.',stepClaude:'<b>Claude</b>: Settings → Connectors → Add custom connector → paste the URL.',
+  stepChatGPT:'<b>ChatGPT</b>: Settings → Apps & Connectors → add a custom connector (MCP) → paste the URL, no authentication.',stepAsk:'Then ask: “Use Thenvio and brainstorm my idea … with the goal …”.',connectorCopied:'Connector URL copied.',
   ghTitle:'Read from GitHub',ghConnect:'Connect GitHub (read)',ghReading:'Reading {repo}…',ghRead:'Read <b>{repo}</b> ({branch}): {n} canvas(es), {c} context file(s).',ghError:'GitHub: {e}',bodyPlaceholder:'Context, details, why it matters…',evidencePlaceholder:'Interview note, link, number…',invalidAi:'Invalid AI response: {e}',undoEmpty:'Nothing to undo.'},
  pl:{hint:'Kliknij dwukrotnie, by dodać · Przeciągnij kropkę, by połączyć · Tab dodaje gałąź',scan:'Skanuj przyszłości',tabNote:'Notatka',tabCoach:'Co dalej',tabFutures:'Przyszłości',
   noteEmpty:'Wybierz notatkę, aby ją rozwinąć, albo kliknij dwukrotnie canvas, by zacząć nową.',status:'Status',ratings:'Wpływ i wysiłek',evidence:'Dowód lub źródło',
@@ -121,6 +125,10 @@ const T={
   askText:'Użyj Thenvio. Rozkmiń canvas „{title}”{goal}: przeczytaj go przez thenvio_canvas, poszukaj naprawdę różnych alternatyw, pytań, które zmieniłyby decyzję, i najtańszych testów, potem zapisz to przez thenvio_brainstorm i powiedz mi, jaka jest najlepsza droga i pierwszy test.',
   askGoal:' z celem „{goal}”',configCopied:'Skopiowano konfigurację Claude Desktop — wklej w Ustawienia → Developer → Edit config i zrestartuj Claude.',
   chatgptCopied:'Skopiowano kroki dla ChatGPT.',localSynced:'Na żywo z lokalnym mózgiem <b>{dir}</b>{time}. Zmiany z Claude i ChatGPT pojawiają się tu same.',localError:'Lokalny mózg: {e}',liveUpdated:'Canvas zaktualizowany z mózgu.',
+  connectorLabel:'Twój adres connectora',copy:'Kopiuj',connectorSecret:'Ten adres to klucz do Twojego mózgu — każdy, kto go ma, może go czytać i zmieniać. Nie udostępniaj go.',createConnector:'Utwórz mój connector',
+  cloudCreate:'Utwórz osobisty connector MCP. Wklejasz go raz w Claude albo ChatGPT — od tej pory rozkminiasz w czacie, a ten canvas aktualizuje się sam.',
+  cloudLede:'Twój connector działa. Dodaj go raz, potem po prostu pisz w czacie.',stepClaude:'<b>Claude</b>: Ustawienia → Connectors → Dodaj własny connector → wklej adres.',
+  stepChatGPT:'<b>ChatGPT</b>: Ustawienia → Aplikacje i connectory → dodaj własny connector (MCP) → wklej adres, bez uwierzytelniania.',stepAsk:'Potem napisz: „Użyj Thenvio i rozkmiń mój pomysł … z celem …”.',connectorCopied:'Skopiowano adres connectora.',
   ghTitle:'Czytaj z GitHuba',ghConnect:'Połącz GitHub (odczyt)',ghReading:'Czytam {repo}…',ghRead:'Wczytano <b>{repo}</b> ({branch}): canvasy: {n}, pliki kontekstu: {c}.',ghError:'GitHub: {e}',bodyPlaceholder:'Kontekst, szczegóły, dlaczego to ważne…',evidencePlaceholder:'Notatka z rozmowy, link, liczba…',invalidAi:'Nieprawidłowa odpowiedź AI: {e}',undoEmpty:'Nie ma czego cofnąć.'}
 };
 
@@ -1001,8 +1009,16 @@ export function initFreeCanvas({notice=()=>{}}={}){
   const n=selectedNode(),ctx=brainContext().length?t('scopeCtx'):'';
   $('#boardThinkScope').textContent=n&&n.id!==graph().rootId?t('scopeNote',{t:n.title,ctx}):t('scopeAll',{ctx});
   $('#boardKeyRow').hidden=hasKey();
-  $('#boardMcpInfo').textContent=local?t('mcpLocal',{dir:local.info.dir}):t('mcpStatic');
-  $('#boardCopyClaudeConfig').hidden=$('#boardCopyMcpUrl').hidden=$('#boardCopyAsk').hidden=!local;
+  const cloud=isCloud(),onCloud=!!local?.info.cloud;
+  $('#boardMcpInfo').textContent=cloud?(onCloud?t('cloudLede'):t('cloudCreate')):local?t('mcpLocal',{dir:local.info.dir}):t('mcpStatic');
+  $('#boardCopyClaudeConfig').hidden=$('#boardCopyMcpUrl').hidden=!local||onCloud;
+  $('#boardCopyAsk').hidden=!local;
+  $('#boardCreateConnector').hidden=!cloud||onCloud;
+  $('#boardConnector').hidden=!onCloud;
+  if(onCloud){
+   $('#boardConnectorUrl').value=local.info.connector;
+   $('#boardConnectorSteps').innerHTML=['stepClaude','stepChatGPT','stepAsk'].map(k=>'<li>'+t(k)+'</li>').join('');
+  }
   $('#boardThinkRun').disabled=thinkBusy;
   const host=$('#boardThinkResult');host.replaceChildren();
   if(!lastThink)return;
@@ -1456,8 +1472,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
  requestAnimationFrame(initialCamera);
  brain.restore().catch(()=>{});
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible')return;brain.refresh();if(ghLast&&Date.now()-ghLast>60000)connectGithub(true);});
- detectLocalBrain().then(async info=>{
-  if(!info)return;
+ async function startSync(info){
   local=createLocalBrain(info,{merge:mergeFromLocal,status:localStatusUpdate});
   try{await local.start();}catch(err){notice(t('localError',{e:err.message}));}
   localContext=await local.context();
@@ -1465,6 +1480,19 @@ export function initFreeCanvas({notice=()=>{}}={}){
   const want=new URLSearchParams(location.search).get('canvas');
   if(want&&portfolio.graphs.some(g=>g.id===want)&&want!==portfolio.activeId)switchGraph(want);
   if(panelMode==='ai')renderThinkPanel();
+ }
+ detectLocalBrain().then(info=>{
+  if(info)return startSync(info);
+  if(isCloud()){const id=cloudBrainId();if(id)return startSync(cloudInfo(id));}
+ });
+ $('#boardCreateConnector').addEventListener('click',async()=>{
+  if(local)return;
+  await startSync(cloudInfo(createCloudBrainId()));
+  renderThinkPanel();
+ });
+ $('#boardCopyConnector').addEventListener('click',async()=>{
+  const v=$('#boardConnectorUrl').value;
+  try{await navigator.clipboard.writeText(v);notice(t('connectorCopied'));}catch{$('#boardConnectorUrl').select();copy(v);}
  });
  try{const repo=localStorage.getItem('thenvio-github-repo');if(repo){$('#boardGhRepo').value=repo;connectGithub(true);}}catch{}
  return {

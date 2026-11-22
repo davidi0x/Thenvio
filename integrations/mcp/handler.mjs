@@ -1,8 +1,7 @@
 // Thenvio MCP request handler shared by stdio (Claude Desktop, Claude Code, Cursor) and Streamable HTTP
 // (ChatGPT, claude.ai custom connectors). The chat model does the thinking on the person's own
 // subscription; these tools keep the canvas in the shared-brain folder and render it in the chat.
-// No network calls, no API keys, nothing deleted.
-import {readFileSync} from 'node:fs';
+// No network calls, no API keys, nothing deleted. Runtime-neutral: works in Node and in a Cloudflare Worker.
 import {evaluate,stressTest,validate} from '../../core/engine.mjs';
 import {demoProject} from '../../core/demo.mjs';
 import {SKILLS,getSkill,skillPrompt} from '../../core/skills.mjs';
@@ -15,7 +14,6 @@ import {applyThinkResult,withGoal,readGoal,THINK_SCHEMA,THINK_GUIDE} from '../..
 
 export const UI_URI='ui://thenvio/canvas-v1.html';
 export const UI_MIME='text/html;profile=mcp-app';
-const uiHtml=()=>readFileSync(new URL('../../web/mcp-app.html',import.meta.url),'utf8');
 const renderMeta={ui:{resourceUri:UI_URI},'openai/outputTemplate':UI_URI,'openai/toolInvocation/invoking':'Thinking on the canvas…','openai/toolInvocation/invoked':'Canvas updated'};
 const protocol='2025-11-25';
 const projectSchema={
@@ -74,7 +72,7 @@ function view(graph,store,extra={}){
     nodes:graph.nodes.map(n=>({id:n.id,parentId:n.parentId,title:n.title,kind:n.kind,status:n.status,x:n.x,y:n.y,impact:n.impact,effort:n.effort,free:n.free===true})),links:graph.links},
    futures:{total:f.total,viable:f.viable,blocked:f.blocked,winner:f.winner&&{score:f.winner.score,confidence:f.winner.confidence,choices:f.winner.choices,nodes:f.winner.nodes},
     weakest:f.weakest&&{title:f.weakest.title,drop:f.weakest.drop},nextMove:f.nextMove,disclaimer:f.disclaimer},
-   nextMoves:moves,openUrl:store?.url?store.url+'/?canvas='+encodeURIComponent(graph.id):null,...extra};
+   nextMoves:moves,openUrl:store?.openUrl?store.openUrl(graph.id):store?.url?store.url+'/?canvas='+encodeURIComponent(graph.id):null,...extra};
 }
 function summary(v){
   const w=v.futures.winner;
@@ -177,7 +175,8 @@ export async function handleRequest(req,ctx={}){
       case 'resources/list':return ok({resources:[{uri:UI_URI,name:'Thenvio canvas',mimeType:UI_MIME}]});
       case 'resources/read':
         if(req.params?.uri!==UI_URI)return {jsonrpc:'2.0',id,error:{code:-32602,message:'Unknown resource'}};
-        return ok({contents:[{uri:UI_URI,mimeType:UI_MIME,text:uiHtml(),_meta:{ui:{prefersBorder:true}}}]});
+        if(!ctx.uiHtml)return {jsonrpc:'2.0',id,error:{code:-32603,message:'UI not available'}};
+        return ok({contents:[{uri:UI_URI,mimeType:UI_MIME,text:ctx.uiHtml,_meta:{ui:{prefersBorder:true}}}]});
       case 'prompts/list':return ok({prompts:[
         {name:'thenvio-brainstorm',description:'Brainstorm an idea on the Thenvio canvas: alternatives, questions and the best route to a goal.',arguments:[{name:'idea',description:'The idea or canvas',required:false},{name:'goal',description:'Where you want to get',required:false}]},
         ...SKILLS.map(s=>({name:s.id,description:s.summary,arguments:[{name:'goal',description:'Optional goal',required:false}]}))]});

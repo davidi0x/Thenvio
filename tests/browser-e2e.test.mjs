@@ -201,3 +201,48 @@ test('think: own API key, Claude answer placed on the canvas, futures ranked; Gi
   assert.deepEqual(errors,[]);
  }finally{await browser.close();server.close();}
 });
+
+test('cloud connector: create it on the site, use it from a chat app, the canvas updates by itself',{skip:!playwright&&'Playwright is not installed'},async t=>{
+ const browser=await launch();
+ if(!browser){t.skip('Chromium is not available');return;}
+ const {buildWorkerAssets}=await import('../scripts/build-worker.mjs');
+ await buildWorkerAssets();
+ const {default:worker,Brain}=await import('../integrations/cloud/worker.mjs');
+ const {mapStorage}=await import('../integrations/kv-brain-store.mjs');
+ const {SAMPLE}=await import('./fixtures/think-sample.mjs');
+ const objects=new Map();
+ const env={BRAIN:{idFromName:n=>n,get:id=>{if(!objects.has(id))objects.set(id,new Brain({storage:mapStorage()}));const o=objects.get(id);return {fetch:r=>o.fetch(r)};}}};
+ // Node adapter in place of the Workers runtime.
+ const server=await new Promise(resolve=>{const s=http.createServer(async(req,res)=>{
+  const chunks=[];for await (const c of req)chunks.push(c);
+  const body=chunks.length?Buffer.concat(chunks):undefined;
+  const r=await worker.fetch(new Request('http://127.0.0.1:'+s.address().port+req.url,{method:req.method,headers:req.headers,body:['GET','HEAD'].includes(req.method)?undefined:body}),env);
+  res.writeHead(r.status,Object.fromEntries(r.headers));res.end(Buffer.from(await r.arrayBuffer()));
+ }).listen(0,'127.0.0.1',()=>resolve(s));});
+ const base='http://127.0.0.1:'+server.address().port;
+ try{
+  const page=await browser.newPage({viewport:{width:1366,height:860}});
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+  await page.goto(base+'/');
+  await page.waitForSelector('.board-note.root textarea.board-note-inline');
+  await page.keyboard.type('Phone payments for cafes');await page.keyboard.press('Enter');
+  await page.click('#boardThink');
+  await page.click('#boardCreateConnector');
+  await page.waitForFunction(()=>/\/mcp\/[A-Za-z0-9_-]{22,}$/.test(document.querySelector('#boardConnectorUrl').value));
+  const connector=await page.inputValue('#boardConnectorUrl');
+  assert.match(await page.textContent('#boardConnectorSteps'),/Claude.*ChatGPT/s);
+  // A chat app calls the connector URL.
+  const call=async(name,args)=>(await (await fetch(connector,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/call',params:{name,arguments:args}})})).json()).result;
+  await new Promise(r=>setTimeout(r,800));
+  const list=await call('thenvio_canvases',{});
+  assert.equal(list.structuredContent.canvases[0]?.title,'Phone payments for cafes','the canvas drawn on the site is in the brain');
+  const done=await call('thenvio_brainstorm',{canvas:'cafes',...SAMPLE});
+  assert.match(done.content[0].text,/Best route/);
+  await page.waitForFunction(()=>[...document.querySelectorAll('.board-note-title')].some(n=>n.textContent==='QR sticker instead of a terminal'),null,{timeout:10000});
+  // The "open canvas" link from the chat connects another browser to the same brain.
+  const other=await browser.newPage();
+  await other.goto(done.structuredContent.openUrl);
+  await other.waitForFunction(()=>[...document.querySelectorAll('.board-note-title')].some(n=>n.textContent==='QR sticker instead of a terminal'),null,{timeout:10000});
+  assert.deepEqual(errors,[]);
+ }finally{await browser.close();server.close();}
+});
