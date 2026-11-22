@@ -1,5 +1,25 @@
 # Thenvio
 
+## v0.7 — one shared brain, a canvas anyone can use
+
+**Don't keep your thinking in Notion, ClickUp or Obsidian. Keep it in a repo.** Thenvio now works as the front end of a team's *shared brain*: one Git repository, plain text, that people and AI agents read and write together.
+
+```
+shared-brain/
+├─ how-we-work/     how the team works and decides
+├─ product-data/    ideas (one Markdown file per canvas), assumptions, decisions
+├─ brand/           voice and positioning — written by you, never generated
+├─ skills/          24 founder skills (SKILL.md) your agents can follow
+├─ README.md · AGENTS.md · CLAUDE.md
+```
+
+- **Brain → Connect a folder** (Chrome, Edge): pick your local clone of the brain repo. Thenvio writes the layout once (never overwriting files your team wrote), saves every canvas as readable Markdown on each change, and reads edits back when you return to the tab — a teammate's pull or an agent's change shows up on the canvas. Then `git commit && git push`. Thenvio never runs git or touches the network.
+- **Download brain (.zip)** works in every browser; **Open a brain folder** reads canvases from any folder; **Import file…** accepts a single canvas `.md`.
+- **Agents are first-class.** Canvas files are plain Markdown (`- [option] Title`, indent to branch, `<!-- id … -->` tags invisible on GitHub). An agent can add a line and Thenvio picks it up, placing the new note beside its parent. `AGENTS.md` tells agents where things live and the rules (no invented data, no pushing without approval).
+- **Agent tools.** MCP: `thenvio_futures` and `thenvio_next_moves` take a canvas file straight from the repo. CLI: `npm run brain -- init <dir>` creates a brain, `npm run brain -- scan <dir>` prints the best route and next moves for every canvas, `npm run brain -- export <thenvio-export.json> <dir>` writes canvases from an export.
+
+**Minimal by default — open it and start.** The canvas is the whole app: no sidebar, a header with only *Brain*, *Scan futures* and a menu. The panel stays closed until you select a note, and then it shows just kind, title and notes (status, ratings, evidence, tools and skills are folded under *More*). Instead of a list of advice there is one next step in the corner — click to do it, `›` for another. Import, export, your own AI, appearance and the classic analysis tools live in the menu.
+
 ## Thinking canvas v0.6 — test ideas, get the next move, scan the futures
 
 Thenvio is a brainstorming space that thinks with you. Write one idea and the canvas keeps proposing where to go next, which assumption to test, which tool is worth connecting, and — once there are real choices on the board — which combination of choices is the strongest route.
@@ -162,6 +182,8 @@ Implemented tools:
 - thenvio_founder_skill — return an AI-host skill protocol
 - thenvio_validate — schema validation
 - thenvio_demo — clearly synthetic input example
+- thenvio_futures — scan every combination of choices in a canvas (Markdown from a shared brain or an idea graph)
+- thenvio_next_moves — ranked next moves for a canvas
 
 All 24 founder protocols are also exposed as MCP prompts.
 

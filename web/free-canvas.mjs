@@ -7,12 +7,14 @@ import {prepareBoard,moveBoardNodes,addBoardNode,updateBoardText,updateBoardMeta
 import {thinkNext,brainstormPrompt,parseBrainstormResponse,THINK_MODES} from './core/brainstorm.mjs';
 import {coachGraph,nodeAdvice,inferKind,detectLocale,isPlaceholder,skillBrief,defaultModeFor} from './core/coach.mjs';
 import {analyzeFutures,countFutures,findForks,decisionRecord,confidenceLabel} from './core/futures.mjs';
+import {markdownToCanvas,canvasToMarkdown,BRAIN_FOLDERS} from './core/brain.mjs';
+import {createBrainSync} from './brain-sync.mjs';
 
 const $=s=>document.querySelector(s);
 const el=(tag,cls='',txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined&&txt!==null)e.textContent=String(txt);return e;};
 const svgEl=(tag,attrs={})=>{const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);return e;};
 const button=(cls,txt,fn)=>{const b=el('button',cls,txt);b.type='button';if(fn)b.addEventListener('click',fn);return b;};
-const KEY='thenvio-ideas-portfolio-v1',UI_KEY='thenvio-canvas-ui-v1',MAX=50;
+const KEY='thenvio-ideas-portfolio-v1',MAX=50;
 const MIN_SCALE=.3,MAX_SCALE=1.9;
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 const reducedMotion=()=>document.documentElement.dataset.motion==='off'||window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -25,7 +27,7 @@ const T={
  en:{hint:'Double-click to add · Drag a dot to connect · Tab adds a branch',scan:'Scan futures',tabNote:'Note',tabCoach:'Next moves',tabFutures:'Futures',
   noteEmpty:'Select a note to shape it, or double-click the canvas to start a new one.',status:'Status',ratings:'Impact & effort',evidence:'Evidence or source',
   suggestions:'Suggestions',more:'Other angles ↻',addAll:'Add all',tools:'Tools worth connecting',toolsNote:'Suggestions only. Thenvio is not connected to these apps.',
-  skill:'Founder skill for this',child:'+ Branch',detach:'Detach',copyContext:'Copy context',delete:'Delete',coachLede:'Next best moves for this canvas',
+  skill:'Founder skill for this',child:'+ Branch',detach:'Detach',copyContext:'Copy context',delete:'Delete note',coachLede:'Next best moves for this canvas',
   dockNote:'Note',dockConnect:'Connect',dockArrange:'Arrange',
   kind_idea:'Main idea',kind_direction:'Option',kind_question:'Question',kind_assumption:'Assumption',kind_experiment:'Test',kind_insight:'Insight',
   st_open:'Open',st_exploring:'Exploring',st_supported:'Supported',st_refuted:'Refuted',impact:'Impact',effort:'Effort',
@@ -45,11 +47,20 @@ const T={
   copied:'Copied.',clipboardBlocked:'Clipboard blocked.',pillNext:'Next',pillDetails:'Details',noSuggestions:'No new angles here. Write your own with Tab.',
   allBlocked:'Every route is blocked',score:'score',saveFailed:'Unable to save. Export your canvas as JSON.',canvasExported:'Canvas exported.',
   canvasImported:'Canvas imported.',importFailed:'Import failed: {e}',tooLarge:'File is too large.',maxCanvases:'Maximum 50 canvases.',ideasAdded:'Ideas added to canvas.',
-  nothingToImport:'Nothing to import.',bodyPlaceholder:'Context, details, why it matters…',evidencePlaceholder:'Interview note, link, number…',invalidAi:'Invalid AI response: {e}',undoEmpty:'Nothing to undo.'},
+  nothingToImport:'Nothing to import.',brain:'Brain',menuNew:'New canvas',menuImport:'Import file…',menuExport:'Export JSON',menuAi:'Use your own AI…',menuSettings:'Appearance',menuClassic:'More tools',
+  more:'More',connectTo:'Connect to…',panelNote:'Note',panelFutures:'Futures',panelBrain:'Shared brain',panelAi:'Your own AI',
+  brainLede:'One repo, plain text. Your team and your agents work from the same files.',brainConnect:'Connect a folder',brainDownload:'Download brain (.zip)',brainOpen:'Open a brain folder',
+  brainHow:'Put it on GitHub',brainTraits:'Lightweight · Full history · Backed up · Free',brainReconnect:'Reconnect “{name}”',brainDisconnect:'Disconnect folder',
+  brainOff:'Not connected. Canvases stay in this browser until you connect a folder or download the brain.',brainSynced:'Saved to <b>{name}</b> at {time} · {n} files. Commit and push to share.',
+  brainSaving:'Saving to <b>{name}</b>…',brainNeedsAccess:'<b>{name}</b> needs your permission again.',brainError:'Could not write to the folder: {e}',
+  brainUnsupported:'This browser cannot write to folders. Download the brain and commit it, or open a folder to read its canvases.',
+  brainImported:'{n} canvas(es) read from the brain.',brainNothing:'No canvases found in product-data/ideas/.',
+  brainStep1:'Create a private repository on GitHub.',brainStep2:'Clone it and connect that folder here — or unzip the download into it.',brainStep3:'Save history: <code>git add . && git commit -m "Update brain" && git push</code>',brainStep4:'Point your agents at the repo. They read <code>AGENTS.md</code> and the same files.',
+  welcomeHint:'Enter saves · Tab adds a branch',bodyPlaceholder:'Context, details, why it matters…',evidencePlaceholder:'Interview note, link, number…',invalidAi:'Invalid AI response: {e}',undoEmpty:'Nothing to undo.'},
  pl:{hint:'Kliknij dwukrotnie, by dodać · Przeciągnij kropkę, by połączyć · Tab dodaje gałąź',scan:'Skanuj przyszłości',tabNote:'Notatka',tabCoach:'Co dalej',tabFutures:'Przyszłości',
   noteEmpty:'Wybierz notatkę, aby ją rozwinąć, albo kliknij dwukrotnie canvas, by zacząć nową.',status:'Status',ratings:'Wpływ i wysiłek',evidence:'Dowód lub źródło',
   suggestions:'Podpowiedzi',more:'Inne kąty ↻',addAll:'Dodaj wszystkie',tools:'Narzędzia do podłączenia',toolsNote:'Tylko sugestie. Thenvio nie jest połączone z tymi aplikacjami.',
-  skill:'Skill do tej notatki',child:'+ Gałąź',detach:'Odłącz',copyContext:'Kopiuj kontekst',delete:'Usuń',coachLede:'Najlepsze następne ruchy',
+  skill:'Skill do tej notatki',child:'+ Gałąź',detach:'Odłącz',copyContext:'Kopiuj kontekst',delete:'Usuń notatkę',coachLede:'Najlepsze następne ruchy',
   dockNote:'Notatka',dockConnect:'Połącz',dockArrange:'Ułóż',
   kind_idea:'Główny pomysł',kind_direction:'Opcja',kind_question:'Pytanie',kind_assumption:'Założenie',kind_experiment:'Test',kind_insight:'Wniosek',
   st_open:'Otwarte',st_exploring:'Badam',st_supported:'Potwierdzone',st_refuted:'Obalone',impact:'Wpływ',effort:'Wysiłek',
@@ -69,7 +80,16 @@ const T={
   copied:'Skopiowano.',clipboardBlocked:'Schowek zablokowany.',pillNext:'Dalej',pillDetails:'Szczegóły',noSuggestions:'Brak nowych kątów. Dopisz własny klawiszem Tab.',
   allBlocked:'Wszystkie ścieżki są zablokowane',score:'ocena',saveFailed:'Nie można zapisać. Wyeksportuj canvas do JSON.',canvasExported:'Wyeksportowano canvas.',
   canvasImported:'Zaimportowano canvas.',importFailed:'Import nieudany: {e}',tooLarge:'Plik jest za duży.',maxCanvases:'Maksymalnie 50 canvasów.',ideasAdded:'Dodano pomysły na canvas.',
-  nothingToImport:'Nic do zaimportowania.',bodyPlaceholder:'Kontekst, szczegóły, dlaczego to ważne…',evidencePlaceholder:'Notatka z rozmowy, link, liczba…',invalidAi:'Nieprawidłowa odpowiedź AI: {e}',undoEmpty:'Nie ma czego cofnąć.'}
+  nothingToImport:'Nic do zaimportowania.',brain:'Mózg',menuNew:'Nowy canvas',menuImport:'Importuj plik…',menuExport:'Eksportuj JSON',menuAi:'Użyj własnego AI…',menuSettings:'Wygląd',menuClassic:'Więcej narzędzi',
+  more:'Więcej',connectTo:'Połącz z…',panelNote:'Notatka',panelFutures:'Przyszłości',panelBrain:'Wspólny mózg',panelAi:'Twoje AI',
+  brainLede:'Jedno repo, zwykły tekst. Twój zespół i Twoi agenci pracują na tych samych plikach.',brainConnect:'Połącz folder',brainDownload:'Pobierz mózg (.zip)',brainOpen:'Otwórz folder mózgu',
+  brainHow:'Wrzuć na GitHuba',brainTraits:'Lekkie · Pełna historia · Kopia zapasowa · Za darmo',brainReconnect:'Połącz ponownie „{name}”',brainDisconnect:'Odłącz folder',
+  brainOff:'Nie połączono. Canvasy zostają w tej przeglądarce, dopóki nie połączysz folderu albo nie pobierzesz mózgu.',brainSynced:'Zapisano w <b>{name}</b> o {time} · {n} plików. Zrób commit i push, by udostępnić.',
+  brainSaving:'Zapisuję w <b>{name}</b>…',brainNeedsAccess:'<b>{name}</b> potrzebuje ponownie Twojej zgody.',brainError:'Nie można zapisać w folderze: {e}',
+  brainUnsupported:'Ta przeglądarka nie zapisuje do folderów. Pobierz mózg i zrób commit albo otwórz folder, by wczytać canvasy.',
+  brainImported:'Wczytano z mózgu: {n} canvas(y).',brainNothing:'Brak canvasów w product-data/ideas/.',
+  brainStep1:'Załóż prywatne repozytorium na GitHubie.',brainStep2:'Sklonuj je i połącz ten folder tutaj — albo rozpakuj do niego pobrany plik.',brainStep3:'Zapisz historię: <code>git add . && git commit -m "Aktualizacja mózgu" && git push</code>',brainStep4:'Wskaż agentom repo. Czytają <code>AGENTS.md</code> i te same pliki.',
+  welcomeHint:'Enter zapisuje · Tab dodaje gałąź',bodyPlaceholder:'Kontekst, szczegóły, dlaczego to ważne…',evidencePlaceholder:'Notatka z rozmowy, link, liczba…',invalidAi:'Nieprawidłowa odpowiedź AI: {e}',undoEmpty:'Nie ma czego cofnąć.'}
 };
 
 function portfolioLoad(){
@@ -85,17 +105,14 @@ function portfolioLoad(){
  const initial=prepareBoard(makeIdea('Untitled idea'));
  return {format:'thenvio-ideas-collection-v1',graphs:[initial],activeId:initial.id};
 }
-function loadUi(){try{return JSON.parse(localStorage.getItem(UI_KEY)||'{}')||{};}catch{return {};}}
-function saveUi(ui){try{localStorage.setItem(UI_KEY,JSON.stringify(ui));}catch{}}
 
 export function initFreeCanvas({notice=()=>{}}={}){
  const view=$('#view-branches'),viewport=$('#boardViewport'),surface=$('#boardSurface'),nodesLayer=$('#boardNodes'),ghostLayer=$('#boardGhosts');
  const edgeLayer=$('#boardEdgeLayer'),ghostEdgeLayer=$('#boardGhostEdges'),draft=$('#boardDraft'),panel=$('#boardPanel');
  const hud=$('#boardHud'),hudText=$('#boardHudText'),edgeMenu=$('#boardEdgeMenu'),pill=$('#boardCoachPill');
- const ui={panel:true,...loadUi()};
  let portfolio=portfolioLoad();
  let selected=null,linkSource=null,history=[],future=[],lastCoalesce=null,lastCommitAt=0;
- let inline=null,dragging=false,sheetOpen=false,panelTab='coach';
+ let inline=null,dragging=false,panelMode=null;const skipped=new Set();
  let thinkMode=null,thinkRound=0,ghostList=[];
  let futures=null,futuresSig='',highlight=null,scanTimer=null,scanning=false;
  let locale='en',firstPaint=true,needsCamera=true,coachTimer=null,lastTap={id:null,t:0},lastBgTap={t:0,x:0,y:0},lastPointerType='mouse';
@@ -106,7 +123,8 @@ export function initFreeCanvas({notice=()=>{}}={}){
  const graph=()=>portfolio.graphs.find(g=>g.id===portfolio.activeId);
  const nodeById=id=>graph().nodes.find(n=>n.id===id)||null;
  const selectedNode=()=>selected?nodeById(selected):null;
- const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(portfolio));}catch{notice(t('saveFailed'));}};
+ const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(portfolio));}catch{notice(t('saveFailed'));}brain?.schedule();};
+ let brain=null;
  const signature=g=>g.nodes.map(n=>[n.id,n.parentId,n.kind,n.status,n.impact||0,n.effort||0,n.free?1:0,n.title].join('\u0001')).join('\u0002')+'|'+g.links.map(l=>l.from+'>'+l.to+':'+(l.type||'')).join(',');
  const fmtBig=v=>{try{return BigInt(v).toLocaleString(locale==='pl'?'pl-PL':'en-US');}catch{return String(v);}};
  function refreshLocale(){
@@ -115,6 +133,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
   locale=text?detectLocale(text,nav):nav;
   view.querySelectorAll('[data-i18n]').forEach(node=>{const value=T[locale][node.dataset.i18n];if(value)node.textContent=value;});
   $('#boardFutures').setAttribute('aria-label',T[locale].scan);
+  $('#boardBrain').setAttribute('aria-label',T[locale].panelBrain);
  }
 
  // ── History ──
@@ -471,12 +490,13 @@ export function initFreeCanvas({notice=()=>{}}={}){
   if(inline?.id===id)return;
   const entry=cards.get(id),n=nodeById(id);if(!entry||!n)return;
   selected=id;
-  const ta=el('textarea','board-note-inline');ta.maxLength=150;ta.rows=3;
+  const ta=el('textarea','board-note-inline');ta.maxLength=150;ta.rows=2;
   ta.value=isPlaceholder(n.title)?'':n.title;
   ta.placeholder=id===graph().rootId?t('rootPlaceholder'):t('notePlaceholder');
   ta.setAttribute('aria-label',t('editTitle'));
   inline={id,isNew,original:n.title,ta};
-  entry.el.classList.add('is-editing');entry.title.replaceChildren(ta);entry.body.textContent='';
+  entry.el.classList.add('is-editing');entry.title.replaceChildren(ta);
+  entry.body.textContent=id===graph().rootId&&isPlaceholder(n.title)?t('welcomeHint'):'';
   ta.addEventListener('pointerdown',ev=>ev.stopPropagation());
   ta.addEventListener('dblclick',ev=>ev.stopPropagation());
   ta.addEventListener('keydown',ev=>{
@@ -541,7 +561,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
   if(selected!==id&&!keepMode){thinkMode=null;thinkRound=0;}
   if(inline&&inline.id!==id)finishInline(true);
   selected=id;
-  if(!keepTab&&!isPhone())panelTab='note';
+  if(!keepTab&&!isPhone())panelMode='note';
   render();
   if(!keepTab)revealSelection();
   if(focus)cards.get(id)?.el.focus({preventScroll:true});
@@ -549,7 +569,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
  function deselect(){
   finishInline(true);
   selected=null;linkSource=null;
-  if(panelTab==='note')panelTab='coach';
+  if(panelMode==='note')panelMode=null;
   render();
  }
  function handleNodeTap(id,pointerType){
@@ -806,7 +826,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
    case 'add':{const id=addChild(a.parentId,null,{seed:a.seed});if(id){select(id);ensureVisible(id);}break;}
    case 'select':select(a.nodeId);ensureVisible(a.nodeId);break;
    case 'rate':
-    select(a.nodeId);openPanel('note');ensureVisible(a.nodeId);
+    select(a.nodeId);$('#boardMore').open=true;openPanel('note');ensureVisible(a.nodeId);
     requestAnimationFrame(()=>{const r=$('#boardRatings');r.classList.remove('is-flash');void r.offsetWidth;r.classList.add('is-flash');r.scrollIntoView({block:'center',behavior:reducedMotion()?'auto':'smooth'});});
     break;
    case 'futures':scanFutures();break;
@@ -814,35 +834,26 @@ export function initFreeCanvas({notice=()=>{}}={}){
   }
  }
 
- // ── Panel ──
- function panelVisible(){return isPhone()?sheetOpen:ui.panel;}
- function openPanel(tab){
-  panelTab=tab;
-  if(isPhone())sheetOpen=true;else{ui.panel=true;saveUi(ui);}
-  renderPanel();
- }
- function closePanel(){
-  if(isPhone())sheetOpen=false;else{ui.panel=false;saveUi(ui);}
-  renderPanel();
- }
+ // ── Panel: one purpose at a time ──
+ function openPanel(mode){panelMode=mode;renderPanel();}
+ function closePanel(){panelMode=null;renderPanel();}
  function renderPanel(){
-  panel.hidden=!panelVisible();
-  for(const b of document.querySelectorAll('[data-panel-tab]')){const on=b.dataset.panelTab===panelTab;b.setAttribute('aria-selected',String(on));b.tabIndex=on?0:-1;}
-  $('#boardNotePanel').hidden=panelTab!=='note';
-  $('#boardCoachPanel').hidden=panelTab!=='coach';
-  $('#boardFuturesPanel').hidden=panelTab!=='futures';
-  $('#boardAiPanel').hidden=panelTab!=='ai'||panel.hidden;
-  $('#boardAi').setAttribute('aria-expanded',String(!panel.hidden&&panelTab==='ai'));
-  $('#boardPanelToggle').setAttribute('aria-expanded',String(!panel.hidden));
-  if(!panel.hidden){
-   if(panelTab==='note')renderNoteTab();
-   if(panelTab==='futures')renderFuturesTab();
-  }
-  scheduleCoach();
+  if(panelMode==='note'&&!selectedNode())panelMode=null;
+  panel.hidden=!panelMode;
+  $('#boardPanelTitle').textContent=panelMode?t({note:'panelNote',futures:'panelFutures',brain:'panelBrain',ai:'panelAi'}[panelMode]):'';
+  $('#boardNotePanel').hidden=panelMode!=='note';
+  $('#boardFuturesPanel').hidden=panelMode!=='futures';
+  $('#boardBrainPanel').hidden=panelMode!=='brain';
+  $('#boardAiPanel').hidden=panelMode!=='ai';
+  $('#boardAi').setAttribute('aria-expanded',String(panelMode==='ai'));
+  $('#boardBrain').setAttribute('aria-expanded',String(panelMode==='brain'));
+  if(panelMode==='note')renderNoteTab();
+  if(panelMode==='futures')renderFuturesTab();
+  if(panelMode==='brain')renderBrainPanel();
+  scheduleNext();
  }
  function renderNoteTab(){
   const n=selectedNode(),g=graph();
-  $('#boardNoteEmpty').hidden=!!n;$('#boardNoteBody').hidden=!n;
   if(!n)return;
   const root=n.id===g.rootId;
   const kinds=$('#boardKinds');kinds.replaceChildren();
@@ -857,6 +868,13 @@ export function initFreeCanvas({notice=()=>{}}={}){
   title.placeholder=root?t('rootPlaceholder'):t('notePlaceholder');
   body.placeholder=t('bodyPlaceholder');ev.placeholder=t('evidencePlaceholder');
   if(document.activeElement!==body)body.value=n.description||'';
+  const modes=$('#boardModes');modes.replaceChildren();
+  const active=thinkMode||defaultModeFor(n.kind);
+  for(const mode of THINK_MODES){
+   const b=button('',t('mode_'+mode),()=>{thinkMode=mode;thinkRound=0;render();});
+   b.setAttribute('role','radio');b.setAttribute('aria-checked',String(active===mode));modes.append(b);
+  }
+  $('#boardIdeasRow').hidden=isPlaceholder(n.title);
   $('#boardStatusWrap').hidden=root;
   const st=$('#boardStatus');st.replaceChildren();
   for(const s of STATES){
@@ -876,65 +894,90 @@ export function initFreeCanvas({notice=()=>{}}={}){
   }
   $('#boardEvidenceWrap').hidden=root||!(['assumption','experiment','insight'].includes(n.kind)||n.status==='supported'||n.status==='refuted'||n.evidence);
   if(document.activeElement!==ev)ev.value=n.evidence||'';
-  // Suggestions
-  const modes=$('#boardModes');modes.replaceChildren();
-  const active=thinkMode||defaultModeFor(n.kind);
-  for(const mode of THINK_MODES){
-   const b=button('',t('mode_'+mode),()=>{thinkMode=mode;thinkRound=0;render();});
-   b.setAttribute('role','radio');b.setAttribute('aria-checked',String(active===mode));modes.append(b);
+  if($('#boardMore').open){
+   let advice=null;try{advice=nodeAdvice(g,n.id,{locale});}catch{}
+   const tools=$('#boardTools');tools.replaceChildren();
+   for(const tool of advice?.tools||[]){
+    const box=el('div','board-tool'),row=el('div','board-tool-row');
+    row.append(el('strong','',tool.name),el('small','',tool.examples.join(' · ')));
+    box.append(row,el('span','',tool.how),el('span','',tool.why));
+    box.append(button('board-chip-button',t('addStep'),()=>{const id=addChild(n.id,null,{seed:{title:(tool.name+': '+tool.examples.slice(0,2).join(' / ')).slice(0,150),kind:'experiment',description:tool.how+'\n\n'+t('toolsNote')}});if(id)ensureVisible(id);}));
+    tools.append(box);
+   }
+   const skill=$('#boardSkill');skill.replaceChildren();
+   if(advice?.skill){
+    const box=el('div','board-skill');
+    box.append(el('strong','',advice.skill.name),el('span','',advice.skill.summary+' '+advice.skill.why));
+    box.append(button('board-chip-button',t('copySkill'),()=>copy(skillBrief(graph(),n.id,advice.skill.id))));
+    skill.append(box);
+   }
   }
-  const list=$('#boardSuggest');list.replaceChildren();
-  const cards4=isPlaceholder(n.title)?[]:suggestionsFor(n,4);
-  if(!cards4.length)list.append(el('p','board-empty',t('noSuggestions')));
-  for(const card of cards4){
-   const b=button('board-suggest-item',null,()=>addSuggestion(n.id,card));
-   b.dataset.card=card.id;
-   b.append(el('em','',KIND_GLYPH[card.kind]+' '+t('kind_'+card.kind)),el('strong','',card.title),el('span','',card.question));
-   b.addEventListener('mouseenter',()=>setHoverGhost(card.id));b.addEventListener('mouseleave',()=>setHoverGhost(null));
-   list.append(b);
-  }
-  $('#boardSuggestAll').hidden=!cards4.length;$('#boardSuggestMore').hidden=!cards4.length;
-  // Tools and skill
-  let advice=null;try{advice=nodeAdvice(g,n.id,{locale});}catch{}
-  const tools=$('#boardTools');tools.replaceChildren();
-  for(const tool of advice?.tools||[]){
-   const box=el('div','board-tool'),row=el('div','board-tool-row');
-   row.append(el('strong','',tool.name),el('small','',tool.examples.join(' · ')));
-   box.append(row,el('span','',tool.how),el('span','',tool.why));
-   box.append(button('board-chip-button',t('addStep'),()=>{const id=addChild(n.id,null,{seed:{title:(tool.name+': '+tool.examples.slice(0,2).join(' / ')).slice(0,150),kind:'experiment',description:tool.how+'\n\n'+t('toolsNote')}});if(id)ensureVisible(id);}));
-   tools.append(box);
-  }
-  const skill=$('#boardSkill');skill.replaceChildren();
-  if(advice?.skill){
-   const box=el('div','board-skill');
-   box.append(el('strong','',advice.skill.name),el('span','',advice.skill.summary+' '+advice.skill.why));
-   box.append(button('board-chip-button',t('copySkill'),()=>copy(skillBrief(graph(),n.id,advice.skill.id))));
-   skill.append(box);
-  }
-  $('#boardDelete').disabled=root;$('#boardDetach').disabled=root||n.free===true;
+  $('#boardDelete').hidden=root;$('#boardDetach').disabled=root||n.free===true;
+  $('#boardLink').setAttribute('aria-pressed',String(!!linkSource));
  }
- function scheduleCoach(){clearTimeout(coachTimer);coachTimer=setTimeout(renderCoach,90);}
- function renderCoach(){
-  const g=graph();
-  let moves=[];try{moves=coachGraph(g,{locale,futures:currentFutures(),limit:6});}catch(err){console.warn(err);}
-  const top=moves[0];
-  if(isPhone()&&!sheetOpen&&!inline&&!scanning){
-   pill.hidden=false;pill.replaceChildren();
-   const n=selectedNode();
-   if(n){pill.append(el('b','',KIND_GLYPH[n.kind]),el('span','',isPlaceholder(n.title)?t('newThought'):n.title),el('b','',t('pillDetails')+' ↑'));pill.dataset.mode='note';}
-   else if(top){pill.append(el('b','',t('pillNext')),el('span','',top.title),el('b','','↑'));pill.dataset.mode='coach';}
-   else pill.hidden=true;
-  }else pill.hidden=true;
-  if(panel.hidden||panelTab!=='coach')return;
-  const list=$('#boardCoachList');list.replaceChildren();
-  if(!moves.length)list.append(el('li','board-empty',t('coachEmpty')));
-  for(const m of moves){
-   const li=el('li'),b=button('board-coach-item',null,()=>runAction(m.action));
-   const text=el('div');text.append(el('strong','',m.title),el('span','',m.why));
-   b.append(el('span','board-coach-icon',m.icon),text);li.append(b);list.append(li);
+ // One next step at a time; "›" shows another one.
+ let nextTimer=null,nextMove=null;
+ function scheduleNext(){clearTimeout(nextTimer);nextTimer=setTimeout(renderNext,90);}
+ function renderNext(){
+  const g=graph(),box=$('#boardNext');
+  let moves=[];try{moves=coachGraph(g,{locale,futures:currentFutures(),limit:12});}catch(err){console.warn(err);}
+  nextMove=moves.find(m=>!skipped.has(m.id))||null;
+  const n=selectedNode();
+  const calm=inline||scanning||highlight||dragging;
+  const show=!!nextMove&&!calm&&!(isPhone()&&(panelMode||n));
+  box.hidden=!show;
+  if(show){
+   const b=$('#boardNextDo');b.replaceChildren(el('b','',nextMove.icon),el('span','',nextMove.title),el('i','','→'));
+   b.title=nextMove.why;b.setAttribute('aria-label',nextMove.title+'. '+nextMove.why);
+   $('#boardNextSkip').hidden=moves.filter(m=>!skipped.has(m.id)).length<2;
   }
-  let forks=0,total='0';try{forks=findForks(g).length;total=countFutures(g).toString();}catch{}
-  $('#boardStats').textContent=t('stats',{n:g.nodes.length,f:forks,s:fmtBig(total)});
+  if(isPhone()&&n&&!panelMode&&!inline&&!scanning){
+   pill.hidden=false;pill.replaceChildren(el('b','',KIND_GLYPH[n.kind]),el('span','',isPlaceholder(n.title)?t('newThought'):n.title),el('b','',t('pillDetails')+' ↑'));
+  }else pill.hidden=true;
+ }
+ function renderBrainPanel(){
+  const st=brain.state(),tree=$('#boardBrainTree');
+  tree.replaceChildren(...BRAIN_FOLDERS.map(f=>{const li=el('li');li.append(el('code','',f.path),el('small','',f[locale]));return li;}));
+  const name=(st.name||'').replace(/[<>&"]/g,'');
+  const status=$('#boardBrainStatus');
+  status.innerHTML=!st.supported&&!st.handle?t('brainUnsupported')
+   :st.mode==='synced'?t('brainSynced',{name,time:st.savedAt.toLocaleTimeString(locale==='pl'?'pl-PL':'en-US',{hour:'2-digit',minute:'2-digit'}),n:st.files})
+   :st.mode==='saving'?t('brainSaving',{name})
+   :st.mode==='reconnect'?t('brainNeedsAccess',{name})
+   :st.mode==='error'?t('brainError',{e:st.error.replace(/[<>&"]/g,'')})
+   :t('brainOff');
+  const connect=$('#boardBrainConnect');
+  connect.hidden=!st.supported;
+  connect.className=st.handle&&st.mode!=='reconnect'?'futures-secondary':'futures-primary';
+  connect.textContent=st.mode==='reconnect'?t('brainReconnect',{name}):st.handle?t('brainDisconnect'):t('brainConnect');
+  const steps=$('#boardBrainSteps');
+  steps.innerHTML=['brainStep1','brainStep2','brainStep3','brainStep4'].map(k=>'<li>'+t(k)+'</li>').join('');
+ }
+ function brainStatus(st){
+  const dot=$('#boardBrainDot');
+  dot.className='board-brain-dot'+(st.handle?' '+st.mode:'');
+  $('#boardBrain').title=st.handle?st.name+' · '+st.mode:t('panelBrain');
+  if(panelMode==='brain')renderBrainPanel();
+ }
+ // Canvases read from the brain: new ones join; changed files that are newer than the local copy win.
+ function mergeFromBrain(items){
+  let added=0,updated=0;
+  const starter=graph();
+  const starterEmpty=isPlaceholder(starter.title)&&starter.nodes.length===1;
+  for(const {graph:g,content,lastModified} of items){
+   const local=portfolio.graphs.find(x=>x.id===g.id);
+   if(!local){if(portfolio.graphs.length>=MAX)continue;portfolio.graphs.push(g);added++;continue;}
+   if(canvasToMarkdown(local)===content)continue;
+   if(lastModified>Date.parse(local.updatedAt)){
+    if(local.id===portfolio.activeId){history.push(local);future=[];}
+    portfolio.graphs=portfolio.graphs.map(x=>x.id===g.id?g:x);updated++;
+   }
+  }
+  if(!added&&!updated)return {added,updated};
+  if(starterEmpty&&added&&portfolio.graphs.length>1){portfolio.graphs=portfolio.graphs.filter(x=>x.id!==starter.id);switchGraph(items[0].graph.id);}
+  else{persist();render();}
+  notice(t('brainImported',{n:added+updated}));
+  return {added,updated};
  }
  function reasonText(b){
   if(b.code==='conflict')return t('reason_conflict',{a:b.title,b:b.otherTitle});
@@ -997,7 +1040,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
   }
   const others=r.scenarios.filter(s=>s.key!==r.winner?.key&&!s.blocked).slice(0,4);
   if(others.length){
-   const sec=el('div','futures-section');sec.append(el('h5','',t('others')));
+   const sec=el('details','futures-section');sec.append(el('summary','',t('others')+' ('+others.length+')'));
    const list=el('div','futures-list');
    for(const s of others){
     const b=button('futures-alt',null,()=>showRoute(s));
@@ -1008,7 +1051,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
    sec.append(list);host.append(sec);
   }
   if(r.blockedSamples.length){
-   const sec=el('div','futures-section');sec.append(el('h5','',t('blockedRoutes')));
+   const sec=el('details','futures-section');sec.append(el('summary','',t('blockedRoutes')+' ('+r.blocked+')'));
    const list=el('div','futures-list');
    for(const s of r.blockedSamples){
     const b=button('futures-alt blocked',null,()=>showRoute(s));
@@ -1037,7 +1080,6 @@ export function initFreeCanvas({notice=()=>{}}={}){
  }
  function render(){
   populateProjects();syncNodes();syncEdges();syncGhosts();renderPanel();
-  $('#boardLink').classList.toggle('is-active',!!linkSource);$('#boardLink').setAttribute('aria-pressed',String(!!linkSource));
   viewport.classList.toggle('is-linking',!!linkSource);
   firstPaint=false;
  }
@@ -1059,7 +1101,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
   if(!portfolio.graphs.some(g=>g.id===id))return;
   finishInline(true);cancelScan();clearHighlight(false);
   portfolio.activeId=id;selected=null;linkSource=null;history=[];future=[];futures=null;futuresSig='';thinkMode=null;thinkRound=0;
-  if(panelTab==='note')panelTab='coach';
+  if(panelMode==='note')panelMode=null;
   persist();resetSurface();refreshLocale();render();needsCamera=true;requestAnimationFrame(initialCamera);
  }
  function saveExport(){
@@ -1074,6 +1116,12 @@ export function initFreeCanvas({notice=()=>{}}={}){
   if(!file)return;
   if(file.size>5_000_000){notice(t('tooLarge'));return;}
   try{
+   if(/\.(md|markdown)$/i.test(file.name)){
+    const g=markdownToCanvas(await file.text(),{now:new Date().toISOString()});
+    const r=mergeFromBrain([{graph:g,content:'',lastModified:Date.now()}]);
+    if(!r.added&&!r.updated)notice(t('canvasImported'));
+    switchGraph(g.id);return;
+   }
    const body=JSON.parse(await file.text());
    const incoming=(body?.format==='thenvio-ideas-collection-v1'?body.graphs:[body]);
    if(!Array.isArray(incoming)||!incoming.length||incoming.length>MAX)throw Error('Invalid file.');
@@ -1112,6 +1160,9 @@ export function initFreeCanvas({notice=()=>{}}={}){
  const queueText=()=>{clearTimeout(textTimer);textTimer=setTimeout(flushText,380);};
 
  // ── Controls ──
+ const menu=$('#boardMenuDetails');
+ for(const b of menu.querySelectorAll('button'))b.addEventListener('click',()=>{menu.open=false;});
+ document.addEventListener('pointerdown',e=>{if(menu.open&&!menu.contains(e.target))menu.open=false;});
  $('#boardSelect').addEventListener('change',e=>switchGraph(e.target.value));
  $('#boardNew').addEventListener('click',newCanvas);
  $('#boardCreateForm').addEventListener('submit',e=>{
@@ -1136,15 +1187,11 @@ export function initFreeCanvas({notice=()=>{}}={}){
   finishInline(true);
   try{commit(tidyLayout(graph()));notice(t('arranged'));setTimeout(()=>fitTo(),reducedMotion()?0:380);}catch(err){notice(err.message);}
  });
- $('#boardPanelClose').addEventListener('click',closePanel);
- $('#boardPanelToggle').addEventListener('click',()=>panelVisible()?closePanel():openPanel(panelTab));
- for(const b of document.querySelectorAll('[data-panel-tab]'))b.addEventListener('click',()=>openPanel(b.dataset.panelTab));
- $('.board-tabs').addEventListener('keydown',e=>{
-  if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
-  const tabs=[...document.querySelectorAll('[data-panel-tab]')],i=tabs.findIndex(b=>b.dataset.panelTab===panelTab);
-  const next=tabs[(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length];openPanel(next.dataset.panelTab);next.focus();
- });
- pill.addEventListener('click',()=>openPanel(pill.dataset.mode==='note'?'note':'coach'));
+ $('#boardPanelClose').addEventListener('click',()=>{if(panelMode==='note'&&!isPhone())deselect();closePanel();});
+ pill.addEventListener('click',()=>openPanel('note'));
+ $('#boardNextDo').addEventListener('click',()=>{if(nextMove)runAction(nextMove.action);});
+ $('#boardNextSkip').addEventListener('click',()=>{if(nextMove)skipped.add(nextMove.id);renderNext();});
+ $('#boardMore').addEventListener('toggle',()=>{if($('#boardMore').open)renderNoteTab();});
  $('#boardEditForm').addEventListener('submit',e=>{e.preventDefault();flushText();});
  $('#boardEditTitle').addEventListener('input',queueText);
  $('#boardEditTitle').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();flushText();e.target.blur();}});
@@ -1156,17 +1203,6 @@ export function initFreeCanvas({notice=()=>{}}={}){
   evTimer=setTimeout(()=>{try{if(nodeById(id))commit(updateBoardMeta(graph(),id,{evidence:value}),{coalesce:'ev:'+id});}catch(err){notice(err.message);}},400);
  });
  $('#boardSuggestMore').addEventListener('click',()=>{thinkRound++;render();});
- $('#boardSuggestAll').addEventListener('click',()=>{
-  const n=selectedNode();if(!n)return;
-  let g=graph();const cards4=suggestionsFor(n,4);if(!cards4.length)return;
-  let slots;try{slots=freeSlots(g,n.id,cards4.length);}catch(err){notice(err.message);return;}
-  const parent=disp.get(n.id);
-  cards4.slice(0,slots.length).forEach((card,i)=>{
-   const made=addBoardNode(g,{title:card.title,kind:card.kind,description:card.description,parentId:n.id,x:slots[i].x,y:slots[i].y,free:false});
-   g=made.graph;spawnFrom.set(made.id,parent?{...parent}:slots[i]);
-  });
-  commit(g);
- });
  $('#boardDelete').addEventListener('click',()=>{if(selected)removeNode(selected);});
  $('#boardCopyContext').addEventListener('click',()=>{if(selected)copy(ideaContext(graph(),selected));});
  $('#boardUndo').addEventListener('click',()=>restore(true));
@@ -1175,14 +1211,28 @@ export function initFreeCanvas({notice=()=>{}}={}){
  $('#boardZoomOut').addEventListener('click',()=>zoomAt(1/1.2,undefined,undefined,true));
  $('#boardFit').addEventListener('click',()=>fitTo());
  $('#boardFutures').addEventListener('click',()=>scanning?cancelScan():scanFutures());
- $('#boardImport').addEventListener('click',()=>$('#importInput').click());
- $('#boardExport').addEventListener('click',saveExport);
- $('#boardSettings').addEventListener('click',()=>$('#settingsButton').click());
- $('#boardMenuImport').addEventListener('click',()=>{$('#boardMenuDetails').open=false;$('#importInput').click();});
- $('#boardMenuExport').addEventListener('click',()=>{$('#boardMenuDetails').open=false;saveExport();});
- $('#boardMenuSettings').addEventListener('click',()=>{$('#boardMenuDetails').open=false;$('#settingsButton').click();});
- $('#boardAi').addEventListener('click',()=>(!panel.hidden&&panelTab==='ai')?openPanel('coach'):openPanel('ai'));
- $('#boardAiClose').addEventListener('click',()=>{panelTab='coach';if(isPhone())sheetOpen=false;renderPanel();});
+ $('#boardMenuImport').addEventListener('click',()=>$('#importInput').click());
+ $('#boardMenuExport').addEventListener('click',saveExport);
+ $('#boardMenuSettings').addEventListener('click',()=>$('#settingsButton').click());
+ $('#boardAi').addEventListener('click',()=>panelMode==='ai'?closePanel():openPanel('ai'));
+ $('#boardAiClose').addEventListener('click',closePanel);
+ $('#boardBrain').addEventListener('click',()=>panelMode==='brain'?closePanel():openPanel('brain'));
+ $('#boardBrainConnect').addEventListener('click',async()=>{
+  const st=brain.state();
+  try{
+   if(st.mode==='reconnect')await brain.reconnect();
+   else if(st.handle)await brain.disconnect();
+   else{const r=await brain.connect();if(!r.canvases.length)notice(t('brainSynced',{name:brain.state().name,time:'',n:brain.state().files}).replace(/<[^>]+>/g,''));}
+  }catch(err){if(err?.name!=='AbortError')notice(t('brainError',{e:err.message}));}
+  renderBrainPanel();
+ });
+ $('#boardBrainDownload').addEventListener('click',()=>{try{brain.download();}catch(err){notice(err.message);}});
+ $('#boardBrainOpen').addEventListener('click',()=>$('#boardBrainFolder').click());
+ $('#boardBrainFolder').addEventListener('change',async e=>{
+  try{const r=await brain.importFiles([...e.target.files]);if(!r.canvases.length)notice(t('brainNothing'));for(const x of r.errors)notice(x.path+': '+x.message);}
+  catch(err){notice(t('importFailed',{e:err.message}));}
+  e.target.value='';
+ });
  $('#boardCopyPrompt').addEventListener('click',()=>copy(brainstormPrompt(graph(),selected||graph().rootId,{mode:thinkMode||'explore',locale})));
  $('#boardImportAi').addEventListener('click',()=>{
   try{
@@ -1197,7 +1247,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
    }
    if(!added.length){notice(t('nothingToImport'));return;}
    commit(current,{select:parent});
-   $('#boardAiJson').value='';panelTab='coach';renderPanel();fitTo([parent,...added]);notice(t('ideasAdded'));
+   $('#boardAiJson').value='';closePanel();fitTo([parent,...added]);notice(t('ideasAdded'));
   }catch(err){notice(t('invalidAi',{e:err.message}));}
  });
  document.addEventListener('keydown',e=>{
@@ -1238,10 +1288,16 @@ export function initFreeCanvas({notice=()=>{}}={}){
  viewport.addEventListener('focusin',e=>{const card=e.target.closest?.('.board-note');if(card&&!dragging)ensureVisible(card.dataset.id);});
  const resizeObserver=new ResizeObserver(()=>{if(needsCamera)initialCamera();else applyCamera();renderPanel();});
  resizeObserver.observe(viewport);
- window.matchMedia('(max-width: 690px)').addEventListener('change',()=>{sheetOpen=false;renderPanel();});
+ window.matchMedia('(max-width: 690px)').addEventListener('change',()=>{if(panelMode==='note')panelMode=null;renderPanel();});
+ brain=createBrainSync({
+  getGraphs:()=>portfolio.graphs.filter(g=>!(isPlaceholder(g.title)&&g.nodes.length===1)),
+  merge:mergeFromBrain,status:brainStatus,locale:()=>locale
+ });
  refreshLocale();
  render();
  requestAnimationFrame(initialCamera);
+ brain.restore().catch(()=>{});
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')brain.refresh();});
  return {
   show(){if(needsCamera)requestAnimationFrame(initialCamera);else applyCamera();renderPanel();},
   create:newCanvas,
@@ -1249,6 +1305,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
   importFile,
   export:saveExport,
   getGraph:()=>structuredClone(graph()),
-  scanFutures
+  scanFutures,
+  brain:()=>brain
  };
 }

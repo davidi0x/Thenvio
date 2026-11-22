@@ -28,7 +28,7 @@
       </nav>
       <div class="sidebar-spacer"></div>
       <div class="sidebar-help"><span class="sidebar-help-title">A space for any thought.</span><span>No prescribed path.</span></div>
-      <div class="side-footer"><span class="live-dot"></span> LOCAL CANVAS <span>v0.6</span></div>
+      <div class="side-footer"><span class="live-dot"></span> LOCAL CANVAS <span>v0.7</span></div>
     </aside>
     <div class="workspace">
       <header class="topbar">
@@ -45,36 +45,36 @@
         </div>
       </header>
       <main>
-        <section class="view active board-view" id="view-branches" aria-label="Thenvio open canvas">
+        <section class="view active board-view" id="view-branches" aria-label="Thenvio canvas">
           <div class="board-shell">
             <header class="board-header">
               <div class="board-name">
+                <span class="board-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
                 <select id="boardSelect" aria-label="Choose canvas"></select>
-                <button type="button" class="board-icon" id="boardNew" aria-label="Create a canvas" title="New canvas">+</button>
               </div>
               <div class="board-header-actions">
-                <button type="button" class="board-icon" id="boardUndo" aria-label="Undo" title="Undo (Ctrl/⌘ Z)">↶</button>
-                <button type="button" class="board-icon" id="boardRedo" aria-label="Redo" title="Redo (Ctrl/⌘ Shift Z)">↷</button>
-                <div class="board-split"></div>
-                <button type="button" class="board-icon board-header-export" id="boardImport" aria-label="Import canvas" title="Import">↥</button>
-                <button type="button" class="board-icon board-header-export" id="boardExport" aria-label="Export canvas" title="Export">↧</button>
-                <button type="button" class="board-icon" id="boardSettings" aria-label="Canvas appearance" title="Appearance">⚙</button>
-                <div class="board-split"></div>
+                <button type="button" class="board-brain-button" id="boardBrain" aria-controls="boardPanel" aria-expanded="false" title="Shared brain: one repo, plain text"><span class="board-brain-dot" id="boardBrainDot" aria-hidden="true"></span><span data-i18n="brain">Brain</span></button>
                 <button type="button" class="board-futures-button" id="boardFutures" title="Compare every combination of your choices"><span class="board-futures-glyph" aria-hidden="true"></span><span data-i18n="scan">Scan futures</span></button>
-                <button type="button" class="board-ai-button" id="boardAi" aria-expanded="false" aria-controls="boardAiPanel"><span aria-hidden="true">✦</span> AI</button>
-                <button type="button" class="board-icon board-panel-toggle" id="boardPanelToggle" aria-label="Toggle thinking panel" aria-expanded="true" aria-controls="boardPanel" title="Thinking panel">▥</button>
                 <details id="boardMenuDetails" class="board-menu">
-                  <summary aria-label="More canvas actions" title="More">···</summary>
+                  <summary aria-label="Menu" title="Menu">···</summary>
                   <div class="board-menu-popup">
-                    <button type="button" id="boardMenuImport">Import</button>
-                    <button type="button" id="boardMenuExport">Export</button>
-                    <button type="button" id="boardMenuSettings">Appearance</button>
+                    <button type="button" id="boardNew" data-i18n="menuNew">New canvas</button>
+                    <button type="button" id="boardMenuImport" data-i18n="menuImport">Import file…</button>
+                    <button type="button" id="boardMenuExport" data-i18n="menuExport">Export JSON</button>
+                    <button type="button" id="boardAi" aria-expanded="false" aria-controls="boardAiPanel" data-i18n="menuAi">Use your own AI…</button>
+                    <button type="button" id="boardMenuSettings" data-i18n="menuSettings">Appearance</button>
+                    <div class="board-menu-sep" role="separator"></div>
+                    <span class="board-menu-label" data-i18n="menuClassic">More tools</span>
+                    <button type="button" data-tab="overview">Decision analysis</button>
+                    <button type="button" data-tab="assumptions">Assumptions</button>
+                    <button type="button" data-tab="skills">Founder skills</button>
+                    <button type="button" data-tab="integrations">Connections</button>
                   </div>
                 </details>
               </div>
             </header>
             <div class="board-body">
-              <div id="boardViewport" class="board-viewport" tabindex="0" aria-label="Canvas. Drag empty space to pan, pinch or Ctrl+scroll to zoom. Double-click to add a note. Drag a note's dot onto another note to connect them. With a note selected: Enter edits, Tab adds a branch, arrow keys move between notes.">
+              <div id="boardViewport" class="board-viewport" tabindex="0" aria-label="Canvas. Double-click to add a note. Drag a note's dot onto another note to connect them. With a note selected: Enter edits, Tab adds a branch, arrow keys move between notes.">
                 <div id="boardSurface" class="board-surface">
                   <svg id="boardEdges" class="board-edges" aria-hidden="true">
                     <defs>
@@ -87,85 +87,85 @@
                   <div id="boardGhosts" class="board-ghosts"></div>
                   <div id="boardNodes" class="board-nodes"></div>
                 </div>
+                <div class="board-next" id="boardNext" hidden>
+                  <button type="button" class="board-next-do" id="boardNextDo"></button>
+                  <button type="button" class="board-next-skip" id="boardNextSkip" aria-label="Show another suggestion" title="Another suggestion">›</button>
+                </div>
                 <div class="board-hud" id="boardHud" hidden><span class="board-hud-ring" aria-hidden="true"></span><span id="boardHudText"></span></div>
-                <div class="board-corner-hint" id="boardHint" data-i18n="hint">Double-click to add · Drag a dot to connect · Tab adds a branch</div>
                 <div class="board-edge-menu" id="boardEdgeMenu" role="menu" hidden></div>
                 <button type="button" class="board-coach-pill" id="boardCoachPill" hidden></button>
                 <div class="board-dock" role="toolbar" aria-label="Canvas tools">
-                  <button type="button" id="boardAdd" title="Add a note (double-click the canvas)" aria-label="Add a note"><span class="board-dock-plus" aria-hidden="true">+</span> <span data-i18n="dockNote">Note</span></button>
-                  <button type="button" id="boardLink" title="Connect two notes" aria-label="Connect two notes" aria-pressed="false"><span aria-hidden="true">↗</span> <span data-i18n="dockConnect">Connect</span></button>
-                  <button type="button" id="boardArrange" title="Arrange the tree" aria-label="Arrange notes"><span aria-hidden="true">⌗</span> <span data-i18n="dockArrange">Arrange</span></button>
+                  <button type="button" class="board-dock-add" id="boardAdd" title="Add a note (or double-click the canvas)" aria-label="Add a note"><span aria-hidden="true">+</span></button>
+                  <div class="board-dock-divider"></div>
+                  <button type="button" class="board-dock-icon" id="boardUndo" title="Undo (Ctrl/⌘ Z)" aria-label="Undo">↶</button>
+                  <button type="button" class="board-dock-icon" id="boardRedo" title="Redo (Ctrl/⌘ Shift Z)" aria-label="Redo">↷</button>
                   <div class="board-dock-divider"></div>
                   <button type="button" class="board-dock-icon" id="boardZoomOut" title="Zoom out" aria-label="Zoom out">−</button>
                   <span class="board-zoom" id="boardZoomValue">100%</span>
                   <button type="button" class="board-dock-icon" id="boardZoomIn" title="Zoom in" aria-label="Zoom in">+</button>
-                  <button type="button" class="board-dock-icon board-fit" id="boardFit" title="Fit all notes" aria-label="Fit canvas">⤢</button>
+                  <button type="button" class="board-dock-icon" id="boardFit" title="Fit all notes" aria-label="Fit canvas">⤢</button>
+                  <button type="button" class="board-dock-icon" id="boardArrange" title="Tidy the tree" aria-label="Arrange notes">⌗</button>
                 </div>
               </div>
-              <aside id="boardPanel" class="board-panel" aria-label="Thinking panel">
+              <aside id="boardPanel" class="board-panel" aria-labelledby="boardPanelTitle" hidden>
                 <div class="board-panel-head">
-                  <div class="board-tabs" role="tablist" aria-label="Thinking panel views">
-                    <button type="button" role="tab" id="boardTabNote" data-panel-tab="note" aria-controls="boardNotePanel" aria-selected="false" data-i18n="tabNote">Note</button>
-                    <button type="button" role="tab" id="boardTabCoach" data-panel-tab="coach" aria-controls="boardCoachPanel" aria-selected="true" data-i18n="tabCoach">Next moves</button>
-                    <button type="button" role="tab" id="boardTabFutures" data-panel-tab="futures" aria-controls="boardFuturesPanel" aria-selected="false" data-i18n="tabFutures">Futures</button>
-                    <button type="button" role="tab" id="boardTabAi" data-panel-tab="ai" aria-controls="boardAiPanel" aria-selected="false">AI</button>
-                  </div>
-                  <button type="button" class="board-panel-close" id="boardPanelClose" aria-label="Close thinking panel">×</button>
+                  <h2 id="boardPanelTitle"></h2>
+                  <button type="button" class="board-panel-close" id="boardPanelClose" aria-label="Close panel">×</button>
                 </div>
-                <div class="board-tabpanel" id="boardNotePanel" role="tabpanel" aria-labelledby="boardTabNote" hidden>
-                  <p class="board-empty" id="boardNoteEmpty" data-i18n="noteEmpty">Select a note to shape it, or double-click the canvas to start a new one.</p>
-                  <div id="boardNoteBody">
-                    <div class="board-kinds" id="boardKinds" role="radiogroup" aria-label="Kind of note"></div>
-                    <form id="boardEditForm" class="board-edit-form">
-                      <label class="sr-only" for="boardEditTitle">Note title</label>
-                      <textarea id="boardEditTitle" class="board-edit-title" aria-label="Note title" maxlength="150" rows="2" required placeholder="Your thought"></textarea>
-                      <label class="sr-only" for="boardEditBody">Note body</label>
-                      <textarea id="boardEditBody" aria-label="Note body" maxlength="4000" rows="4" placeholder="Context, details, why it matters…"></textarea>
-                      <button type="submit" class="sr-only">Save note</button>
-                    </form>
+                <div class="board-tabpanel" id="boardNotePanel" hidden>
+                  <div class="board-kinds" id="boardKinds" role="radiogroup" aria-label="Kind of note"></div>
+                  <form id="boardEditForm" class="board-edit-form">
+                    <label class="sr-only" for="boardEditTitle">Note title</label>
+                    <textarea id="boardEditTitle" class="board-edit-title" maxlength="150" rows="2" required></textarea>
+                    <label class="sr-only" for="boardEditBody">Note body</label>
+                    <textarea id="boardEditBody" maxlength="4000" rows="3"></textarea>
+                    <button type="submit" class="sr-only">Save note</button>
+                  </form>
+                  <div class="board-ideas" id="boardIdeasRow">
+                    <div class="board-modes" id="boardModes" role="radiogroup" aria-label="Suggestion style"></div>
+                    <button type="button" class="board-icon-text" id="boardSuggestMore" title="Other suggestions" aria-label="Other suggestions">↻</button>
+                  </div>
+                  <details class="board-more" id="boardMore">
+                    <summary data-i18n="more">More</summary>
                     <div class="board-field" id="boardStatusWrap"><span class="board-field-label" data-i18n="status">Status</span><div class="board-segment" id="boardStatus" role="radiogroup" aria-label="Status"></div></div>
                     <div class="board-field" id="boardRatingsWrap"><span class="board-field-label" data-i18n="ratings">Impact &amp; effort</span><div class="board-ratings" id="boardRatings"></div></div>
-                    <div class="board-field" id="boardEvidenceWrap"><label class="board-field-label" for="boardEvidence" data-i18n="evidence">Evidence or source</label><textarea id="boardEvidence" maxlength="4000" rows="2" placeholder="Interview note, link, number…"></textarea></div>
-                    <section class="board-section" aria-labelledby="boardSuggestTitle">
-                      <div class="board-section-head"><h3 id="boardSuggestTitle" data-i18n="suggestions">Suggestions</h3><button type="button" class="board-text-button" id="boardSuggestMore" data-i18n="more">Other angles ↻</button></div>
-                      <div class="board-modes" id="boardModes" role="radiogroup" aria-label="Thinking mode"></div>
-                      <div class="board-suggest" id="boardSuggest"></div>
-                      <button type="button" class="board-text-button" id="boardSuggestAll" data-i18n="addAll">Add all</button>
-                    </section>
-                    <section class="board-section" aria-labelledby="boardToolsTitle">
-                      <div class="board-section-head"><h3 id="boardToolsTitle" data-i18n="tools">Tools worth connecting</h3></div>
-                      <div class="board-tools" id="boardTools"></div>
-                      <p class="board-fineprint" data-i18n="toolsNote">Suggestions only. Thenvio is not connected to these apps.</p>
-                    </section>
-                    <section class="board-section" aria-labelledby="boardSkillTitle">
-                      <div class="board-section-head"><h3 id="boardSkillTitle" data-i18n="skill">Founder skill for this</h3></div>
-                      <div id="boardSkill"></div>
-                    </section>
-                    <div class="board-panel-footer">
+                    <div class="board-field" id="boardEvidenceWrap"><label class="board-field-label" for="boardEvidence" data-i18n="evidence">Evidence or source</label><textarea id="boardEvidence" maxlength="4000" rows="2"></textarea></div>
+                    <div class="board-field"><span class="board-field-label" data-i18n="tools">Tools worth connecting</span><div class="board-tools" id="boardTools"></div><p class="board-fineprint" data-i18n="toolsNote">Suggestions only. Thenvio is not connected to these apps.</p></div>
+                    <div class="board-field"><span class="board-field-label" data-i18n="skill">Skill for this</span><div id="boardSkill"></div></div>
+                    <div class="board-actions">
                       <button type="button" id="boardChild" data-i18n="child">+ Branch</button>
+                      <button type="button" id="boardLink" aria-pressed="false" data-i18n="connectTo">Connect to…</button>
                       <button type="button" id="boardDetach" data-i18n="detach">Detach</button>
                       <button type="button" id="boardCopyContext" data-i18n="copyContext">Copy context</button>
-                      <button type="button" id="boardDelete" data-i18n="delete">Delete</button>
                     </div>
+                  </details>
+                  <button type="button" class="board-delete" id="boardDelete" data-i18n="delete">Delete note</button>
+                </div>
+                <div class="board-tabpanel" id="boardFuturesPanel" hidden><div id="boardFuturesBody" aria-live="polite"></div></div>
+                <div class="board-tabpanel" id="boardBrainPanel" hidden>
+                  <p class="board-lede-big" data-i18n="brainLede">One repo, plain text. Your team and your agents work from the same files.</p>
+                  <ul class="brain-tree" id="boardBrainTree"></ul>
+                  <p class="brain-status" id="boardBrainStatus" role="status"></p>
+                  <div class="brain-actions">
+                    <button type="button" class="futures-primary" id="boardBrainConnect" data-i18n="brainConnect">Connect a folder</button>
+                    <button type="button" class="futures-secondary" id="boardBrainDownload" data-i18n="brainDownload">Download brain (.zip)</button>
+                    <button type="button" class="futures-secondary" id="boardBrainOpen" data-i18n="brainOpen">Open a brain folder</button>
                   </div>
+                  <details class="brain-how">
+                    <summary data-i18n="brainHow">Put it on GitHub</summary>
+                    <ol id="boardBrainSteps"></ol>
+                  </details>
+                  <p class="brain-traits" data-i18n="brainTraits">Lightweight · Full history · Backed up · Free</p>
+                  <input id="boardBrainFolder" type="file" webkitdirectory multiple hidden>
                 </div>
-                <div class="board-tabpanel" id="boardCoachPanel" role="tabpanel" aria-labelledby="boardTabCoach">
-                  <p class="board-lede" data-i18n="coachLede">Next best moves for this canvas</p>
-                  <ol class="board-coach" id="boardCoachList"></ol>
-                  <p class="board-stats" id="boardStats"></p>
-                </div>
-                <div class="board-tabpanel" id="boardFuturesPanel" role="tabpanel" aria-labelledby="boardTabFutures" hidden>
-                  <div id="boardFuturesBody" aria-live="polite"></div>
-                </div>
-                <div class="board-tabpanel board-ai-panel" id="boardAiPanel" role="tabpanel" aria-labelledby="boardTabAi" hidden>
-                  <div class="board-ai-title">Your ideas, your AI.</div>
+                <div class="board-tabpanel board-ai-panel" id="boardAiPanel" hidden>
                   <p>No model connected. Copy a focused prompt into your own ChatGPT, Claude or other assistant, then paste its JSON answer back here.</p>
                   <button type="button" class="board-ai-primary" id="boardCopyPrompt">Copy focused prompt</button>
                   <a class="board-ai-external" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">Open ChatGPT <span aria-hidden="true">↗</span></a>
                   <label for="boardAiJson">Paste AI suggestions (JSON)</label>
                   <textarea id="boardAiJson" rows="6" placeholder='{"branches":[{"title":"Another angle","kind":"direction","description":"…"}]}'></textarea>
                   <button type="button" class="board-ai-secondary" id="boardImportAi">Add to canvas</button>
-                  <button type="button" class="board-text-button" id="boardAiClose">Close AI</button>
+                  <button type="button" class="board-text-button" id="boardAiClose">Close</button>
                 </div>
               </aside>
             </div>
@@ -309,7 +309,7 @@
     </form>
   </dialog>
   <input id="ideaImportInput" type="file" accept=".json,application/json" hidden>
-  <input id="importInput" type="file" accept=".json,application/json" hidden>
+  <input id="importInput" type="file" accept=".json,.md,application/json,text/markdown" hidden>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script type="module" src="./app.mjs"></script>
 </body>

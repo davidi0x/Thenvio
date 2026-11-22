@@ -90,3 +90,25 @@ freeSlots (deterministic non-overlapping positions beside a note), tidyLayout (t
 
 ### Rendering — web/free-canvas.mjs
 Keyed DOM reconciliation (no full re-render), one requestAnimationFrame loop that eases displayed positions toward model positions (new notes fly out of their parent, children follow a dragged parent, undo and arrange animate), pointer-captured drags, drag-to-connect from a note's dot, inline editing with Tab/Enter flow, pinch zoom and double-tap on touch, an animated camera, and a futures scan that highlights sampled scenarios before settling on the winner. Reduced-motion preferences turn animation off. The UI language follows the content (Polish or English).
+
+## Shared brain (v0.7)
+
+One repository, plain text, for the team and its agents. Layout: `how-we-work/`, `product-data/` (`ideas/`, `assumptions.md`, `decisions/`), `brand/`, `skills/`, plus `README.md`, `AGENTS.md`, `CLAUDE.md`.
+
+### Canvas file format — core/brain.mjs
+`product-data/ideas/<slug>-<hash>.md`: YAML-like front matter (`thenvio: canvas`, `version`, `id`, `title`, `updated`), `# Main idea`, then one bullet per note: `- [kind · status] Title <!-- id=… x=… y=… impact=… effort=… -->`. Two spaces of indent = child. `>` lines are the note's text; `> **Evidence:**` (or `**Dowód:**`) lines are its evidence. `## Loose notes` holds free notes; `## Connections` holds `- A → B · relates|supports|conflicts <!-- from=… to=… -->`. Kind and status words exist in English and Polish.
+- canvasToMarkdown → markdownToCanvas is a lossless round trip (same notes, fields, positions, links) and re-serialising is byte-stable.
+- The parser is tolerant: missing kinds are inferred, unsafe or duplicate ids are replaced by deterministic hashes, out-of-range ratings are ignored, unresolvable links are dropped, notes without positions are placed in free space beside their parent (or the whole canvas is laid out when nothing has a position), more than 400 notes is refused. The result always passes validateIdeaGraph.
+- brainFiles(graphs) returns every file with an owner: `thenvio` (canvases, assumption register, decision records — regenerated) or `team` (scaffold docs and skills — created only when missing, never overwritten). readBrain(files) reads canvases back and reports bad files without failing.
+- skills/*/SKILL.md are generated from core/skills.mjs (skillMarkdown) and a test asserts byte equality, so the 24-skill catalog and folders cannot drift.
+- core/zip.mjs writes a deterministic stored ZIP (CRC-32, UTF-8 names, fixed timestamp) for the download.
+
+### Sync — web/brain-sync.mjs
+Uses the File System Access API on a folder the person picks (the handle is remembered in IndexedDB; access is re-requested when the browser asks). Rules: on connect, canvases in the folder are read first — new ones join, and a file wins over the local copy only if it differs and its modification time is newer than the canvas's `updatedAt` (the replaced local version stays on the undo stack); then Thenvio writes changed `thenvio` files and missing `team` files. Saves are debounced after every change; the folder is re-read when the tab becomes visible again. Nothing is deleted, no git command is run, no network request is made. Browsers without the API get a ZIP download and a read-only folder import.
+
+### Agents
+- MCP (integrations/mcp/server.mjs): `thenvio_futures`, `thenvio_next_moves` accept a canvas as Markdown or an idea-graph object and return the same deterministic analysis as the canvas, with its disclaimer.
+- CLI (scripts/brain.mjs): `init <dir>` (scaffold, keeps existing files), `export <export.json> <dir>`, `scan <dir>`. Local files only.
+
+### Minimal canvas UI
+The canvas hides the app sidebar. Header: Brain (with a sync dot), Scan futures, menu. The side panel is closed by default and has one purpose at a time (note, futures, brain, own AI). The coach shows a single next step; `›` skips to the next one for the session.

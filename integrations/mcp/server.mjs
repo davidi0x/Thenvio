@@ -7,6 +7,10 @@ import readline from 'node:readline';
 import {evaluate,stressTest,validate,VERSION} from '../../core/engine.mjs';
 import {demoProject} from '../../core/demo.mjs';
 import {SKILLS,getSkill,skillPrompt} from '../../core/skills.mjs';
+import {readIdeaGraph} from '../../core/idea-graph.mjs';
+import {markdownToCanvas} from '../../core/brain.mjs';
+import {analyzeFutures} from '../../core/futures.mjs';
+import {coachGraph} from '../../core/coach.mjs';
 
 const protocol='2025-11-25';
 const projectSchema={
@@ -19,14 +23,25 @@ const projectSchema={
     paths:{type:'array',items:{type:'object',required:['id','name','description','cost','weeks','upside','risk','learning','dependencies'],properties:{id:{type:'string'},name:{type:'string'},description:{type:'string'},cost:{type:'number'},weeks:{type:'number'},upside:{type:'number'},risk:{type:'number'},learning:{type:'number'},dependencies:{type:'array',items:{type:'string'}}}}}
   }
 };
+const canvasSchema={type:'object',required:['canvas'],properties:{
+  canvas:{description:'Canvas Markdown (a product-data/ideas/*.md file) or an idea-graph JSON object.',oneOf:[{type:'string'},{type:'object'}]},
+  locale:{type:'string',enum:['en','pl']}}};
 const toolDefinitions=[
   {name:'thenvio_evaluate',description:'Evaluate routes under a stated budget, timeline and risk tolerance. Return feasible paths, explicit blockers, a weighted heuristic ranking, evidence gaps and next tests. Never call this a success forecast.',inputSchema:{type:'object',required:['project'],properties:{project:projectSchema}}},
   {name:'thenvio_stress_test',description:'Re-run a decision with lower budget, shorter time and extreme risk tolerances to identify fragile recommendations.',inputSchema:{type:'object',required:['project'],properties:{project:projectSchema}}},
   {name:'thenvio_what_if',description:'Change constraints without generating or paying for new AI content. Returns re-evaluated comparison.',inputSchema:{type:'object',required:['project','changes'],properties:{project:projectSchema,changes:{type:'object',additionalProperties:false,properties:{budget:{type:'number',minimum:0},deadlineWeeks:{type:'number',minimum:1},riskTolerance:{type:'number',minimum:0,maximum:100}}}}}},
   {name:'thenvio_founder_skill',description:'Get an evidence-first founder operating protocol. The host AI performs the actual reasoning and optional research; the protocol never claims to have performed it.',inputSchema:{type:'object',required:['skillId'],properties:{skillId:{type:'string',enum:SKILLS.map(s=>s.id)},project:projectSchema}}},
   {name:'thenvio_validate',description:'Validate a decision project and explain schema errors before evaluating or importing it.',inputSchema:{type:'object',required:['project'],properties:{project:{type:'object'}}}},
-  {name:'thenvio_demo',description:'Return a synthetic example project (explicitly not real research) that illustrates the full input format.',inputSchema:{type:'object',properties:{}}}
+  {name:'thenvio_demo',description:'Return a synthetic example project (explicitly not real research) that illustrates the full input format.',inputSchema:{type:'object',properties:{}}},
+  {name:'thenvio_futures',description:'Scan every combination of choices in a Thenvio canvas (Markdown from a shared brain, product-data/ideas/*.md, or an idea-graph object). Returns the strongest route, why, the weakest link, plan B and the next move. Scores rank the user\'s own notes; they are not probabilities.',inputSchema:canvasSchema},
+  {name:'thenvio_next_moves',description:'Rank the next useful moves for a Thenvio canvas (Markdown or idea-graph object): name the idea, test the most foundational assumption, ask who it is for, rate options, record a decision. Deterministic rules, no research performed.',inputSchema:canvasSchema}
 ];
+function readCanvas(args){
+  if(typeof args.canvas==='string')return markdownToCanvas(args.canvas);
+  if(args.canvas&&typeof args.canvas==='object')return readIdeaGraph(args.canvas);
+  throw Error('Provide canvas as Markdown text or an idea-graph object');
+}
+const lang=args=>args.locale==='pl'?'pl':'en';
 function reply(id,result){process.stdout.write(JSON.stringify({jsonrpc:'2.0',id,result})+'\n');}
 function error(id,code,message){process.stdout.write(JSON.stringify({jsonrpc:'2.0',id,error:{code,message}})+'\n');}
 function result(data){return {content:[{type:'text',text:JSON.stringify(data,null,2)}],structuredContent:data};}
@@ -47,6 +62,17 @@ function call(name,args={}){
     }
     case 'thenvio_validate':return {valid:validate(args.project).length===0,errors:validate(args.project)};
     case 'thenvio_demo':return {warning:'SYNTHETIC EXAMPLE; NO VERIFIED MARKET FACTS',project:demoProject};
+    case 'thenvio_futures':{
+      const graph=readCanvas(args),r=analyzeFutures(graph,{locale:lang(args)});
+      const {samples,...rest}=r;
+      return {canvas:graph.title,...rest};
+    }
+    case 'thenvio_next_moves':{
+      const graph=readCanvas(args),locale=lang(args);
+      const futures=analyzeFutures(graph,{locale});
+      return {canvas:graph.title,moves:coachGraph(graph,{locale,futures,limit:8}).map(({id,title,why,action})=>({id,title,why,action})),
+        disclaimer:futures.disclaimer};
+    }
     default:throw Error('Unknown tool: '+name);
   }
 }

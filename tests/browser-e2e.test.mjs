@@ -100,3 +100,51 @@ test('opt-in canvas QA script passes against the live UI',{skip:!playwright&&'Pl
   assert.match(await page.textContent('#boardSmokeResult'),/PASS/,await page.textContent('#boardSmokeResult'));
  }finally{await browser.close();server.close();}
 });
+
+// In-memory stand-in for the File System Access API, so the brain sync runs end to end headlessly.
+const memoryFolder=`(()=>{
+ window.__fs={};
+ const nf=()=>{const e=new Error('not found');e.name='NotFoundError';return e;};
+ const file=(p,n)=>({kind:'file',name:n,async getFile(){return {text:async()=>__fs[p].content,lastModified:__fs[p].lastModified};},
+  async createWritable(){let buf='';return {write:async c=>{buf+=c;},close:async()=>{__fs[p]={content:buf,lastModified:Date.now()};}};}});
+ const dir=(prefix,name)=>({kind:'directory',name,
+  async getDirectoryHandle(n){return dir(prefix+n+'/',n);},
+  async getFileHandle(n,o={}){const p=prefix+n;if(!(p in __fs)){if(!o.create)throw nf();__fs[p]={content:'',lastModified:Date.now()};}return file(p,n);},
+  async *entries(){const seen=new Set();for(const k of Object.keys(__fs)){if(!k.startsWith(prefix))continue;const [first,...more]=k.slice(prefix.length).split('/');if(seen.has(first))continue;seen.add(first);yield [first,more.length?dir(prefix+first+'/',first):file(prefix+first,first)];}},
+  async queryPermission(){return 'granted';},async requestPermission(){return 'granted';}});
+ window.showDirectoryPicker=async()=>dir('','team-brain');
+})();`;
+
+test('shared brain: connect a folder, autosave plain text, pick up an agent edit, download a zip',{skip:!playwright&&'Playwright is not installed'},async t=>{
+ const browser=await launch();
+ if(!browser){t.skip('Chromium is not available');return;}
+ const server=await serve();
+ try{
+  const ctx=await browser.newContext({viewport:{width:1366,height:860},acceptDownloads:true});
+  await ctx.addInitScript(memoryFolder);
+  const page=await ctx.newPage();
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('http://127.0.0.1:'+server.address().port+'/');
+  await page.waitForSelector('.board-note.root textarea.board-note-inline');
+  assert.ok(await page.isHidden('#boardPanel'),'nothing but the idea on first open');
+  await page.keyboard.type('Coffee payments');await page.keyboard.press('Enter');
+  await page.click('#boardBrain');
+  await page.click('#boardBrainConnect');
+  await page.waitForFunction(()=>document.querySelector('#boardBrainDot').classList.contains('synced'));
+  const paths=await page.evaluate(()=>Object.keys(window.__fs));
+  for(const p of ['README.md','AGENTS.md','how-we-work/README.md','brand/README.md','product-data/assumptions.md','skills/red-team/SKILL.md'])assert.ok(paths.includes(p),p);
+  const idea=paths.find(p=>p.startsWith('product-data/ideas/'));
+  assert.ok(idea,'the canvas is saved as a Markdown file');
+  await page.click('.board-note.root');await page.keyboard.press('Tab');
+  await page.keyboard.type('Customers will try a new terminal');await page.keyboard.press('Enter');
+  await page.waitForFunction(p=>window.__fs[p].content.includes('[assumption] Customers will try a new terminal'),idea);
+  // An agent appends a note to the file in the repo; returning to the tab reads it back.
+  await page.evaluate(p=>{window.__fs[p]={content:window.__fs[p].content.replace(/\n$/,'\n- [test] Pilot in 3 cafes; success if 2 keep it\n'),lastModified:Date.now()+5000};},idea);
+  await page.evaluate(()=>document.dispatchEvent(new Event('visibilitychange')));
+  await page.waitForFunction(()=>[...document.querySelectorAll('.board-note-title')].some(n=>n.textContent.startsWith('Pilot in 3 cafes')));
+  await page.click('#boardBrain');
+  const [download]=await Promise.all([page.waitForEvent('download'),page.click('#boardBrainDownload')]);
+  assert.match(download.suggestedFilename(),/^shared-brain-\d{4}-\d{2}-\d{2}\.zip$/);
+  assert.deepEqual(errors,[]);
+ }finally{await browser.close();server.close();}
+});

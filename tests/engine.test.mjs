@@ -73,7 +73,7 @@ test('MCP tool and prompt transports respond with actual structured results',()=
  const messages=p.stdout.trim().split('\n').map(x=>JSON.parse(x));
  assert.equal(messages.length,5);
  assert.equal(messages[0].result.serverInfo.name,'thenvio');
- assert.equal(messages[1].result.tools.length,6);
+ assert.equal(messages[1].result.tools.length,8);
  assert.ok(messages[2].result.structuredContent.winners.recommended);
  assert.equal(messages[3].result.prompts.length,24);
  assert.equal(messages[4].result.structuredContent.valid,false);
