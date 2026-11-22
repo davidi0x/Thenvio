@@ -1,5 +1,19 @@
 # Thenvio
 
+## Thenvio Flow v0.4 — thinking that moves
+
+The primary idea map now **offers the next question, possible answer, counterargument or experiment immediately**. A person should not have to create empty branches or open several forms before thinking can continue.
+
+- New idea creation automatically provides **four relevant starting branches** based on the entered topic.
+- Selecting a branch displays contextual, editable suggestions in four thinking modes: **Discover / Answer / Challenge / Test**. One tap attaches a complete next thought and immediately continues developing that branch.
+- Suggestion cards include a **question and a possible answer or hypothesis**, not just a title. Domain cues distinguish social products, travel, learning, health, commerce, startup software and general ideas.
+- **Other angles** rotates suggestions; **Add all** grows four branches in one undoable step; typing an answer or new question into the **inline composer** creates it instantly.
+- On phones, selecting a map card opens a compact bottom sheet; after adding a branch, the sheet closes and the new map node is focused. No miniature full-tree map or buried controls.
+- Detailed notes and statuses are still available in a collapsed advanced editor. Existing branches, JSON saves, undo/redo and graph cross-links are preserved.
+- For real generative brainstorming, **Copy AI brief → paste into the user's own assistant → import validated JSON**. Thenvio does **not** make a paid model call or claim that heuristic prompts are AI-written research.
+- The additional deterministic suggestions are produced by pure \`core/brainstorm.mjs\`, testable and transparent.
+
+
 ## Thenvio is for growing ideas (v0.3)
 
 **The main workspace is a living idea map — not a decision dashboard.** Start with one thought and grow it into branching directions, assumptions, questions, experiments and discoveries. The previous comparative scoring screen is still available as a **secondary Decision analysis** tab for users who choose to evaluate a mature option.

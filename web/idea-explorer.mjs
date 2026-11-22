@@ -6,6 +6,8 @@ import {
   branchPath,layoutIdeaGraph,outlineIdeaGraph,developIdeaBranch,ideaContext
 } from './core/idea-graph.mjs';
 import {demoIdeas} from './core/demo-ideas.mjs';
+import {thinkNext,applyThoughts} from './core/brainstorm.mjs';
+import {initIdeaFlow} from './idea-flow.mjs';
 
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
@@ -149,8 +151,9 @@ export function initIdeaExplorer({notice=()=>{}}={}){
     if(search&&!((n.title+' '+n.description+' '+n.evidence).toLowerCase().includes(search)))card.classList.add('is-dim');
     const eyebrow=dom('div','ideas-node-eyebrow');
     eyebrow.append(dom('span','ideas-node-dot'),document.createTextNode(kindNames[n.kind]));
+    const excerpt=(n.description||'').split('\n').find(line=>line.trim())?.trim();
     card.append(eyebrow,dom('div','ideas-node-title',n.title),
-      dom('div','ideas-node-sub',n.hiddenChildren?String(n.hiddenChildren)+' branches tucked away':n.childCount?String(n.childCount)+' branches · '+stateNames[n.status]:stateNames[n.status]+' · develop further'));
+      dom('div','ideas-node-sub',n.hiddenChildren?String(n.hiddenChildren)+' branches tucked away':excerpt?excerpt.slice(0,65):n.childCount?String(n.childCount)+' branches · '+stateNames[n.status]:stateNames[n.status]+' · explore'));
     if(n.hiddenChildren){
       card.append(dom('span','ideas-node-bubble','+'+n.hiddenChildren));
     }
@@ -162,7 +165,7 @@ export function initIdeaExplorer({notice=()=>{}}={}){
     plus.addEventListener('click',e=>{
       e.stopPropagation();
       if(n.hiddenChildren)overwrite(updateIdeaBranch(active(),n.id,{collapsed:false}),{message:'Branches expanded'});
-      else openCreateChild(n.id);
+      else selectNode(n.id);
     });
     card.append(plus);
     return card;
@@ -236,10 +239,12 @@ export function initIdeaExplorer({notice=()=>{}}={}){
       remove.addEventListener('click',()=>overwrite(unlinkIdeaBranches(active(),connection.from,connection.to),{message:'Connection removed'}));
       row.append(visit,remove);linked.append(row);
     }
+    flow.render();
   }
   function selectNode(id){
     if(!active().nodes.some(n=>n.id===id))return;
     selected=id;drawMap();drawOutline();drawInspector();
+    flow.open();
     if(mode==='map'&&!graphLayout.nodes.some(n=>n.id===id)){
       const path=branchPath(active(),id);
       for(const ancestor of path){
@@ -337,19 +342,14 @@ export function initIdeaExplorer({notice=()=>{}}={}){
       notice(ok?'Branch context copied.':'Copy was blocked by the browser. Try a secure context.');
     }
   }
+  const flow=initIdeaFlow({getGraph:active,getSelected:()=>selected,mutate:overwrite,notice});
   // Input wiring. Every displayed action changes state or navigates to real data.
   $('#ideaNew').addEventListener('click',newIdea);
   $('#ideaProjectSelect').addEventListener('change',e=>switchGraph(e.target.value));
   $('#ideaUndo').addEventListener('click',()=>replacement(null,true));
   $('#ideaRedo').addEventListener('click',()=>replacement(null,false));
   $('#ideaAddChild').addEventListener('click',()=>openCreateChild(selected));
-  $('#ideaDevelop').addEventListener('click',()=>{
-    try{
-      const before=active(),after=developIdeaBranch(before,selected);
-      if(after.nodes.length===before.nodes.length){notice('Branch limit reached.');return;}
-      overwrite(after,{focus:selected,message:'Added guided exploration branches. Edit each to make it yours.'});
-    }catch(error){notice(error.message);}
-  });
+  $('#ideaDevelop').addEventListener('click',()=>flow.addVisible());
   $('#ideaDelete').addEventListener('click',()=>{
     const graph=active(),node=graph.nodes.find(n=>n.id===selected);
     if(!node||node.id===graph.rootId)return;
@@ -375,9 +375,11 @@ export function initIdeaExplorer({notice=()=>{}}={}){
       if(createMode==='root'){
         if(portfolio.graphs.length>=MAX_GRAPHS)throw Error('Maximum 50 ideas. Export your work to archive it.');
         const g=makeIdea(title,description);
-        portfolio.graphs.push(g);portfolio.activeId=g.id;selected=g.rootId;
+        const seeds=thinkNext(g,g.rootId,{mode:'explore',count:4,locale:flow.locale});
+        const started=applyThoughts(g,g.rootId,seeds).graph;
+        portfolio.graphs.push(started);portfolio.activeId=started.id;selected=started.rootId;
         history=[];future=[];search='';$('#ideaSearch').value='';initialFit=true;
-        store();render({fit:true});notice('Idea created. Add your first branch.');
+        store();render({fit:true});flow.close();notice(flow.locale==='pl'?'Pomysł gotowy. Odkrywaj pierwsze kierunki jednym dotknięciem.':'Idea ready. Explore the first directions with one tap.');
       }else{
         const next=addIdeaBranch(active(),createParent,{title,description,kind:$('#ideaCreateKind').value});
         overwrite(next,{focus:next.nodes.at(-1).id,message:'New branch added.'});
@@ -413,7 +415,7 @@ export function initIdeaExplorer({notice=()=>{}}={}){
     importIdeas(event.target.files?.[0]);event.target.value='';
   });
   viewport.addEventListener('pointerdown',event=>{
-    if(event.button!==0||event.target.closest('.ideas-node'))return;
+    if(event.button!==0||event.target.closest('.ideas-node,button,input,textarea'))return;
     drag={id:event.pointerId,x:event.clientX,y:event.clientY,panX:pan.x,panY:pan.y};
     viewport.setPointerCapture(event.pointerId);
   });
@@ -454,7 +456,7 @@ export function initIdeaExplorer({notice=()=>{}}={}){
   window.addEventListener('resize',()=>{if(mode==='map'&&$('#view-branches').classList.contains('active'))initialPosition();},{passive:true});
   render();
   return {
-    show(){renderPortfolio();requestAnimationFrame(()=>{if(!graphLayout)return;positionCanvas();});},
+    show(){flow.close();renderPortfolio();requestAnimationFrame(()=>{if(!graphLayout)return;positionCanvas();});},
     create:newIdea,
     import(){ $('#ideaImportInput').click();},
     export:exportIdeas,
