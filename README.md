@@ -18,6 +18,8 @@ The initial example is labeled **SYNTHETIC DEMO**. All cost, risk, learning and 
 
 ## Studio redesign (v0.2)
 
+The Studio home is prompt-first: type the decision you want to explore to open a prefilled project brief. This does not fake AI generation. The interactive chart is placed before the input sliders so the comparison is visible sooner.
+
 The workspace is a calm, light-first **decision studio** rather than a dashboard. New capabilities:
 
 - Three real, interactive views generated from the same deterministic engine: **Landscape** (cost vs. comparative score), **Score drivers** (weighted components), and **Stress test** (sensitivity to changed constraints).
