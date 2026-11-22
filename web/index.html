@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light" data-density="comfortable" data-motion="on" data-accent="ink">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0b0c0d">
+  <meta name="theme-color" content="#fafaf8">
   <meta name="description" content="Thenvio turns goals into paths, assumptions into tests and uncertainty into decisions. Bring your own AI.">
   <title>Thenvio — Decide with clarity</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
@@ -11,66 +11,104 @@
 </head>
 <body>
   <div class="app">
-    <aside class="sidebar">
-      <a class="brand" href="#" aria-label="Thenvio home" id="brand">
+    <aside class="sidebar" aria-label="Primary">
+      <a class="brand" href="#" aria-label="Thenvio Studio" id="brand">
         <span class="brandmark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
         <span class="brandname">thenvio<span class="branddot">.</span></span>
       </a>
-      <div class="side-section-label">WORKSPACE</div>
+      <div class="sidebar-divider"></div>
+      <div class="side-section-label">YOUR WORKSPACE</div>
       <nav class="navigation" aria-label="Main navigation">
-        <button type="button" class="nav-item active" data-tab="overview"><span class="nav-icon">◫</span> Decision lab</button>
-        <button type="button" class="nav-item" data-tab="assumptions"><span class="nav-icon">◎</span> Assumptions</button>
-        <button type="button" class="nav-item" data-tab="skills"><span class="nav-icon">⌘</span> Founder skills <span class="nav-count">24</span></button>
-        <button type="button" class="nav-item" data-tab="integrations"><span class="nav-icon">⇄</span> Integrations</button>
+        <button type="button" class="nav-item active" data-tab="overview"><span class="nav-icon" aria-hidden="true">◈</span> Studio</button>
+        <button type="button" class="nav-item" data-tab="assumptions"><span class="nav-icon" aria-hidden="true">◎</span> Assumptions</button>
+        <button type="button" class="nav-item" data-tab="skills"><span class="nav-icon" aria-hidden="true">⌘</span> Founder skills <span class="nav-count">24</span></button>
+        <button type="button" class="nav-item" data-tab="integrations"><span class="nav-icon" aria-hidden="true">⇄</span> Connections</button>
       </nav>
       <div class="sidebar-spacer"></div>
-      <div class="side-note"><span class="live-dot"></span> LOCAL-FIRST ENGINE <span class="side-note-sub">No hosted AI. No token billing.</span></div>
-      <div class="side-footer">THENVIO <span>PREVIEW 0.1</span></div>
+      <div class="sidebar-help"><span class="sidebar-help-title">A quieter way to think.</span><span>Less noise. Better reasoning.</span></div>
+      <div class="side-footer"><span class="live-dot"></span> ENGINE LOCAL <span>v0.2</span></div>
     </aside>
     <div class="workspace">
       <header class="topbar">
-        <div class="breadcrumbs">Workspace <span>/</span> <strong id="breadcrumb">Decision lab</strong></div>
+        <div class="breadcrumbs">Thenvio <span>/</span> <strong id="breadcrumb">Studio</strong></div>
         <div class="top-actions">
+          <span class="session-label"><span class="live-dot"></span> Saved on this device</span>
           <span class="demo-label" id="demoLabel">ILLUSTRATIVE DEMO</span>
-          <button type="button" class="ghost-button" id="importButton">Import</button>
-          <button type="button" class="ghost-button" id="exportButton">Export <span aria-hidden="true">↗</span></button>
-          <button type="button" class="icon-button mobile-new" id="mobileNew" title="New decision">+</button>
+          <button type="button" class="ghost-button" id="importButton" title="Import a project">Import</button>
+          <button type="button" class="ghost-button" id="exportButton" title="Export your project">Export <span aria-hidden="true">↗</span></button>
+          <button type="button" class="icon-button settings-button" id="settingsButton" aria-label="Personalize appearance" title="Appearance settings">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2" fill="var(--surface)"/><circle cx="16" cy="17" r="2" fill="var(--surface)"/></svg>
+          </button>
+          <button type="button" class="icon-button mobile-new" id="mobileNew" title="New decision" aria-label="New decision">+</button>
         </div>
       </header>
       <main>
         <section class="view active" id="view-overview" aria-label="Decision lab">
-          <div class="heading-row">
-            <div class="heading-intro">
-              <div class="eyebrow"><span class="eyebrow-line"></span> DECISION INTELLIGENCE</div>
-              <h1>Better decisions.<br><span class="muted-heading">Fewer blind spots.</span></h1>
-              <p class="lead">Explore the consequences before you commit. Every path, assumption and trade-off in one place.</p>
-            </div>
-            <button type="button" class="primary-button" id="newDecision">+ New decision</button>
-          </div>
-          <div class="project-line"><span class="project-kicker">ACTIVE DECISION</span><strong id="projectTitle"></strong><button type="button" class="text-button" id="editProject">Edit</button></div>
-          <div class="metric-grid" id="metricGrid"></div>
-          <div class="two-col">
-            <div class="main-col">
-              <section class="panel controls-panel">
-                <div class="section-head"><div><div class="eyebrow subtle">01 / CONSTRAINTS</div><h2>Change the conditions</h2></div><div class="tiny-badge">LIVE RECALCULATION</div></div>
-                <p class="section-sub">No new AI request. Move a parameter to instantly re-evaluate every path.</p>
-                <div class="control-grid">
-                  <div class="control"><label for="budgetRange">Available budget <strong id="budgetLabel">$12,000</strong></label><input id="budgetRange" type="range" min="0" max="50000" step="100"><div class="range-ends"><span>$0</span><span id="budgetMax">$50,000</span></div></div>
-                  <div class="control"><label for="weeksRange">Time to decision <strong id="weeksLabel">12 weeks</strong></label><input id="weeksRange" type="range" min="1" max="52" step="1"><div class="range-ends"><span>1 week</span><span>52 weeks</span></div></div>
-                  <div class="control"><label for="riskRange">Risk tolerance <strong id="riskLabel">40 / 100</strong></label><input id="riskRange" type="range" min="0" max="100" step="1"><div class="range-ends"><span>Conservative</span><span>Exploratory</span></div></div>
-                </div>
-              </section>
-              <section class="panel routes-panel">
-                <div class="section-head"><div><div class="eyebrow subtle">02 / COMPARISON</div><h2>Possible paths <span id="pathCount" class="heading-count"></span></h2></div><button type="button" class="small-button" id="addPath">+ Add path</button></div>
-                <div id="routes"></div>
-                <p class="method-note">Scores are transparent comparative heuristics — not probabilities, validated forecasts or claims about the market.</p>
-              </section>
-            </div>
-            <div class="side-col">
-              <section class="panel detail-panel"><div class="eyebrow subtle">03 / DEEP DIVE</div><div id="pathDetail"></div></section>
-              <section class="panel action-panel"><div class="section-head"><div><div class="eyebrow subtle">04 / NEXT</div><h2>What to validate</h2></div></div><div id="nextActions"></div><button class="inline-link" type="button" data-tab="assumptions">Open assumption register <span>↗</span></button></section>
+          <div class="studio-intro">
+            <div class="eyebrow">YOUR THINKING SPACE <span class="eyebrow-dot"></span> STUDIO</div>
+            <div class="intro-line">
+              <div>
+                <h1>Clarity changes<br><span class="muted-heading">everything.</span></h1>
+                <p class="lead">Bring your ideas. Explore the alternatives. See what actually changes the decision.</p>
+              </div>
+              <button type="button" class="primary-button" id="newDecision"><span class="button-plus" aria-hidden="true">+</span> New decision</button>
             </div>
           </div>
+          <section class="active-brief" aria-labelledby="projectTitle">
+            <div class="brief-kicker"><span class="brief-indicator" aria-hidden="true"></span> IN FOCUS</div>
+            <div class="brief-row">
+              <div class="brief-copy">
+                <h2 id="projectTitle"></h2>
+                <p id="projectGoal"></p>
+              </div>
+              <button type="button" class="ghost-button edit-brief" id="editProject">Edit brief <span aria-hidden="true">↗</span></button>
+            </div>
+            <div class="metric-grid" id="metricGrid" aria-label="Decision summary"></div>
+          </section>
+          <section class="controls-panel" aria-labelledby="conditionsTitle">
+            <div class="section-head">
+              <div><span class="section-index">01 / CONDITIONS</span><h2 id="conditionsTitle">Explore the variables</h2></div>
+              <span class="quiet-caption"><span class="pulse-mark"></span> Updates live, without AI calls</span>
+            </div>
+            <div class="control-grid">
+              <div class="control"><label for="budgetRange">Available budget <strong id="budgetLabel">$12,000</strong></label><input id="budgetRange" type="range" min="0" max="50000" step="100"><div class="range-ends"><span>$0</span><span id="budgetMax">$50,000</span></div></div>
+              <div class="control"><label for="weeksRange">Time to decision <strong id="weeksLabel">12 weeks</strong></label><input id="weeksRange" type="range" min="1" max="52" step="1"><div class="range-ends"><span>1 week</span><span>52 weeks</span></div></div>
+              <div class="control"><label for="riskRange">Risk tolerance <strong id="riskLabel">40 / 100</strong></label><input id="riskRange" type="range" min="0" max="100" step="1"><div class="range-ends"><span>Conservative</span><span>Exploratory</span></div></div>
+            </div>
+          </section>
+          <section class="visual-panel" aria-labelledby="chartTitle">
+            <div class="section-head visual-head">
+              <div><span class="section-index">02 / DECISION LANDSCAPE</span><h2 id="chartTitle">See the trade-offs.</h2><p class="section-sub">These charts use your estimates — never invented market data.</p></div>
+              <div class="view-switch" role="group" aria-label="Chart view">
+                <button type="button" class="switch-item active" data-viz="map" aria-pressed="true">Landscape</button>
+                <button type="button" class="switch-item" data-viz="drivers" aria-pressed="false">Score drivers</button>
+                <button type="button" class="switch-item" data-viz="resilience" aria-pressed="false">Stress test</button>
+              </div>
+            </div>
+            <div id="vizHost" class="viz-host" aria-live="polite"></div>
+            <div class="viz-footer" id="vizFooter"></div>
+          </section>
+          <div class="studio-bottom">
+            <section class="routes-panel" aria-labelledby="pathsTitle">
+              <div class="section-head">
+                <div><span class="section-index">03 / YOUR OPTIONS</span><h2 id="pathsTitle">Explore each path <span id="pathCount" class="heading-count"></span></h2></div>
+                <button type="button" class="small-button" id="addPath">+ Add a path</button>
+              </div>
+              <div id="routes"></div>
+              <p class="method-note">All scores are relative heuristics. They are not verified predictions or chances of success.</p>
+            </section>
+            <aside class="detail-panel" aria-label="Selected path details">
+              <div class="section-head"><div><span class="section-index">04 / INSPECT</span><h2>Inside the decision</h2></div></div>
+              <div id="pathDetail"></div>
+            </aside>
+          </div>
+          <section class="action-panel" aria-labelledby="nextTitle">
+            <div class="section-head"><div><span class="section-index">05 / NEXT MOVES</span><h2 id="nextTitle">What would change your mind?</h2></div>
+              <button class="inline-link" type="button" data-tab="assumptions">Evidence register ↗</button>
+            </div>
+            <div class="action-list" id="nextActions"></div>
+          </section>
+
         </section>
         <section class="view" id="view-assumptions" aria-label="Assumptions">
           <div class="page-heading"><div class="eyebrow"><span class="eyebrow-line"></span> EVIDENCE SYSTEM</div><h1>Assumptions<span class="branddot">.</span></h1><p class="lead">Every strategy rests on claims. Track which ones have evidence and which ones can break a plan.</p></div>
@@ -98,6 +136,27 @@
   <dialog id="pathDialog" class="modal"><form id="pathForm"><div class="modal-head"><h2 id="pathDialogTitle">Add a path</h2><button class="modal-close" type="button" data-close="pathDialog" aria-label="Close">×</button></div><input name="id" type="hidden"><label>Name<input name="name" maxlength="180" required placeholder="One distinct strategy"></label><label>How would this route work?<textarea name="description" maxlength="1500" rows="2"></textarea></label><div class="form-cols"><label>Estimated cost (USD)<input name="cost" type="number" min="0" max="1000000000" step="1" required></label><label>Estimated weeks<input name="weeks" type="number" min="0" max="520" step="1" required></label></div><div class="form-cols triple"><label>Upside / 100<input name="upside" type="number" min="0" max="100" required></label><label>Risk / 100<input name="risk" type="number" min="0" max="100" required></label><label>Learning / 100<input name="learning" type="number" min="0" max="100" required></label></div><div class="form-hint">These values are your estimates, not market facts.</div><fieldset><legend>Dependent assumptions</legend><div id="pathDependencies" class="check-list"></div></fieldset><div class="modal-actions"><button type="button" class="ghost-button" data-close="pathDialog">Cancel</button><button type="submit" class="primary-button compact">Save path</button></div></form></dialog>
   <dialog id="assumptionDialog" class="modal"><form id="assumptionForm"><div class="modal-head"><h2 id="assumptionDialogTitle">Add assumption</h2><button class="modal-close" type="button" data-close="assumptionDialog" aria-label="Close">×</button></div><input name="id" type="hidden"><label>Claim to validate<textarea name="claim" maxlength="1000" rows="2" required placeholder="One specific claim, testable in reality"></textarea></label><label>Evidence status<select name="status"><option value="unknown">Unknown / untested</option><option value="supported">Supported</option><option value="refuted">Refuted</option></select></label><label>Evidence source or note<input name="source" maxlength="2000" placeholder="Source URL, interview reference or proof note"></label><p class="form-hint">No source means the claim remains uncertain even when marked supported.</p><div class="modal-actions"><button type="button" class="ghost-button" data-close="assumptionDialog">Cancel</button><button type="submit" class="primary-button compact">Save assumption</button></div></form></dialog>
   <dialog id="skillDialog" class="modal"><div class="modal-head"><h2 id="skillDialogTitle"></h2><button class="modal-close" type="button" data-close="skillDialog" aria-label="Close">×</button></div><p id="skillDescription" class="section-sub"></p><label for="skillPrompt">Paste this into your AI assistant</label><textarea id="skillPrompt" class="prompt-textarea" readonly rows="13"></textarea><div class="modal-actions"><button type="button" class="ghost-button" data-close="skillDialog">Close</button><button id="copySkill" type="button" class="primary-button compact">Copy prompt</button></div></dialog>
+  <dialog id="settingsDialog" class="modal settings-modal">
+    <div class="modal-head"><div><span class="section-index">PERSONALIZE YOUR SPACE</span><h2>Make it yours.</h2></div><button class="modal-close" type="button" data-close="settingsDialog" aria-label="Close settings">×</button></div>
+    <p class="settings-intro">Your workspace, your pace. Preferences are saved only in this browser.</p>
+    <div class="settings-group"><span class="settings-label">Appearance</span><div class="preference-options" role="group" aria-label="Appearance">
+      <button type="button" class="preference-option" data-theme-choice="light">Light <span>○</span></button>
+      <button type="button" class="preference-option" data-theme-choice="dark">Dark <span>○</span></button>
+      <button type="button" class="preference-option" data-theme-choice="system">System <span>○</span></button>
+    </div></div>
+    <div class="settings-group"><span class="settings-label">Accent</span><div class="accent-options" role="group" aria-label="Accent color">
+      <button type="button" class="accent-option" data-accent-choice="ink" aria-label="Ink" title="Ink"><span class="swatch ink"></span></button>
+      <button type="button" class="accent-option" data-accent-choice="blue" aria-label="Cobalt" title="Cobalt"><span class="swatch blue"></span></button>
+      <button type="button" class="accent-option" data-accent-choice="sage" aria-label="Sage" title="Sage"><span class="swatch sage"></span></button>
+      <button type="button" class="accent-option" data-accent-choice="violet" aria-label="Violet" title="Violet"><span class="swatch violet"></span></button>
+    </div></div>
+    <div class="settings-group"><span class="settings-label">Layout density</span><div class="preference-options" role="group" aria-label="Layout density">
+      <button type="button" class="preference-option" data-density-choice="comfortable">Comfortable</button>
+      <button type="button" class="preference-option" data-density-choice="compact">Compact</button>
+    </div></div>
+    <div class="settings-group last"><label class="motion-label" for="motionToggle"><span><strong>Subtle animations</strong><small>Never at the cost of accessibility.</small></span><input id="motionToggle" type="checkbox" checked></label></div>
+    <div class="modal-actions"><button type="button" class="primary-button compact" data-close="settingsDialog">Done</button></div>
+  </dialog>
   <input id="importInput" type="file" accept=".json,application/json" hidden>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script type="module" src="./app.mjs"></script>

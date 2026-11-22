@@ -16,6 +16,17 @@ Thenvio is a local-first decision-intelligence workspace. Users can combine thei
 
 The initial example is labeled **SYNTHETIC DEMO**. All cost, risk, learning and upside scores are illustrative estimates, not market facts or forecast probabilities. Source notes are not independently validated.
 
+## Studio redesign (v0.2)
+
+The workspace is a calm, light-first **decision studio** rather than a dashboard. New capabilities:
+
+- Three real, interactive views generated from the same deterministic engine: **Landscape** (cost vs. comparative score), **Score drivers** (weighted components), and **Stress test** (sensitivity to changed constraints).
+- Select paths directly from charts to inspect their assumptions and blockers.
+- Custom preferences: light / dark / system appearance, four accent choices, comfortable / compact density and reduced motion.
+- Responsive layout, labeled controls, keyboard-operable chart selections, and a persistent local preference file in browser storage.
+
+Preferences do not leave your device. The charts only visualize your own provided path estimates; they do not represent market verification or probabilities.
+
 ## Live preview
 
 **[Open Thenvio preview](https://thenvio-preview-v01.iwaniuk-dawid.workers.dev/)**

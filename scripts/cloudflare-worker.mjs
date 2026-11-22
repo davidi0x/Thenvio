@@ -3,13 +3,13 @@ import {readFile} from 'node:fs/promises';
 const fileMap={
  '/':'web/index.html','/index.html':'web/index.html',
  '/styles.css':'web/styles.css','/app.mjs':'web/app.mjs','/favicon.svg':'web/favicon.svg',
- '/core/engine.mjs':'core/engine.mjs','/core/demo.mjs':'core/demo.mjs','/core/skills.mjs':'core/skills.mjs'
+ '/core/engine.mjs':'core/engine.mjs','/core/demo.mjs':'core/demo.mjs','/core/skills.mjs':'core/skills.mjs','/core/visuals.mjs':'core/visuals.mjs'
 };
 const mime={
  '/':'text/html; charset=utf-8','/index.html':'text/html; charset=utf-8',
  '/styles.css':'text/css; charset=utf-8','/app.mjs':'text/javascript; charset=utf-8',
  '/favicon.svg':'image/svg+xml','/core/engine.mjs':'text/javascript; charset=utf-8',
- '/core/demo.mjs':'text/javascript; charset=utf-8','/core/skills.mjs':'text/javascript; charset=utf-8'
+ '/core/demo.mjs':'text/javascript; charset=utf-8','/core/skills.mjs':'text/javascript; charset=utf-8','/core/visuals.mjs':'text/javascript; charset=utf-8'
 };
 export async function makeWorkerSource() {
  const pairs=await Promise.all(Object.entries(fileMap).map(async ([route,file])=>[
