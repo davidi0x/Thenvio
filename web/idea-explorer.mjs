@@ -379,7 +379,7 @@ export function initIdeaExplorer({notice=()=>{}}={}){
         const started=applyThoughts(g,g.rootId,seeds).graph;
         portfolio.graphs.push(started);portfolio.activeId=started.id;selected=started.rootId;
         history=[];future=[];search='';$('#ideaSearch').value='';initialFit=true;
-        store();render({fit:true});flow.close();notice(flow.locale==='pl'?'Pomysł gotowy. Odkrywaj pierwsze kierunki jednym dotknięciem.':'Idea ready. Explore the first directions with one tap.');
+        store();render({fit:true});if(window.matchMedia('(max-width: 690px)').matches)flow.open();else flow.close();notice(flow.locale==='pl'?'Pierwsze kierunki gotowe. Wybierz, co warto rozwinąć.':'First directions are ready. Choose what to develop next.');
       }else{
         const next=addIdeaBranch(active(),createParent,{title,description,kind:$('#ideaCreateKind').value});
         overwrite(next,{focus:next.nodes.at(-1).id,message:'New branch added.'});

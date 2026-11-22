@@ -295,3 +295,9 @@ html[data-density="compact"] .ideas-viewport,html[data-density="compact"] .ideas
 }
 @keyframes idea-sheet-enter{from{transform:translateY(17px);opacity:.2}to{transform:translateY(0);opacity:1}}
 @media(prefers-reduced-motion:reduce){.idea-suggestion,.ideas-view .ideas-inspector.is-open,.idea-thinking-modes button{animation:none!important;transition:none!important}}
+
+
+/* Mobile: the next action is always visible without scrolling the canvas. */
+@media(max-width:690px){
+ .idea-open-flow{top:12px;bottom:auto;right:12px;padding:11px 13px;border-radius:9px;font-size:11px}
+}
