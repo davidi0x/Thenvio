@@ -25,7 +25,7 @@ test('chat apps brainstorm into the shared brain over MCP HTTP; the canvas app s
   assert.ok(init.result.capabilities.resources);
   const tools=(await (await rpc(s.port,'tools/list')).json()).result.tools;
   const ui=tools.filter(t=>t._meta?.ui?.resourceUri);
-  assert.deepEqual(ui.map(t=>t.name).sort(),['thenvio_brainstorm','thenvio_new_canvas','thenvio_show','thenvio_update_note']);
+  assert.deepEqual(ui.map(t=>t.name).sort(),['thenvio_brainstorm','thenvio_new_canvas','thenvio_show','thenvio_swarm','thenvio_update_note']);
   assert.ok(ui.every(t=>t._meta['openai/outputTemplate']===t._meta.ui.resourceUri),'ChatGPT alias is set');
   const res=(await (await rpc(s.port,'resources/read',{uri:ui[0]._meta.ui.resourceUri})).json()).result.contents[0];
   assert.equal(res.mimeType,'text/html;profile=mcp-app');

@@ -9,6 +9,7 @@ import {coachGraph,nodeAdvice,inferKind,detectLocale,isPlaceholder,skillBrief,de
 import {analyzeFutures,countFutures,findForks,decisionRecord,confidenceLabel} from './core/futures.mjs';
 import {markdownToCanvas,canvasToMarkdown,BRAIN_FOLDERS} from './core/brain.mjs';
 import {createBrainSync} from './brain-sync.mjs';
+import {simulateSwarm,swarmNotes} from './core/swarm.mjs';
 import {thinkRequest,applyThinkResult,readGoal,withGoal,THINK_SCHEMA} from './core/think.mjs';
 import {runThink,setKey,hasKey} from './ai-think.mjs';
 import {readGithubBrain,setToken} from './github-brain.mjs';
@@ -78,6 +79,11 @@ const T={
   cloudCreate:'Create your personal MCP connector. Paste it once into Claude or ChatGPT — from then on you brainstorm in the chat and this canvas updates by itself.',
   cloudLede:'Your connector is live. Add it once, then ask in any chat.',stepClaude:'<b>Claude</b>: Settings → Connectors → Add custom connector → paste the URL.',
   stepChatGPT:'<b>ChatGPT</b>: Settings → Apps & Connectors → add a custom connector (MCP) → paste the URL, no authentication.',stepAsk:'Then ask: “Use Thenvio and brainstorm my idea … with the goal …”.',connectorCopied:'Connector URL copied.',
+  swarmTitle:'Crowd (simulation)',swarmIntro:'Hundreds of synthetic people with different traits react to your options and influence each other. It shows what people would actually take up — and who rejects what, and why.',
+  swarmRun:'Simulate the crowd',swarmAgain:'Another crowd ↻',swarmAdd:'Add objections to the canvas',swarmTop:'Most taken up: “{t}” — {p}% after {r} rounds',swarmTip:' (tipping point in round {n})',
+  swarmNone:'Nobody took any option up — the crowd sees too little benefit or too much friction.',swarmObj:'Main objection: {o} ({p}%)',swarmUndecided:'{p}% stayed undecided.',swarmAdded:'{n} crowd objections added as questions.',
+  swarmConflict:'Value and uptake disagree: the futures scan favours “{f}”, the crowd takes up “{c}”. Find what makes the valuable option as easy to take up — or test whether the easy one is valuable enough.',
+  swarmNote:'Adoption, not value: a widely taken option can still be the wrong one. Check the objections with real people.',
   ghTitle:'Read from GitHub',ghConnect:'Connect GitHub (read)',ghReading:'Reading {repo}…',ghRead:'Read <b>{repo}</b> ({branch}): {n} canvas(es), {c} context file(s).',ghError:'GitHub: {e}',bodyPlaceholder:'Context, details, why it matters…',evidencePlaceholder:'Interview note, link, number…',invalidAi:'Invalid AI response: {e}',undoEmpty:'Nothing to undo.'},
  pl:{hint:'Kliknij dwukrotnie, by dodać · Przeciągnij kropkę, by połączyć · Tab dodaje gałąź',scan:'Skanuj przyszłości',tabNote:'Notatka',tabCoach:'Co dalej',tabFutures:'Przyszłości',
   noteEmpty:'Wybierz notatkę, aby ją rozwinąć, albo kliknij dwukrotnie canvas, by zacząć nową.',status:'Status',ratings:'Wpływ i wysiłek',evidence:'Dowód lub źródło',
@@ -129,6 +135,11 @@ const T={
   cloudCreate:'Utwórz osobisty connector MCP. Wklejasz go raz w Claude albo ChatGPT — od tej pory rozkminiasz w czacie, a ten canvas aktualizuje się sam.',
   cloudLede:'Twój connector działa. Dodaj go raz, potem po prostu pisz w czacie.',stepClaude:'<b>Claude</b>: Ustawienia → Connectors → Dodaj własny connector → wklej adres.',
   stepChatGPT:'<b>ChatGPT</b>: Ustawienia → Aplikacje i connectory → dodaj własny connector (MCP) → wklej adres, bez uwierzytelniania.',stepAsk:'Potem napisz: „Użyj Thenvio i rozkmiń mój pomysł … z celem …”.',connectorCopied:'Skopiowano adres connectora.',
+  swarmTitle:'Tłum (symulacja)',swarmIntro:'Setki syntetycznych osób o różnych cechach reagują na Twoje opcje i wpływają na siebie nawzajem. Widać, co ludzie faktycznie by wzięli — i kto, co i dlaczego odrzuca.',
+  swarmRun:'Symuluj tłum',swarmAgain:'Inny tłum ↻',swarmAdd:'Dodaj obiekcje na canvas',swarmTop:'Najchętniej brane: „{t}” — {p}% po {r} rundach',swarmTip:' (przełamanie w rundzie {n})',
+  swarmNone:'Nikt nie wziął żadnej opcji — tłum widzi za małą korzyść albo za duży wysiłek.',swarmObj:'Główna obiekcja: {o} ({p}%)',swarmUndecided:'{p}% zostało niezdecydowanych.',swarmAdded:'Dodano obiekcje tłumu jako pytania: {n}.',
+  swarmConflict:'Wartość i adopcja się rozjeżdżają: skan przyszłości stawia na „{f}”, a tłum bierze „{c}”. Znajdź, co uczyni wartościową opcję równie łatwą do wzięcia — albo sprawdź, czy ta łatwa daje dość korzyści.',
+  swarmNote:'To adopcja, nie wartość: chętnie brana opcja nadal może być zła. Sprawdź obiekcje z prawdziwymi ludźmi.',
   ghTitle:'Czytaj z GitHuba',ghConnect:'Połącz GitHub (odczyt)',ghReading:'Czytam {repo}…',ghRead:'Wczytano <b>{repo}</b> ({branch}): canvasy: {n}, pliki kontekstu: {c}.',ghError:'GitHub: {e}',bodyPlaceholder:'Kontekst, szczegóły, dlaczego to ważne…',evidencePlaceholder:'Notatka z rozmowy, link, liczba…',invalidAi:'Nieprawidłowa odpowiedź AI: {e}',undoEmpty:'Nie ma czego cofnąć.'}
 };
 
@@ -188,6 +199,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
   replaceGraph(next);
   if(select!==undefined)selected=select;
   if(highlight&&!scanning)clearHighlight(false);
+  if(swarmLayer.childElementCount)clearSwarm();
   persist();render();
   return true;
  }
@@ -1105,6 +1117,71 @@ export function initFreeCanvas({notice=()=>{}}={}){
   const g=graph(),goal=$('#boardGoal').value.trim()||readGoal(g);
   return t('askText',{title:g.title,goal:goal?t('askGoal',{goal}):''});
  }
+ // ── Swarm: a synthetic crowd drifts toward the options it adopts ──
+ let swarm=null,swarmSeed=0,swarmTimer=null;
+ const swarmLayer=$('#boardSwarm');
+ function clearSwarm(){clearTimeout(swarmTimer);swarmLayer.replaceChildren();swarmLayer.classList.remove('is-fading');}
+ function runSwarm(next=false){
+  if(next)swarmSeed++;
+  swarm=simulateSwarm(graph(),{locale,seed:swarmSeed});
+  clearHighlight(false);
+  openPanel('futures');
+  playSwarm(swarm);
+ }
+ function playSwarm(sim){
+  clearSwarm();
+  if(!sim.options.length)return;
+  const g=graph(),root=g.nodes.find(n=>n.id===g.rootId);
+  const home={x:root.x+CARD_W/2,y:root.y+CARD_H+150};
+  const pr=i=>{const x=Math.sin(i*12.9898+swarmSeed*7.13)*43758.5453;return x-Math.floor(x);};
+  const cloud=sim.frames[0].map((_,i)=>{const a=pr(i)*Math.PI*2,r=40+pr(i+999)*110;return {x:home.x+Math.cos(a)*r*1.6,y:home.y+Math.sin(a)*r*.7};});
+  const around=sim.options.map(o=>{const n=g.nodes.find(x=>x.id===o.optionId);return n?{x:n.x+CARD_W/2,y:n.y+CARD_H/2}:home;});
+  const dots=cloud.map(p=>{const c=svgEl('circle',{r:'3.4',cx:'0',cy:'0'});c.style.transform='translate('+p.x+'px,'+p.y+'px)';swarmLayer.append(c);return c;});
+  fitTo([g.rootId,...sim.options.map(o=>o.optionId)]);
+  const place=frame=>frame.forEach((c,i)=>{
+   if(c<0){dots[i].classList.remove('on');dots[i].style.transform='translate('+cloud[i].x+'px,'+cloud[i].y+'px)';return;}
+   const a=pr(i+77)*Math.PI*2,rx=CARD_W*.62+pr(i+5)*34,ry=CARD_H*.85+pr(i+9)*26,t=around[c];
+   dots[i].classList.add('on');dots[i].style.transform='translate('+(t.x+Math.cos(a)*rx)+'px,'+(t.y+Math.sin(a)*ry)+'px)';
+  });
+  if(reducedMotion()){place(sim.frames.at(-1));renderPanel();return;}
+  let f=0;
+  const step=()=>{place(sim.frames[f]);f++;if(f<sim.frames.length)swarmTimer=setTimeout(step,420);else renderPanel();};
+  swarmTimer=setTimeout(step,350);
+ }
+ function swarmSection(){
+  const sec=el('section','futures-section');
+  sec.append(el('h5','',t('swarmTitle')));
+  if(!swarm){
+   sec.append(el('p','board-fineprint',t('swarmIntro')),button('futures-secondary',t('swarmRun'),()=>runSwarm()));
+   return sec;
+  }
+  if(swarm.empty){sec.append(el('p','board-empty',swarm.empty));return sec;}
+  const w=swarm.winner;
+  sec.append(el('p','board-lede-big',w?t('swarmTop',{t:w.title,p:w.adoption,r:swarm.rounds})+(w.tippingRound?t('swarmTip',{n:w.tippingRound}):''):t('swarmNone')));
+  for(const o of swarm.options){
+   const row=el('div','swarm-option'),head=el('div','swarm-row');
+   head.append(el('strong','',o.title),el('span','',o.blocked?'✕':o.adoption+'%'));
+   const bar=el('div','swarm-bar'),fill=el('i');fill.style.width=(o.blocked?0:o.adoption)+'%';bar.append(fill);
+   row.append(head,bar);
+   if(o.objections[0])row.append(el('span','swarm-why',t('swarmObj',{o:o.objections[0].name,p:o.objections[0].share})+' · '+o.objections[0].segments.slice(0,2).map(x=>x.name).join(', ')));
+   sec.append(row);
+  }
+  const fw=currentFutures()?.winner;
+  if(w&&fw&&!fw.options.includes(w.optionId)){
+   const best=fw.choices.map(c=>c.optionTitle).join(' → ');
+   sec.append(el('p','futures-weak',t('swarmConflict',{f:best,c:w.title})));
+  }
+  if(swarm.undecided)sec.append(el('p','board-fineprint',t('swarmUndecided',{p:swarm.undecided})));
+  const actions=el('div','futures-actions');
+  actions.append(button('futures-primary',t('swarmAdd'),()=>{
+   const out=swarmNotes(graph(),swarm,{locale});
+   const from=disp.get(graph().rootId);
+   for(const id of out.added){const n=out.graph.nodes.find(x=>x.id===id);spawnFrom.set(id,{x:n.x,y:n.y});}
+   commit(out.graph);notice(t('swarmAdded',{n:out.added.length}));
+  }),button('futures-secondary',t('swarmAgain'),()=>runSwarm(true)));
+  sec.append(actions,el('p','board-fineprint',t('swarmNote')),el('p','futures-disclaimer',swarm.disclaimer));
+  return sec;
+ }
  function brainStatus(st){
   const dot=$('#boardBrainDot');
   dot.className='board-brain-dot'+(st.handle?' '+st.mode:'');
@@ -1150,6 +1227,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
    if(forks){const hero=el('div','futures-hero');hero.append(el('div','futures-count',fmtBig(total)),el('div','futures-sub',t('stats',{n:g.nodes.length,f:forks,s:fmtBig(total)})));host.append(hero);}
    else host.append(el('p','board-empty',t('noForksBody')));
    host.append(scanBtn(t('scanNow')));
+   host.append(swarmSection());
    return;
   }
   const hero=el('div','futures-hero');
@@ -1159,7 +1237,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
    host.append(el('p','board-lede',t('noForksTitle')),el('p','board-empty',t('noForksBody')));
    const next=button('futures-next',null,()=>runAction({type:'suggest',nodeId:r.nextMove.nodeId,mode:'explore'}));
    next.append(el('small','',t('nextMove')),el('strong','',r.nextMove.title),el('span','',r.nextMove.why));host.append(next);
-   host.append(el('p','futures-disclaimer',r.disclaimer));return;
+   host.append(el('p','futures-disclaimer',r.disclaimer),swarmSection());return;
   }
   const sum=r.viable+r.blocked||1;
   const split=el('div','futures-split');const ok=el('i','ok'),no=el('i','no');ok.style.width=(r.viable/sum*100)+'%';no.style.width=(r.blocked/sum*100)+'%';split.append(ok,no);
@@ -1217,6 +1295,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
    sec.append(list);host.append(sec);
   }
   host.append(el('p','futures-disclaimer',r.disclaimer));
+  host.append(swarmSection());
  }
  function coachActionFor(m){
   const g=graph();

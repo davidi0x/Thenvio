@@ -246,3 +246,27 @@ test('cloud connector: create it on the site, use it from a chat app, the canvas
   assert.deepEqual(errors,[]);
  }finally{await browser.close();server.close();}
 });
+
+test('swarm: a synthetic crowd drifts to the options it adopts and its objections land on the canvas',{skip:!playwright&&'Playwright is not installed'},async t=>{
+ const browser=await launch();
+ if(!browser){t.skip('Chromium is not available');return;}
+ const server=await serve();
+ try{
+  const page=await browser.newPage({viewport:{width:1366,height:860}});
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('http://127.0.0.1:'+server.address().port+'/');
+  await page.waitForSelector('.board-note.root textarea.board-note-inline');
+  await page.keyboard.type('Phone payments for cafes');await page.keyboard.press('Enter');
+  for(const title of ['QR sticker with phone payment','New app with account and subscription','Loyalty stamps without an app']){
+   await page.click('.board-note.root');await page.keyboard.press('Tab');await page.keyboard.type(title);await page.keyboard.press('Enter');
+  }
+  await page.click('#boardFutures');
+  await page.waitForFunction(()=>document.querySelector('#boardHud.is-done'),null,{timeout:8000});
+  await page.click('text=Simulate the crowd');
+  await page.waitForFunction(()=>document.querySelectorAll('#boardSwarm circle.on').length>20,null,{timeout:10000});
+  await page.waitForSelector('text=Add objections to the canvas',{timeout:10000});
+  await page.click('text=Add objections to the canvas');
+  await page.waitForFunction(()=>[...document.querySelectorAll('.board-note-title')].some(n=>n.textContent.startsWith('Crowd (')));
+  assert.deepEqual(errors,[]);
+ }finally{await browser.close();server.close();}
+});

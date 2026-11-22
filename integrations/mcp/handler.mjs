@@ -10,6 +10,7 @@ import {updateBoardMeta} from '../../core/board.mjs';
 import {markdownToCanvas} from '../../core/brain.mjs';
 import {analyzeFutures} from '../../core/futures.mjs';
 import {coachGraph,detectLocale} from '../../core/coach.mjs';
+import {simulateSwarm,swarmNotes,summarizeVoices} from '../../core/swarm.mjs';
 import {applyThinkResult,withGoal,readGoal,THINK_SCHEMA,THINK_GUIDE} from '../../core/think.mjs';
 
 export const UI_URI='ui://thenvio/canvas-v1.html';
@@ -54,6 +55,12 @@ const brainTools=[
    inputSchema:{type:'object',required:['note'],properties:{canvas:canvasRef,note:{type:'string',description:'Note title (or id).'},
     status:{type:'string',enum:['open','exploring','supported','refuted']},evidence:{type:'string'},impact:{type:'integer'},effort:{type:'integer'},
     kind:{type:'string',enum:['direction','question','assumption','experiment','insight']}}},_meta:renderMeta},
+  {name:'thenvio_swarm',description:'Run a synthetic crowd over the options on the canvas: agents with traits (benefit seeking, time pressure, caution, price sensitivity, need for trust, habit strength, social influence, adoption threshold — each 0 to 1) influence each other in a social network over several rounds. Optionally give YOUR personas: 6-20 distinct people who plausibly use this, each with a share of the crowd, traits and a reaction to each option in their own voice (stance adopt/maybe/reject, why, what would change their mind). Personas are simulated, never real people or research; say so. Returns adoption per option, tipping points, who rejects what and why, and adds the loudest objections to the canvas as questions plus one real-world check.',
+   inputSchema:{type:'object',properties:{canvas:canvasRef,addToCanvas:{type:'boolean',description:'Add the top objections as notes (default true).'},
+    personas:{type:'array',items:{type:'object',required:['name','reactions'],properties:{
+     name:{type:'string'},segment:{type:'string'},share:{type:'number',description:'Relative size of this persona group.'},
+     traits:{type:'object',properties:Object.fromEntries(['gain','timeCost','caution','priceSens','trustNeed','habit','social','threshold'].map(k=>[k,{type:'number'}]))},
+     reactions:{type:'array',items:{type:'object',required:['option','stance'],properties:{option:{type:'string',description:'Exact option title.'},stance:{type:'string',enum:['adopt','maybe','reject']},why:{type:'string'},wouldChangeMindIf:{type:'string'}}}}}}}}},_meta:renderMeta},
   {name:'thenvio_show',description:'Show the canvas with its best route in the chat.',inputSchema:{type:'object',properties:{canvas:canvasRef}},_meta:renderMeta}
 ];
 export const toolDefinitions=[...baseTools,...brainTools];
@@ -76,7 +83,8 @@ function view(graph,store,extra={}){
 }
 function summary(v){
   const w=v.futures.winner;
-  return [v.canvas.title+(v.canvas.goal?' — goal: '+v.canvas.goal:''),
+  const sw=v.swarm;
+  return [sw?.winner?'Crowd (synthetic): most taken up "'+sw.winner.title+'" '+sw.winner.adoption+'%'+(sw.loudest?'; loudest objection on "'+sw.loudest.optionTitle+'": '+sw.loudest.text+' ('+sw.loudest.share+'%)':''):sw?'Crowd (synthetic): no option was taken up.':'',v.canvas.title+(v.canvas.goal?' — goal: '+v.canvas.goal:''),
    w?'Best route ('+w.score+'/100, '+w.confidence+'): '+(w.choices.map(c=>c.optionTitle).join(' → ')||'—'):'No route yet: '+v.futures.nextMove.title,
    v.futures.weakest?'Weakest link: '+v.futures.weakest.title:'','Next: '+v.nextMoves.join(' | '),
    v.openUrl?'Open the canvas: '+v.openUrl:'',v.futures.disclaimer].filter(Boolean).join('\n');
@@ -143,6 +151,16 @@ export async function callTool(name,args={},ctx={}){
       const g=updateBoardMeta(graph,note.id,patch);
       await store.save(g);
       return view(g,store,{updated:note.title});
+    }
+    case 'thenvio_swarm':{
+      const store=needStore(ctx),{graph}=await store.find(args.canvas);
+      const locale=detectLocale(graph.nodes.map(n=>n.title).join(' '),'en');
+      const sim=simulateSwarm(graph,{locale,personas:args.personas});
+      const voices=summarizeVoices(graph,args.personas||[]);
+      let g=graph,added=0;
+      if(args.addToCanvas!==false&&sim.options.length){const out=swarmNotes(graph,sim,{locale,voices});g=out.graph;added=out.added.length;if(added)await store.save(g);}
+      const {frames,...crowd}=sim;
+      return view(g,store,{swarm:crowd,voices,added});
     }
     case 'thenvio_show':{const store=needStore(ctx),{graph}=await store.find(args.canvas);return view(graph,store);}
     default:throw Error('Unknown tool: '+name);

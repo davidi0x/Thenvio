@@ -37,5 +37,9 @@ test('Cloudflare build includes board CSS, canvas module and spatial graph core'
  assert.match(worker,/free-canvas\.mjs/);
  assert.match(worker,/board\.css/);
  assert.match(worker,/core\/board\.mjs/);
- assert.match(build,/board\.mjs/);
+ const {spawnSync}=await import('node:child_process');const {readdirSync}=await import('node:fs');
+ assert.equal(spawnSync(process.execPath,['scripts/build.mjs']).status,0);
+ const core=readdirSync(new URL('../core/',import.meta.url)).filter(f=>f.endsWith('.mjs')).sort();
+ assert.deepEqual(readdirSync(new URL('../dist/core/',import.meta.url)).sort(),core,'every core module ships in the build');
+ assert.ok(build.length>0);
 });

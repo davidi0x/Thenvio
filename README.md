@@ -1,5 +1,15 @@
 # Thenvio
 
+## v1.1 — Crowd: a synthetic swarm reacts to your options
+
+Inspired by swarm-intelligence simulators, built the Thenvio way. In **Futures → Simulate the crowd**, a few hundred synthetic people with different traits (benefit seeking, time pressure, caution, price sensitivity, need for trust, habit strength, social influence) live in a small-world network and, round after round, take up or ignore each option — pulled by its value and by neighbours who already took it, pushed away by effort, price, trust, habit change and open risks. Dots on the canvas drift to the options they adopt.
+
+What you get: adoption curves and tipping points, **who rejects which option and why**, and a warning when value and uptake disagree (the futures scan favours one route, the crowd takes up another). One click turns the loudest objections into questions on the canvas plus a real-world check ("5 conversations with …"), which then feed the futures scan.
+
+In Claude or ChatGPT, `thenvio_swarm` lets the chat model write the personas — named people with traits and reactions in their own voice — and Thenvio runs them through the same dynamics and puts their sharpest objections on the canvas.
+
+This is a synthetic crowd with rules and traits you can see — not research and not a forecast. It is for finding the questions to ask real people. Deterministic: the same canvas gives the same crowd; *Another crowd* changes the seed.
+
 ## v1.0 — one connector URL for Claude and ChatGPT
 
 1. Open the Thenvio site → **Think → Create my connector**. You get a personal URL: `https://<site>/mcp/<your-brain-id>`.

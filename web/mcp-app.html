@@ -83,7 +83,8 @@ function render(v){
  const sel=c.nodes.find(n=>n.id===selected);
  $('#app').innerHTML=`<header><h1>${esc(c.title)}</h1>${c.goal?`<div class="goal">${esc(L('Cel: ','Goal: ')+c.goal)}</div>`:''}
   <div class="route">${w?`<span class="score">${w.score}/100</span>${w.choices.map(ch=>`<span class="chip">${esc(ch.optionTitle)}</span>`).join('<span class="meta">→</span>')}<span class="meta">${esc(L('najlepsza z ','best of ')+v.futures.total)}</span>`:`<span class="meta">${esc(v.futures?.nextMove?.title||'')}</span>`}</div>
-  ${v.futures?.weakest?`<div class="meta">${esc(L('Najsłabsze ogniwo: ','Weakest link: ')+v.futures.weakest.title)}</div>`:''}</header>
+  ${v.futures?.weakest?`<div class="meta">${esc(L('Najsłabsze ogniwo: ','Weakest link: ')+v.futures.weakest.title)}</div>`:''}
+  ${v.swarm?.winner?`<div class="meta">${esc(L('Tłum (symulacja): najchętniej „','Crowd (simulated): most taken up “')+v.swarm.winner.title+L('” ','” ')+v.swarm.winner.adoption+'%'+(v.swarm.loudest?' · '+v.swarm.loudest.name+' '+v.swarm.loudest.share+'%':''))}</div>`:''}</header>
   <div class="stage"><svg viewBox="${minX} ${minY} ${maxX-minX} ${maxY-minY}" preserveAspectRatio="xMidYMid meet">${edges}${cards}</svg></div>
   <footer><div class="next"><b>${esc(L('Dalej: ','Next: '))}</b>${esc((v.nextMoves||[]).slice(0,2).join(' · '))}</div>
   <div class="actions">
