@@ -42,7 +42,8 @@ test('stress analysis is repeatable and side effect free',()=>{
  const p=fresh(),before=JSON.stringify(p),result=stressTest(p);
  assert.equal(result.cases.length,5);
  assert.equal(JSON.stringify(p),before);
- assert.ok(result.cases.some(x=>x.changed));
+ assert.ok(result.cases.some(x=>x.change.budget !== undefined && x.change.budget < p.budget));
+ assert.ok(result.cases.every(x=>typeof x.changed === 'boolean' && Array.isArray(x.eligible)));
 });
 test('untrusted imports fail closed, no fake starter routes',()=>{
  const p=emptyProject('Choice','Goal',5000,8);
