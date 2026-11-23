@@ -3,6 +3,7 @@
 // Pure and deterministic. Rules are transparent heuristics, not AI output or research.
 import {assertIdeaGraph,branchPath,ideaContext} from './idea-graph.mjs';
 import {getSkill} from './skills.mjs';
+import {readFrame} from './brainstorm.mjs';
 
 const L=(locale,pl,en)=>locale==='pl'?pl:en;
 const short=(s,n=56)=>s.length>n?s.slice(0,n-1).trimEnd()+'…':s;
@@ -159,15 +160,23 @@ export function coachGraph(graph,{locale='en',futures=null,limit=6}={}){
  if(untested[0])push(78,'test:'+untested[0].id,'⚗',L(locale,'Przetestuj założenie: „'+short(untested[0].title)+'”','Test the assumption: “'+short(untested[0].title)+'”'),
   L(locale,'Najbardziej podstawowe nieprzetestowane założenie. Najtańszy test daje najwięcej wiedzy.','The most foundational untested assumption. The cheapest test teaches the most.'),
   {type:'add',parentId:untested[0].id,seed:testSeed(untested[0],locale)});
+ const frame=readFrame(root.title);
+ // Real content comes from the person's own chat model: offer it once there is something to think about.
+ if(attached.length>=1&&!isPlaceholder(root.title))push(frame.type==='product'?52:72,'think:'+root.id,'✦',L(locale,'Pomyśl nad tym w Claude albo ChatGPT','Think it through in Claude or ChatGPT'),
+  L(locale,'Twój czat rozumie temat: dopisze prawdziwe alternatywy, pytania i testy prosto na canvas.','Your chat understands the topic: it adds real alternatives, questions and tests straight to the canvas.'),{type:'think',nodeId:root.id});
  const audience=/(kto|dla kogo|użytkownik|klient|odbiorc|grupa docelowa|\bwho\b|audience|\buser|customer|persona|target)/i;
- if(attached.length&&!graph.nodes.some(n=>audience.test(n.title+' '+n.description)))push(70,'who:'+root.id,'?',L(locale,'Dla kogo dokładnie to jest?','Who exactly is this for?'),
+ if(frame.type==='product'&&attached.length&&!graph.nodes.some(n=>audience.test(n.title+' '+n.description)))push(70,'who:'+root.id,'?',L(locale,'Dla kogo dokładnie to jest?','Who exactly is this for?'),
   L(locale,'Bez konkretnej osoby każdy kierunek wygląda dobrze.','Without a specific person every direction looks good.'),
   {type:'add',parentId:root.id,seed:{title:L(locale,'Dla kogo dokładnie to jest?','Who exactly is this for?'),kind:'question',description:''}});
  const openQ=attached.find(n=>n.kind==='question'&&n.status!=='supported'&&!kids(n.id).length&&!isPlaceholder(n.title));
  if(openQ)push(66,'answer:'+openQ.id,'↳',L(locale,'Odpowiedz: „'+short(openQ.title)+'”','Answer: “'+short(openQ.title)+'”'),
   L(locale,'Dwie lub więcej odpowiedzi tworzy rozwidlenie, które można porównać.','Two or more answers create a fork you can compare.'),{type:'suggest',nodeId:openQ.id,mode:'answer'});
  const naked=attached.find(n=>n.kind==='direction'&&!isPlaceholder(n.title)&&!kids(n.id).some(k=>k.kind==='assumption'||k.kind==='experiment'));
- if(naked)push(62,'must:'+naked.id,'△',L(locale,'Co musi być prawdą dla „'+short(naked.title)+'”?','What must be true for “'+short(naked.title)+'”?'),
+ const bare=attached.find(n=>n.kind==='direction'&&!isPlaceholder(n.title)&&!kids(n.id).length);
+ if(frame.type!=='product'){if(bare)push(62,'why:'+bare.id,'△',L(locale,'Co przemawia za „'+short(bare.title)+'”, a co przeciw?','What speaks for “'+short(bare.title)+'”, and against it?'),
+  L(locale,'Jeden konkretny powód z każdej strony wystarczy, żeby porównać opcje.','One concrete reason on each side is enough to compare the options.'),
+  {type:'add',parentId:bare.id,seed:{title:L(locale,'Za i przeciw: ','For and against: ')+short(bare.title,100),kind:'question',description:''}});}
+ else if(naked)push(62,'must:'+naked.id,'△',L(locale,'Co musi być prawdą dla „'+short(naked.title)+'”?','What must be true for “'+short(naked.title)+'”?'),
   L(locale,'Każda opcja opiera się na założeniach. Nazwij najważniejsze.','Every option rests on assumptions. Name the key one.'),
   {type:'add',parentId:naked.id,seed:{title:L(locale,'Co musi być prawdą, żeby „','What must be true for “')+short(naked.title,90)+L(locale,'” zadziałało?','” to work?'),kind:'question',description:''}});
  const forkCount=new Set(attached.filter(n=>n.kind==='direction').map(n=>n.parentId)).size;

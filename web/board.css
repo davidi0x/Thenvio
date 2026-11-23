@@ -438,3 +438,4 @@ body.canvas-mode .workspace{min-height:0;height:100dvh}
 .swarm-why{font-size:11px;color:var(--sub)}
 @media(prefers-reduced-motion:reduce){.board-swarm circle,.swarm-bar i,.board-note-crowd i{transition:none}}
 html[data-motion="off"] .board-swarm circle{transition:none}
+.think-open{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 4px}.think-open a{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}

@@ -61,14 +61,14 @@ const T={
   brainUnsupported:'This browser cannot write to folders. Download the brain and commit it, or open a folder to read its canvases.',
   brainImported:'{n} canvas(es) read from the brain.',brainNothing:'No canvases found in product-data/ideas/.',
   brainStep1:'Create a private repository on GitHub.',brainStep2:'Clone it and connect that folder here — or unzip the download into it.',brainStep3:'Save history: <code>git add . && git commit -m "Update brain" && git push</code>',brainStep4:'Point your agents at the repo. They read <code>AGENTS.md</code> and the same files.',
-  welcomeHint:'Enter saves · Tab adds a branch',think:'Think',panelThink:'Think it through',goalLabel:'Goal — where do you want to get?',goalPlaceholder:'e.g. 100 paying customers in 6 months',
+  welcomeHint:'Enter saves · Tab adds a branch',think:'Think',panelThink:'Think it through',goalLabel:'Goal — where do you want to get?',goalPlaceholder:'e.g. decide by tonight — or 100 customers in six months',
   keyLabel:'Your Anthropic API key',keyNote:'Billed to your own account. Kept only in this tab’s memory and sent only to api.anthropic.com when you press Think.',thinkRun:'Think it through',
   noKey:'No API key? Use any assistant',noKeyNote:'Copy the prompt, paste it into Claude or ChatGPT, then paste the JSON answer here.',copyPrompt:'Copy the prompt',pasteJson:'Paste the JSON answer',addToCanvas:'Add to canvas',close:'Close',
   scopeAll:'Thinks about the whole canvas{ctx}.',scopeNote:'Focuses on “{t}”{ctx}.',scopeCtx:' with your shared brain as context',thinking:'Thinking it through — questions, alternatives, the best route… (can take a minute)',
   thinkDone:'{n} notes added. Ranking every combination…',errNoKey:'Paste your API key first.',errBadKey:'The API key was rejected.',errRate:'Rate limited — try again in a moment.',
   errRefusal:'Claude declined this request.',errTooLong:'The answer was cut off — try a narrower focus.',errNet:'Could not reach the API: {e}',
   bestRoute:'Best route',questionsTitle:'Questions that would change the decision',altsTitle:'Alternatives',risk:'Risk',planB:'Plan B',
-  thinkLede:'The thinking happens in your own Claude or ChatGPT — on your subscription.',wayMcp:'Thenvio inside Claude or ChatGPT',copyAsk:'Copy the request for the chat',
+  thinkLede:'The thinking happens in your own Claude or ChatGPT — on your subscription.',openClaude:'Think in Claude ↗',openChatGPT:'Think in ChatGPT ↗',openHintMcp:'With the connector added, the chat saves its thinking straight onto this canvas. Without it you get JSON — paste it below. The request is also on your clipboard.',openHintPaste:'The chat reads this canvas and answers with JSON — paste it below. The request is also on your clipboard.',askToolsHint:'If you have the Thenvio tools (connector), do not reply with JSON: save the result with thenvio_brainstorm on the canvas “{title}” and tell me the best route and the first test.',wayMcp:'Thenvio inside Claude or ChatGPT',copyAsk:'Copy the request for the chat',
   copyClaudeConfig:'Claude Desktop setup',copyMcpUrl:'ChatGPT setup',wayChat:'No setup: copy, paste, paste back',wayKey:'Optional: run it here with an API key',
   mcpLocal:'Connected to the local brain ({dir}). In a chat that has Thenvio, paste the request: the chat brainstorms, the notes appear here live and the canvas opens in the chat.',
   mcpStatic:'Run Thenvio locally (npm start) to use it inside Claude Desktop, Claude Code or ChatGPT. The copy-paste way below works everywhere.',
@@ -119,14 +119,14 @@ const T={
   brainUnsupported:'Ta przeglądarka nie zapisuje do folderów. Pobierz mózg i zrób commit albo otwórz folder, by wczytać canvasy.',
   brainImported:'Wczytano z mózgu: {n} canvas(y).',brainNothing:'Brak canvasów w product-data/ideas/.',
   brainStep1:'Załóż prywatne repozytorium na GitHubie.',brainStep2:'Sklonuj je i połącz ten folder tutaj — albo rozpakuj do niego pobrany plik.',brainStep3:'Zapisz historię: <code>git add . && git commit -m "Aktualizacja mózgu" && git push</code>',brainStep4:'Wskaż agentom repo. Czytają <code>AGENTS.md</code> i te same pliki.',
-  welcomeHint:'Enter zapisuje · Tab dodaje gałąź',think:'Pomyśl',panelThink:'Rozkmina',goalLabel:'Cel — dokąd chcesz dojść?',goalPlaceholder:'np. 100 płacących klientów w 6 miesięcy',
+  welcomeHint:'Enter zapisuje · Tab dodaje gałąź',think:'Pomyśl',panelThink:'Rozkmina',goalLabel:'Cel — dokąd chcesz dojść?',goalPlaceholder:'np. decyzja jeszcze dziś — albo 100 klientów w pół roku',
   keyLabel:'Twój klucz API Anthropic',keyNote:'Rozliczane na Twoim koncie. Trzymany tylko w pamięci tej karty i wysyłany wyłącznie do api.anthropic.com po kliknięciu.',thinkRun:'Rozkmiń to',
   noKey:'Nie masz klucza? Użyj dowolnego asystenta',noKeyNote:'Skopiuj prompt, wklej do Claude albo ChatGPT, potem wklej tu odpowiedź JSON.',copyPrompt:'Kopiuj prompt',pasteJson:'Wklej odpowiedź JSON',addToCanvas:'Dodaj na canvas',close:'Zamknij',
   scopeAll:'Myśli o całym canvasie{ctx}.',scopeNote:'Skupia się na „{t}”{ctx}.',scopeCtx:' z Twoim wspólnym mózgiem jako kontekstem',thinking:'Rozkminiam — pytania, alternatywy, najlepsza droga… (może potrwać minutę)',
   thinkDone:'Dodano notatek: {n}. Porównuję wszystkie kombinacje…',errNoKey:'Najpierw wklej klucz API.',errBadKey:'Klucz API został odrzucony.',errRate:'Limit zapytań — spróbuj za chwilę.',
   errRefusal:'Claude odmówił tego zapytania.',errTooLong:'Odpowiedź została ucięta — zawęź temat.',errNet:'Nie udało się połączyć z API: {e}',
   bestRoute:'Najlepsza droga',questionsTitle:'Pytania, które zmieniłyby decyzję',altsTitle:'Alternatywy',risk:'Ryzyko',planB:'Plan B',
-  thinkLede:'Rozkmina dzieje się w Twoim Claude albo ChatGPT — na Twojej subskrypcji.',wayMcp:'Thenvio w Claude albo ChatGPT',copyAsk:'Kopiuj polecenie do czatu',
+  thinkLede:'Rozkmina dzieje się w Twoim Claude albo ChatGPT — na Twojej subskrypcji.',openClaude:'Pomyśl w Claude ↗',openChatGPT:'Pomyśl w ChatGPT ↗',openHintMcp:'Z dodanym connectorem czat zapisze rozkminę prosto na ten canvas. Bez niego dostaniesz JSON — wklej go poniżej. Polecenie jest też w schowku.',openHintPaste:'Czat przeczyta ten canvas i odpowie JSON-em — wklej go poniżej. Polecenie jest też w schowku.',askToolsHint:'Jeśli masz narzędzia Thenvio (connector), nie odpisuj JSON-em: zapisz wynik przez thenvio_brainstorm na canvasie „{title}” i powiedz mi, jaka jest najlepsza droga i pierwszy test.',wayMcp:'Thenvio w Claude albo ChatGPT',copyAsk:'Kopiuj polecenie do czatu',
   copyClaudeConfig:'Ustaw w Claude Desktop',copyMcpUrl:'Ustaw w ChatGPT',wayChat:'Bez instalacji: kopiuj, wklej, wklej z powrotem',wayKey:'Opcjonalnie: uruchom tutaj z kluczem API',
   mcpLocal:'Połączono z lokalnym mózgiem ({dir}). W czacie z Thenvio wklej polecenie: czat robi rozkminę, notatki pojawiają się tu na żywo, a canvas otwiera się w czacie.',
   mcpStatic:'Uruchom Thenvio lokalnie (npm start), żeby używać go w Claude Desktop, Claude Code albo ChatGPT. Sposób „kopiuj-wklej” poniżej działa wszędzie.',
@@ -887,6 +887,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
     select(a.nodeId);$('#boardMore').open=true;openPanel('note');ensureVisible(a.nodeId);
     requestAnimationFrame(()=>{const r=$('#boardRatings');r.classList.remove('is-flash');void r.offsetWidth;r.classList.add('is-flash');r.scrollIntoView({block:'center',behavior:reducedMotion()?'auto':'smooth'});});
     break;
+   case 'think':openPanel('ai');break;
    case 'futures':scanFutures();break;
    case 'decide':recordDecision();break;
   }
@@ -1037,6 +1038,9 @@ export function initFreeCanvas({notice=()=>{}}={}){
    $('#boardConnectorUrl').value=local.info.connector;
    $('#boardConnectorSteps').innerHTML=['stepClaude','stepChatGPT','stepAsk'].map(k=>'<li>'+t(k)+'</li>').join('');
   }
+  $('#boardOpenHint').textContent=local?t('openHintMcp'):t('openHintPaste');
+  $('#boardOpenClaude').href=chatLink('https://claude.ai/new','?q=');
+  $('#boardOpenChatGPT').href=chatLink('https://chatgpt.com/','?q=');
   $('#boardThinkRun').disabled=thinkBusy;
   const host=$('#boardThinkResult');host.replaceChildren();
   if(!lastThink)return;
@@ -1088,6 +1092,19 @@ export function initFreeCanvas({notice=()=>{}}={}){
    thinkStatus(m==='BAD_KEY'?t('errBadKey'):m==='RATE_LIMIT'?t('errRate'):m==='REFUSAL'?t('errRefusal'):m==='TOO_LONG'?t('errTooLong'):m==='NO_KEY'?t('errNoKey'):t('errNet',{e:m}),true);
    if(m==='BAD_KEY')setKey('');
   }finally{thinkBusy=false;$('#boardThink').classList.remove('is-busy');if(panelMode==='ai')renderThinkPanel();}
+ }
+ // One self-contained request: the chat understands the topic from the canvas itself, saves through
+ // the connector when it has it, and otherwise answers with JSON to paste back.
+ function chatText(){
+  const onCloud=!!local?.info.cloud||!!local;
+  return manualPrompt()+(onCloud?'\n\n'+t('askToolsHint',{title:graph().title}):'');
+ }
+ function chatLink(base,param){const enc=encodeURIComponent(chatText());return enc.length<7500?base+param+enc:base;}
+ function openChat(e,which){
+  saveGoal();
+  const a=e.currentTarget;
+  a.href=which==='claude'?chatLink('https://claude.ai/new','?q='):chatLink('https://chatgpt.com/','?q=');
+  try{navigator.clipboard?.writeText(chatText()).catch(()=>{});}catch{}
  }
  function manualPrompt(){
   const g=graph(),req=thinkRequest(g,{focusId:selected&&selected!==g.rootId?selected:null,goal:$('#boardGoal').value.trim(),context:brainContext(),locale});
@@ -1561,6 +1578,8 @@ export function initFreeCanvas({notice=()=>{}}={}){
   }catch(err){notice(t('invalidAi',{e:err.message}));}
  });
  $('#boardGhConnect').addEventListener('click',()=>connectGithub(false));
+ $('#boardOpenClaude').addEventListener('click',e=>openChat(e,'claude'));
+ $('#boardOpenChatGPT').addEventListener('click',e=>openChat(e,'chatgpt'));
  $('#boardCopyAsk').addEventListener('click',()=>{saveGoal();copy(askForChat());});
  $('#boardCopyClaudeConfig').addEventListener('click',async()=>{
   if(!local)return;

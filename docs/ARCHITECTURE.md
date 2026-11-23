@@ -91,6 +91,9 @@ freeSlots (deterministic non-overlapping positions beside a note), tidyLayout (t
 ### Rendering — web/free-canvas.mjs
 Keyed DOM reconciliation (no full re-render), one requestAnimationFrame loop that eases displayed positions toward model positions (new notes fly out of their parent, children follow a dragged parent, undo and arrange animate), pointer-captured drags, drag-to-connect from a note's dot, inline editing with Tab/Enter flow, pinch zoom and double-tap on touch, an animated camera, and a futures scan that highlights sampled scenarios before settling on the winner. Reduced-motion preferences turn animation off. The UI language follows the content (Polish or English).
 
+### Suggestions follow the topic (v1.2)
+The canvas has no language model of its own; real thinking happens in the person's Claude or ChatGPT (connector, or the prefilled "Think in Claude/ChatGPT" request, answered as JSON to paste back). What the canvas suggests on its own is limited to what it can honestly derive from the person's words: `readFrame(rootTitle)` classifies the canvas as a **choice** ("X czy Y", "X or Y", lists — the named options become the first suggestions plus "something other than…"), a **product** idea (explicit product words only — keeps the startup-oriented domain seeds and methods), or **general** (a goal or topic: clarifying questions — what good looks like, what blocks it, what was tried, who to ask). Non-product notes get plain decision prompts that quote the note (for/against, hidden cost, regret, smallest trial). The coach only asks "who is this for?" on product ideas and offers "Think it through in Claude or ChatGPT" once there is content.
+
 ## Shared brain (v0.7)
 
 One repository, plain text, for the team and its agents. Layout: `how-we-work/`, `product-data/` (`ideas/`, `assumptions.md`, `decisions/`), `brand/`, `skills/`, plus `README.md`, `AGENTS.md`, `CLAUDE.md`.

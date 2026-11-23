@@ -13,6 +13,51 @@ const domainRules=[
  ['commerce',/(sklep|zakup|sprzed|handl|produkt|klient|marketplace|ecommerce|shop|retail|sell|commerce|customer)/i],
  ['startup',/(startup|aplikac|platform|produkt cyfrow|asystent|saas|software|pomysł|idea|app\b|platform|business|founder|agent|biznes)/i]
 ];
+// What kind of thinking the canvas needs. Only explicit product words make it a product idea; a
+// question like "fries or pizza" is a choice between the options it names; anything else is general.
+const PRODUCT=/(startup|aplikac|rezerwac|booking|usług|serwis|service|\bapp\b|saas|platform|produkt|klient|użytkownik|biznes|firm[aęy]|sklep|marketplace|monetyz|subskryp|customer|\busers?\b|business|product|software|founder|revenue|przychod)/i;
+const CHOICE_SPLIT=/\s*(?:,|\bczy\b|\balbo\b|\blub\b|\bbądź\b|\bor\b|\bvs\.?|\bversus\b|\/)\s*/i;
+export function readFrame(text){
+ const raw=tidy(text).replace(/[?!.…]+$/,'');
+ const body=raw.replace(/^(co wybrać|co lepsze|wybór|which|should i|choose|pick|decyzja|decision)\s*[:\-–—]?\s*/i,'');
+ if(/\s(czy|albo|lub|bądź|or|vs\.?|versus)\s|\//i.test(' '+body+' ')){
+  const parts=body.split(CHOICE_SPLIT).map(x=>x.trim()).filter(Boolean);
+  const uniq=[...new Map(parts.map(x=>[x.toLowerCase(),x])).values()];
+  if(uniq.length>=2&&uniq.length<=6&&uniq.every(x=>x.length<=60&&x.split(/\s+/).length<=7))
+   return {type:'choice',options:uniq.map(x=>x[0].toUpperCase()+x.slice(1))};
+ }
+ return {type:PRODUCT.test(raw)?'product':'general'};
+}
+// Plain decision thinking that works for any topic and only reuses the person's own words. These are
+// questions and prompts, never invented answers; real content comes from the person or their chat model.
+const plainMethods={
+ explore:[
+  ['pro','Co przemawia za „{f}”?','What speaks for “{f}”?','question','Wypisz konkretne powody — Twoje, nie ogólne.','List concrete reasons — yours, not generic ones.'],
+  ['con','Co przemawia przeciw „{f}”?','What speaks against “{f}”?','question','Co może pójść nie tak albo co Cię zniechęca?','What could go wrong, or what puts you off?'],
+  ['alt','Inna opcja niż „{f}”','An option other than “{f}”','direction','Jaka trzecia droga w ogóle nie padła?','Which third way has not come up at all?'],
+  ['crit','Co jest tu najważniejsze?','What matters most here?','question','Jedno kryterium, które rozstrzyga (np. czas, koszt, ochota, ludzie).','The one criterion that decides it (e.g. time, cost, appetite, people).']
+ ],
+ answer:[
+  ['know','Co już wiem o: „{f}”','What I already know about “{f}”','insight','Zapisz fakty, które masz — oddziel je od przypuszczeń.','Write down the facts you have — keep them apart from guesses.'],
+  ['ask','Kogo zapytać o „{f}”?','Who to ask about “{f}”?','question','Kto zna odpowiedź albo ma podobne doświadczenie?','Who knows the answer or has been through something similar?'],
+  ['check','Jak szybko sprawdzić „{f}”?','How to check “{f}” quickly?','experiment','Najmniejszy krok, który da odpowiedź jeszcze dziś.','The smallest step that gives an answer today.']
+ ],
+ challenge:[
+  ['wrong','A jeśli „{f}” to zły wybór?','What if “{f}” is the wrong choice?','assumption','Po czym poznasz, że to był błąd?','How would you know it was a mistake?'],
+  ['regret','Czego mogę żałować przy „{f}”?','What might I regret with “{f}”?','question','Pomyśl o sobie za tydzień, nie za minutę.','Think about yourself a week from now, not a minute from now.'],
+  ['cost','Ukryty koszt „{f}”','The hidden cost of “{f}”','assumption','Czas, pieniądze, energia albo inni ludzie — co tu płacisz?','Time, money, energy or other people — what do you pay here?']
+ ],
+ test:[
+  ['try','Najmniejsza próba: „{f}”','Smallest trial: “{f}”','experiment','Spróbuj w małej skali, zanim się zobowiążesz.','Try it small before you commit.'],
+  ['signal','Po czym poznam, że „{f}” było dobre?','How will I know “{f}” was right?','question','Zapisz to teraz, zanim zobaczysz wynik.','Write it down now, before you see the result.']
+ ]
+};
+const goalMethods=[
+ ['done','Jak wygląda dobry wynik?','What does a good result look like?','question','Opisz konkretnie, po czym poznasz, że się udało.','Describe concretely how you will know it worked.'],
+ ['block','Co najbardziej przeszkadza w: „{f}”?','What gets in the way of “{f}” most?','question','Jedna główna przeszkoda, nie lista wszystkiego.','One main obstacle, not a list of everything.'],
+ ['tried','Co już próbowałem?','What have I already tried?','insight','Co zadziałało choć trochę, a co nie — i dlaczego.','What worked a little, what did not — and why.'],
+ ['ask','Kogo zapytać o „{f}”?','Who to ask about “{f}”?','question','Kto już to rozwiązał albo zna temat z bliska?','Who has already solved this or knows it up close?']
+];
 export function detectIdeaDomain(input){for(const [name,re] of domainRules)if(re.test(input))return name;return 'general';}
 // Card record: [identifier, Polish title, English title, Polish question, English question, Polish hypothesis, English hypothesis]
 const domainSeeds={
@@ -90,19 +135,36 @@ export function thinkNext(graph,nodeId,{mode='explore',round=0,locale='pl',count
  if(!THINK_MODES.includes(mode))throw Error('Unknown thinking mode');
  if(!Number.isInteger(round)||round<0||!Number.isInteger(count)||count<1||count>12)throw Error('Invalid suggestion window');
  const path=branchPath(graph,nodeId),focus=path.at(-1),lang=locale==='en'?'en':'pl';
- const domain=detectIdeaDomain(graph.title+' '+focus.title+' '+graph.nodes[0].description);
- const data=(mode==='explore'&&path.length===1?[...(domainSeeds[domain]||domainSeeds.general)]:[]).concat(methods[mode]);
+ const root=graph.nodes.find(n=>n.id===graph.rootId)||graph.nodes[0];
+ const frame=readFrame(root.title||graph.title);
  const existing=new Set(graph.nodes.filter(n=>n.parentId===nodeId).map(n=>norm(n.title)));
- const items=data.map(([id,plTitle,enTitle,plQuestion,enQuestion,plAnswer,enAnswer])=>{
-  const title=l(lang,plTitle,enTitle);
-  const question=mode==='answer'&&focus.kind==='question'
-    ?l(lang,'Możliwa odpowiedź na: ','Possible answer to: ')+compact(focus.title,100)
-    :l(lang,plQuestion,enQuestion);
-  const answer=l(lang,plAnswer,enAnswer);
-  return {id:mode+'_'+id,title,question,answer,kind:typeFor[mode],
-   description:[question,answer].join('\n\n'),
-   source:'structured-heuristic'};
- }).filter(card=>!existing.has(norm(card.title)));
+ let items;
+ if(frame.type==='product'){
+  const domain=detectIdeaDomain(graph.title+' '+focus.title+' '+root.description);
+  const data=(mode==='explore'&&path.length===1?[...(domainSeeds[domain]||domainSeeds.general)]:[]).concat(methods[mode]);
+  items=data.map(([id,plTitle,enTitle,plQuestion,enQuestion,plAnswer,enAnswer])=>{
+   const title=l(lang,plTitle,enTitle);
+   const question=mode==='answer'&&focus.kind==='question'
+     ?l(lang,'Możliwa odpowiedź na: ','Possible answer to: ')+compact(focus.title,100)
+     :l(lang,plQuestion,enQuestion);
+   const answer=l(lang,plAnswer,enAnswer);
+   return {id:mode+'_'+id,title,question,answer,kind:typeFor[mode],description:[question,answer].join('\n\n'),source:'structured-heuristic'};
+  });
+ }else{
+  const f=compact(focus.title,48),cards=[];
+  // A choice names its own options: offer exactly those first, in the person's words.
+  if(frame.type==='choice'&&focus.id===root.id&&mode==='explore'){
+   for(const o of frame.options)cards.push({id:'opt_'+norm(o),title:o,kind:'direction',question:'',answer:''});
+   cards.push({id:'third',title:l(lang,'Coś innego niż: ','Something other than: ')+compact(frame.options.join(' / '),80),kind:'direction',question:'',answer:l(lang,'Czasem najlepsza opcja w ogóle nie padła.','Sometimes the best option has not come up at all.')});
+  }
+  // A goal or topic at the root is clarified first: what blocks it, what good looks like, what was tried.
+  const list=focus.id===root.id&&mode==='explore'?(frame.type==='choice'?plainMethods.explore.filter(m=>m[0]==='crit'):goalMethods):plainMethods[mode];
+  for(const [id,plT,enT,kind,plQ,enQ] of list){
+   cards.push({id:mode+'_'+id,title:l(lang,plT,enT).replace('{f}',f),kind,question:l(lang,plQ,enQ),answer:''});
+  }
+  items=cards.map(c=>({...c,description:[c.question,c.answer].filter(Boolean).join('\n\n'),source:'structured-heuristic'}));
+ }
+ items=items.filter(card=>!existing.has(norm(card.title)));
  if(!items.length)return [];
  const offset=(round*count)%items.length;
  return Array.from({length:Math.min(count,items.length)},(_,i)=>items[(offset+i)%items.length]);

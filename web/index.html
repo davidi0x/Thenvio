@@ -169,6 +169,11 @@
                 </div>
                 <div class="board-tabpanel board-ai-panel" id="boardAiPanel" hidden>
                   <p class="board-lede-big" data-i18n="thinkLede">The thinking happens in your own Claude or ChatGPT — on your subscription.</p>
+                  <div class="think-open">
+                    <a class="board-ai-primary" id="boardOpenClaude" href="https://claude.ai/new" target="_blank" rel="noopener noreferrer" data-i18n="openClaude">Think in Claude ↗</a>
+                    <a class="futures-secondary" id="boardOpenChatGPT" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer" data-i18n="openChatGPT">Think in ChatGPT ↗</a>
+                  </div>
+                  <p class="board-fineprint" id="boardOpenHint"></p>
                   <label class="board-field-label" for="boardGoal" data-i18n="goalLabel">Goal — where do you want to get?</label>
                   <textarea id="boardGoal" rows="2" maxlength="300"></textarea>
                   <p class="board-fineprint" id="boardThinkScope"></p>
@@ -192,8 +197,6 @@
                     <h4 data-i18n="wayChat">No setup: copy, paste, paste back</h4>
                     <div class="think-row">
                       <button type="button" class="futures-secondary" id="boardCopyPrompt" data-i18n="copyPrompt">Copy the prompt</button>
-                      <a class="futures-secondary" href="https://claude.ai/new" target="_blank" rel="noopener noreferrer">Claude ↗</a>
-                      <a class="futures-secondary" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">ChatGPT ↗</a>
                     </div>
                     <label for="boardAiJson" class="board-field-label" data-i18n="pasteJson">Paste the JSON answer</label>
                     <textarea id="boardAiJson" rows="4" placeholder='{"goal":"…","questions":[…],"alternatives":[…],"bestPath":{…}}'></textarea>

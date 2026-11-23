@@ -39,7 +39,7 @@ test('one click adds four valid children and subsequent clicks prevent duplicate
  assert.equal(repeat.graph.nodes.length,5);
 });
 test('question-focused answers remain hypothetical and carry context',()=>{
- let g=makeIdea('Planowanie wycieczek');
+ let g=makeIdea('Aplikacja do planowania wycieczek');
  g=addIdeaBranch(g,g.rootId,{title:'Jak uprościć podróż?',kind:'question'});
  const cards=thinkNext(g,g.nodes.at(-1).id,{mode:'answer'});
  assert.ok(cards.every(x=>x.question.includes('Jak uprościć podróż?')));
@@ -53,4 +53,26 @@ test('AI JSON import validates types, bounds, and markdown fences',()=>{
  assert.throws(()=>parseBrainstormResponse('{"branches":[{"title":"X","kind":"admin","description":"hi"}]}'),/Invalid kind/);
  const idea=makeIdea('New social product');
  assert.match(brainstormPrompt(idea,idea.rootId),/Return ONLY a valid JSON/);
+});
+
+test('suggestions follow the topic: a choice offers its own options, a goal gets clarifying questions',async()=>{
+ const {readFrame}=await import('../core/brainstorm.mjs');
+ assert.deepEqual(readFrame('Frytki czy pizza'),{type:'choice',options:['Frytki','Pizza']});
+ assert.deepEqual(readFrame('Co wybrać: Warszawa, Kraków albo Gdańsk?').options,['Warszawa','Kraków','Gdańsk']);
+ assert.equal(readFrame('Jak poprawić sen').type,'general');
+ assert.equal(readFrame('Aplikacja do rezerwacji kortów').type,'product');
+ const food=makeIdea('Frytki czy pizza');
+ const cards=thinkNext(food,food.rootId,{locale:'pl',count:6});
+ assert.deepEqual(cards.slice(0,2).map(c=>c.title),['Frytki','Pizza'],'the options named in the question come first');
+ const startup=/aplikac|produkt|użytkownik|klient|integrac|prototyp|dystrybuc/i;
+ assert.ok(cards.every(c=>!startup.test(c.title+' '+c.description)),'no startup jargon for a dinner choice');
+ let g=addIdeaBranch(food,food.rootId,{title:'Pizza',kind:'direction'});
+ const pizza=g.nodes.at(-1).id;
+ for(const mode of THINK_MODES){
+  const view=thinkNext(g,pizza,{mode,locale:'pl'});
+  assert.ok(view.length&&view.every(c=>!startup.test(c.title+' '+c.description)),mode);
+ }
+ assert.ok(thinkNext(g,pizza,{locale:'pl'}).some(c=>c.title.includes('Pizza')),'prompts use the note\'s own words');
+ const sleep=makeIdea('Jak poprawić sen');
+ assert.ok(thinkNext(sleep,sleep.rootId,{locale:'pl'}).every(c=>!/przemawia za/.test(c.title)),'a goal is clarified, not weighed pro/con');
 });
