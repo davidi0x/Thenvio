@@ -322,10 +322,11 @@ export function initFreeCanvas({notice=()=>{}}={}){
  function createCard(n){
   const node=el('div','board-note');node.dataset.id=n.id;node.tabIndex=0;node.setAttribute('role','button');
   const card=el('div','board-note-card');
-  const meta=el('div','board-note-meta'),glyph=el('span','board-note-glyph'),kind=el('span','board-note-kind'),pips=el('span','board-note-pips'),status=el('span','board-note-status');
-  meta.append(glyph,kind,pips,status);
+  const meta=el('div','board-note-meta'),glyph=el('span','board-note-glyph'),kind=el('span','board-note-kind'),pips=el('span','board-note-pips'),crowdPct=el('span','board-note-crowdpct'),status=el('span','board-note-status');
+  meta.append(glyph,kind,pips,crowdPct,status);
+  const crowdBar=el('div','board-note-crowd');crowdBar.append(el('i'));
   const title=el('div','board-note-title'),body=el('div','board-note-body');
-  card.append(meta,title,body);
+  card.append(meta,title,body,crowdBar);
   const plus=button('board-note-plus','+');
   plus.setAttribute('aria-label','Add a branch or drag to connect');plus.title='Click: new branch · Drag: connect';
   plus.addEventListener('pointerdown',e=>startConnectDrag(n.id,e));
@@ -338,7 +339,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
    if(e.target!==node)return;
    if((e.key==='Enter'||e.key===' ')&&selected!==n.id){e.preventDefault();e.stopPropagation();select(n.id,{focus:true});}
   });
-  return {el:node,card,glyph,kind,pips,status,title,body,sig:null,needsPos:true};
+  return {el:node,card,glyph,kind,pips,crowdPct,crowdBar,status,title,body,sig:null,needsPos:true};
  }
  function fillCard(entry,n,g){
   const root=n.id===g.rootId;
@@ -1120,7 +1121,18 @@ export function initFreeCanvas({notice=()=>{}}={}){
  // ── Swarm: a synthetic crowd drifts toward the options it adopts ──
  let swarm=null,swarmSeed=0,swarmTimer=null;
  const swarmLayer=$('#boardSwarm');
- function clearSwarm(){clearTimeout(swarmTimer);swarmLayer.replaceChildren();swarmLayer.classList.remove('is-fading');}
+ function setCrowd(optionId,share){
+  const e=cards.get(optionId);if(!e)return;
+  e.el.classList.add('has-crowd');
+  e.crowdPct.textContent=Math.round(share)+'%';
+  e.crowdPct.title=t('swarmTitle');
+  e.crowdBar.firstChild.style.width=Math.min(100,share)+'%';
+ }
+ function clearCrowdMeters(){for(const e of cards.values()){e.el.classList.remove('has-crowd');e.crowdPct.textContent='';e.crowdBar.firstChild.style.width='0';}}
+ function clearSwarm(){
+  clearTimeout(swarmTimer);swarmLayer.replaceChildren();swarmLayer.classList.remove('is-fading');
+  viewport.classList.remove('is-swarming');clearCrowdMeters();
+ }
  function runSwarm(next=false){
   if(next)swarmSeed++;
   swarm=simulateSwarm(graph(),{locale,seed:swarmSeed});
@@ -1128,25 +1140,38 @@ export function initFreeCanvas({notice=()=>{}}={}){
   openPanel('futures');
   playSwarm(swarm);
  }
+ // Agents start in a cloud below the main idea and flow INTO the card they adopt, where they
+ // disappear under it; the card's own meter shows the share. Nothing is left over text.
  function playSwarm(sim){
   clearSwarm();
   if(!sim.options.length)return;
   const g=graph(),root=g.nodes.find(n=>n.id===g.rootId);
-  const home={x:root.x+CARD_W/2,y:root.y+CARD_H+150};
+  const home={x:root.x+CARD_W/2,y:root.y+CARD_H+170};
   const pr=i=>{const x=Math.sin(i*12.9898+swarmSeed*7.13)*43758.5453;return x-Math.floor(x);};
-  const cloud=sim.frames[0].map((_,i)=>{const a=pr(i)*Math.PI*2,r=40+pr(i+999)*110;return {x:home.x+Math.cos(a)*r*1.6,y:home.y+Math.sin(a)*r*.7};});
-  const around=sim.options.map(o=>{const n=g.nodes.find(x=>x.id===o.optionId);return n?{x:n.x+CARD_W/2,y:n.y+CARD_H/2}:home;});
-  const dots=cloud.map(p=>{const c=svgEl('circle',{r:'3.4',cx:'0',cy:'0'});c.style.transform='translate('+p.x+'px,'+p.y+'px)';swarmLayer.append(c);return c;});
+  const cloud=sim.frames[0].map((_,i)=>{const a=pr(i)*Math.PI*2,r=20+pr(i+999)*70;return {x:home.x+Math.cos(a)*r*1.8,y:home.y+Math.sin(a)*r*.6};});
+  const centre=sim.options.map(o=>{const n=g.nodes.find(x=>x.id===o.optionId);return n?{x:n.x+CARD_W/2,y:n.y+CARD_H/2}:home;});
+  viewport.classList.add('is-swarming');
+  const dots=cloud.map((p,i)=>{const c=svgEl('circle',{r:'3',cx:'0',cy:'0'});c.style.transform='translate('+p.x+'px,'+p.y+'px)';c.style.transitionDelay=Math.round(pr(i+31)*240)+'ms';swarmLayer.append(c);return c;});
   fitTo([g.rootId,...sim.options.map(o=>o.optionId)]);
-  const place=frame=>frame.forEach((c,i)=>{
-   if(c<0){dots[i].classList.remove('on');dots[i].style.transform='translate('+cloud[i].x+'px,'+cloud[i].y+'px)';return;}
-   const a=pr(i+77)*Math.PI*2,rx=CARD_W*.62+pr(i+5)*34,ry=CARD_H*.85+pr(i+9)*26,t=around[c];
-   dots[i].classList.add('on');dots[i].style.transform='translate('+(t.x+Math.cos(a)*rx)+'px,'+(t.y+Math.sin(a)*ry)+'px)';
-  });
-  if(reducedMotion()){place(sim.frames.at(-1));renderPanel();return;}
+  const place=(frame,k)=>{
+   frame.forEach((c,i)=>{
+    if(c<0)return;
+    const p=centre[c];
+    dots[i].classList.add('on');
+    dots[i].style.transform='translate('+(p.x+(pr(i+5)-.5)*CARD_W*.5)+'px,'+(p.y+(pr(i+9)-.5)*CARD_H*.4)+'px)';
+   });
+   sim.options.forEach((o,j)=>setCrowd(o.optionId,o.curve[k]));
+  };
+  const finish=()=>{
+   place(sim.frames.at(-1),sim.frames.length-1);
+   swarmLayer.classList.add('is-fading');
+   swarmTimer=setTimeout(()=>{swarmLayer.replaceChildren();swarmLayer.classList.remove('is-fading');viewport.classList.remove('is-swarming');},700);
+   renderPanel();
+  };
+  if(reducedMotion()){finish();return;}
   let f=0;
-  const step=()=>{place(sim.frames[f]);f++;if(f<sim.frames.length)swarmTimer=setTimeout(step,420);else renderPanel();};
-  swarmTimer=setTimeout(step,350);
+  const step=()=>{if(f>=sim.frames.length){swarmTimer=setTimeout(finish,500);return;}place(sim.frames[f],f);f++;swarmTimer=setTimeout(step,420);};
+  swarmTimer=setTimeout(step,300);
  }
  function swarmSection(){
   const sec=el('section','futures-section');

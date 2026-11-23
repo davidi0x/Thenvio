@@ -404,10 +404,18 @@ body.canvas-mode .workspace{min-height:0;height:100dvh}
 .connector-steps{margin:4px 0 0;padding-left:18px;display:grid;gap:4px;font-size:12px;line-height:1.5;color:var(--sub)}
 .connector-steps b{color:var(--text)}
 
-/* Swarm: synthetic agents drift to the options they adopt. Monochrome; adoption is shown by opacity. */
-.board-swarm circle{fill:var(--sub);opacity:.35;transition:transform .7s var(--ease-out),opacity .5s,fill .3s}
-.board-swarm circle.on{fill:var(--accent);opacity:.9}
-.board-swarm.is-fading circle{opacity:0}
+/* Swarm: agents flow into the option card they adopt (drawn under the cards, so never over text);
+   the card keeps a thin adoption meter. Monochrome. */
+.board-swarm circle{fill:var(--sub);opacity:.45;transition:transform .8s var(--ease-out),opacity .6s}
+.board-swarm circle.on{fill:var(--text);opacity:.7}
+.board-swarm.is-fading circle{opacity:0;transition-delay:0s!important}
+.board-viewport.is-swarming .board-ghosts,.board-viewport.is-swarming #boardGhostEdges{opacity:0;pointer-events:none;transition:opacity .2s}
+.board-note-crowd{position:absolute;left:15px;right:15px;bottom:6px;height:3px;border-radius:2px;background:var(--line);overflow:hidden;opacity:0;transition:opacity .3s}
+.board-note-crowd i{display:block;height:100%;width:0;background:var(--text);border-radius:2px;transition:width .5s var(--ease-out)}
+.board-note.has-crowd .board-note-crowd{opacity:1}
+.board-note-crowdpct{font-variant-numeric:tabular-nums;letter-spacing:0;color:var(--text);margin-left:6px}
+.board-note-crowdpct:empty{display:none}
+.board-note.root .board-note-crowd{display:none}
 .swarm-option{display:grid;gap:4px;padding:8px 0;border-bottom:1px solid var(--line)}
 .swarm-option:last-child{border-bottom:0}
 .swarm-row{display:flex;justify-content:space-between;gap:10px;font-size:12px}
@@ -415,5 +423,5 @@ body.canvas-mode .workspace{min-height:0;height:100dvh}
 .swarm-bar{height:5px;border-radius:3px;background:var(--soft);overflow:hidden}
 .swarm-bar i{display:block;height:100%;background:var(--text);transition:width .6s var(--ease-out)}
 .swarm-why{font-size:11px;color:var(--sub)}
-@media(prefers-reduced-motion:reduce){.board-swarm circle,.swarm-bar i{transition:none}}
+@media(prefers-reduced-motion:reduce){.board-swarm circle,.swarm-bar i,.board-note-crowd i{transition:none}}
 html[data-motion="off"] .board-swarm circle{transition:none}
