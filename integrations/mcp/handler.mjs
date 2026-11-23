@@ -55,7 +55,7 @@ const brainTools=[
    inputSchema:{type:'object',required:['note'],properties:{canvas:canvasRef,note:{type:'string',description:'Note title (or id).'},
     status:{type:'string',enum:['open','exploring','supported','refuted']},evidence:{type:'string'},impact:{type:'integer'},effort:{type:'integer'},
     kind:{type:'string',enum:['direction','question','assumption','experiment','insight']}}},_meta:renderMeta},
-  {name:'thenvio_swarm',description:'Run a synthetic crowd over the options on the canvas: agents with traits (benefit seeking, time pressure, caution, price sensitivity, need for trust, habit strength, social influence, adoption threshold — each 0 to 1) influence each other in a social network over several rounds. Optionally give YOUR personas: 6-20 distinct people who plausibly use this, each with a share of the crowd, traits and a reaction to each option in their own voice (stance adopt/maybe/reject, why, what would change their mind). Personas are simulated, never real people or research; say so. Returns adoption per option, tipping points, who rejects what and why, and adds the loudest objections to the canvas as questions plus one real-world check.',
+  {name:'thenvio_swarm',description:'Run a synthetic crowd over the options on the canvas: agents with traits (benefit seeking, time pressure, caution, price sensitivity, need for trust, habit strength, social influence, adoption threshold — each 0 to 1) influence each other in a social network over several rounds. Optionally give YOUR personas: 6-20 distinct people who plausibly use this, each with a share of the crowd, traits and a reaction to each option in their own voice (stance adopt/maybe/reject, why, what would change their mind). Personas are simulated, never real people or research; say so. Returns uptake per option with a range, an honest verdict (clear / close / unclear when options are unrated) and one next step, who rejects what and why, and adds the loudest objections to the canvas as questions plus one real-world check.',
    inputSchema:{type:'object',properties:{canvas:canvasRef,addToCanvas:{type:'boolean',description:'Add the top objections as notes (default true).'},
     personas:{type:'array',items:{type:'object',required:['name','reactions'],properties:{
      name:{type:'string'},segment:{type:'string'},share:{type:'number',description:'Relative size of this persona group.'},
@@ -84,7 +84,7 @@ function view(graph,store,extra={}){
 function summary(v){
   const w=v.futures.winner;
   const sw=v.swarm;
-  return [sw?.winner?'Crowd (synthetic): most taken up "'+sw.winner.title+'" '+sw.winner.adoption+'%'+(sw.loudest?'; loudest objection on "'+sw.loudest.optionTitle+'": '+sw.loudest.text+' ('+sw.loudest.share+'%)':''):sw?'Crowd (synthetic): no option was taken up.':'',v.canvas.title+(v.canvas.goal?' — goal: '+v.canvas.goal:''),
+  return [sw?.verdict?'Crowd (synthetic, '+sw.certainty+'): '+sw.verdict+(sw.next?' Next: '+sw.next.title+' — '+sw.next.why:''):'',v.canvas.title+(v.canvas.goal?' — goal: '+v.canvas.goal:''),
    w?'Best route ('+w.score+'/100, '+w.confidence+'): '+(w.choices.map(c=>c.optionTitle).join(' → ')||'—'):'No route yet: '+v.futures.nextMove.title,
    v.futures.weakest?'Weakest link: '+v.futures.weakest.title:'','Next: '+v.nextMoves.join(' | '),
    v.openUrl?'Open the canvas: '+v.openUrl:'',v.futures.disclaimer].filter(Boolean).join('\n');

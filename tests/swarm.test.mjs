@@ -73,3 +73,23 @@ test('personas from a chat model shape the crowd and their voices land on the ca
  assert.ok(titles.some(t=>t.startsWith('Check for real: 5 conversations')),'one real-world check is added');
  assert.equal(swarmNotes(out.graph,r,{locale:'en',voices}).added.length,0,'no duplicates on a second run');
 });
+
+test('honest verdict: unrated options are a guess, ranges hold the estimate, uptake is not zero-sum',()=>{
+ let g=prepareBoard(makeIdea('Phone payments for cafes'));
+ for(const t of ['QR sticker with phone payment','New app with account and subscription','Loyalty stamps without an app'])g=addIdeaBranch(g,g.rootId,{title:t,kind:'direction'});
+ g=prepareBoard(g);
+ const guess=simulateSwarm(g,{locale:'en'});
+ assert.equal(guess.certainty,'unclear','titles alone never make a verdict');
+ assert.equal(guess.next.code,'rate');
+ assert.match(guess.verdict,/Too early/);
+ const {g:rated,ids}=canvas();
+ const r=simulateSwarm(rated,{locale:'en'});
+ for(const o of r.options)assert.ok(o.range[0]<=o.adoption&&o.adoption<=o.range[1],'the range holds the estimate');
+ assert.ok(r.options.every(o=>o.adoption>0),'no option is cut to zero by a keyword');
+ const by=id=>r.options.find(o=>o.optionId===id);
+ assert.ok(by(ids.app).adoption<by(ids.qr).adoption,'a paid app with an account is taken up less than a QR sticker');
+ assert.ok(['clear','close'].includes(r.certainty));
+ assert.ok(r.next&&r.next.optionId===r.winner.optionId&&r.next.code==='test','next step tests the leader\'s main objection');
+ const pl=simulateSwarm(rated,{locale:'pl'});
+ assert.match(pl.verdict,/prowadzi|Na styk/);
+});

@@ -2,9 +2,9 @@
 
 ## v1.1 — Crowd: a synthetic swarm reacts to your options
 
-Inspired by swarm-intelligence simulators, built the Thenvio way. In **Futures → Simulate the crowd**, a few hundred synthetic people with different traits (benefit seeking, time pressure, caution, price sensitivity, need for trust, habit strength, social influence) live in a small-world network and, round after round, take up or ignore each option — pulled by its value and by neighbours who already took it, pushed away by effort, price, trust, habit change and open risks. Dots on the canvas drift to the options they adopt.
+Inspired by swarm-intelligence simulators, built the Thenvio way. In **Futures → Simulate the crowd**, a few hundred synthetic people with different traits (benefit seeking, time pressure, caution, price sensitivity, need for trust, habit strength, social influence) live in a small-world network and, round after round, take up or ignore each option — pulled by its value and by neighbours who already took it, pushed away by effort, price, trust, habit change and open risks. Dots come out of the main idea and flow into the option cards they would take up; each card shows its share.
 
-What you get: adoption curves and tipping points, **who rejects which option and why**, and a warning when value and uptake disagree (the futures scan favours one route, the crowd takes up another). One click turns the loudest objections into questions on the canvas plus a real-world check ("5 conversations with …"), which then feed the futures scan.
+What you get: for each option, how many would take it up **with a range** (unknowns are varied across runs), an honest verdict (clear lead, close call, or too early when options are unrated), one next step, **who rejects which option and why**, tipping points only when friends really carried it, and a warning when value and uptake disagree (the futures scan favours one route, the crowd takes up another). One click turns the loudest objections into questions on the canvas plus a real-world check ("5 conversations with …"), which then feed the futures scan.
 
 In Claude or ChatGPT, `thenvio_swarm` lets the chat model write the personas — named people with traits and reactions in their own voice — and Thenvio runs them through the same dynamics and puts their sharpest objections on the canvas.
 

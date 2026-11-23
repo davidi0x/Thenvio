@@ -50,7 +50,7 @@ function optionsOf(graph){
   const own=territory(o.id),text=[o.title,o.description,...own.map(n=>n.title)].join(' ');
   const untested=own.filter(n=>n.kind==='assumption'&&(n.status==='open'||n.status==='exploring')).length;
   const supported=own.filter(n=>n.status==='supported'&&n.kind!=='question').length;
-  return {id:o.id,title:o.title,
+  return {id:o.id,title:o.title,rated:{impact:!!o.impact,effort:!!o.effort},
    value:o.impact?(o.impact-1)/4:.5,friction:o.effort?(o.effort-1)/4:.5,
    price:CUES.price.test(text)?1:0,trust:CUES.trust.test(text)?1:0,install:CUES.install.test(text)&&!NO_INSTALL.test(text)?1:0,social:CUES.social.test(text)?1:0,
    risk:Math.min(.5,untested*.12),evidence:Math.min(.25,supported*.08),
@@ -68,9 +68,11 @@ function segmentsFrom(personas){
  const total=list.reduce((s,p)=>s+p.share,0);
  return list.map(p=>({...p,share:p.share/total}));
 }
+const BASE_WEIGHTS=Object.freeze({price:.45,trust:.45,install:.4});
 function utility(a,o,noise){
- const parts={value:a.gain*(.4+.6*o.value),friction:-a.timeCost*o.friction*.8,price:-a.priceSens*o.price*.45,trust:-a.trustNeed*o.trust*.45,
-  install:-a.habit*o.install*.4,risk:-a.caution*o.risk};
+ const w=o.w||BASE_WEIGHTS;
+ const parts={value:a.gain*(.3+.7*o.value),friction:-a.timeCost*o.friction*.8,price:-a.priceSens*o.price*w.price,trust:-a.trustNeed*o.trust*w.trust,
+  install:-a.habit*o.install*w.install,risk:-a.caution*o.risk};
  const u=Object.values(parts).reduce((s,v)=>s+v,0)+o.evidence+noise;
  return {u,parts};
 }
@@ -80,6 +82,39 @@ function smallWorld(n,k,p,rand){
  for(let i=0;i<n;i++)for(const t of [...adj[i]]){if(t>i&&rand()<p){const r=Math.floor(rand()*n);if(r!==i&&!adj[i].has(r)){adj[i].delete(t);adj[t].delete(i);adj[i].add(r);adj[r].add(i);}}}
  return adj.map(s=>[...s]);
 }
+// One crowd run. Each option spreads on its own (would this person take it up if it were offered?),
+// so options do not steal each other's share; frames record each agent's first choice for the animation.
+function runCrowd(options,crowd,net,R){
+ const n=crowd.length,pct=c=>Math.round(c/n*1000)/10;
+ const util=crowd.map(a=>options.map(o=>o.blocked?{u:-9,parts:{}}:utility(a,o,a.noise)));
+ const on=options.map(()=>new Uint8Array(n)),curves=options.map(()=>[]),frames=[];
+ for(let round=0;round<R;round++){
+  options.forEach((o,j)=>{
+   if(o.blocked){curves[j].push(0);return;}
+   const prev=on[j],next=Uint8Array.from(prev);let count=0;
+   for(let i=0;i<n;i++){
+    if(prev[i]){count++;continue;}
+    const a=crowd[i],nb=net[i];
+    let adopted=0;for(const t of nb)adopted+=prev[t];
+    const pull=round===0?0:a.social*(1+.5*o.social)*(adopted/nb.length)*.9;
+    if(util[i][j].u+pull>a.threshold){next[i]=1;count++;}
+   }
+   on[j]=next;curves[j].push(pct(count));
+  });
+  const frame=new Array(n).fill(-1);
+  for(let i=0;i<n;i++){let best=-Infinity;for(let j=0;j<options.length;j++)if(on[j][i]&&util[i][j].u>best){best=util[i][j].u;frame[i]=j;}}
+  frames.push(frame);
+ }
+ return {curves,frames,on,util};
+}
+// What we do not know is varied between runs: unrated impact/effort can be anything, rated ones are
+// fuzzy, and the weight of the keyword cues (payment → trust, app → new habit) is only a guess.
+function perturb(options,rand){
+ const vary=(v,rated)=>rated?clamp01(v+(rand()-.5)*.2):.1+rand()*.8;
+ return options.map(o=>({...o,value:vary(o.value,o.rated.impact),friction:vary(o.friction,o.rated.effort),
+  w:{price:BASE_WEIGHTS.price*(.4+rand()*1.2),trust:BASE_WEIGHTS.trust*(.4+rand()*1.2),install:BASE_WEIGHTS.install*(.4+rand()*1.2)}}));
+}
+const ENSEMBLE=10;
 
 export function simulateSwarm(graph,{agents=240,rounds=12,seed=0,locale='en',personas=null}={}){
  assertIdeaGraph(graph);
@@ -88,7 +123,7 @@ export function simulateSwarm(graph,{agents=240,rounds=12,seed=0,locale='en',per
  const options=optionsOf(graph);
  const disclaimer=L(lang,'Syntetyczny tłum: cechy i zasady ustawione z góry, nie prawdziwi ludzie. Służy do znajdowania pytań, nie do prognozowania.',
   'Synthetic crowd: traits and rules set up front, not real people. Use it to find questions, not to forecast.');
- if(!options.length)return {agents:n,rounds:R,options:[],segments:[],winner:null,frames:[],disclaimer,
+ if(!options.length)return {agents:n,rounds:R,options:[],segments:[],winner:null,frames:[],disclaimer,certainty:null,verdict:null,next:null,
   empty:L(lang,'Dodaj co najmniej jedną opcję (typ „Opcja”), żeby tłum miał na co reagować.','Add at least one option (kind “Option”) for the crowd to react to.')};
  const rand=rng(Number.parseInt(stableHash(graph.id+'|'+seed+'|'+options.map(o=>[o.id,o.value,o.friction,o.risk,o.evidence,o.blocked].join(':')).join(',')),36));
  const segs=segmentsFrom(personas);
@@ -103,54 +138,68 @@ export function simulateSwarm(graph,{agents=240,rounds=12,seed=0,locale='en',per
   crowd.push(a);
  }
  const net=smallWorld(n,6,.12,rand);
- const choice=new Int16Array(n).fill(-1);
- const frames=[];const curves=options.map(()=>[]);
- const util=crowd.map(a=>options.map(o=>o.blocked?{u:-9,parts:{}}:utility(a,o,a.noise)));
- for(let round=0;round<R;round++){
-  const next=Int16Array.from(choice);
-  for(let i=0;i<n;i++){
-   if(choice[i]>=0)continue;
-   const a=crowd[i],nb=net[i];
-   let best=-1,bestScore=-Infinity;
-   for(let j=0;j<options.length;j++){
-    if(options[j].blocked)continue;
-    let adopted=0;for(const t of nb)if(choice[t]===j)adopted++;
-    const pull=round===0?0:a.social*(1+.5*options[j].social)*(adopted/nb.length)*1.5;
-    const score=util[i][j].u+pull;
-    if(score>a.threshold&&score>bestScore){best=j;bestScore=score;}
-   }
-   if(best>=0)next[i]=best;
-  }
-  choice.set(next);
-  frames.push(Array.from(choice));
-  options.forEach((o,j)=>curves[j].push(Math.round(choice.filter(c=>c===j).length/n*1000)/10));
- }
- // Who would not take each option even with no competition, and the biggest reason why.
+ const base=runCrowd(options,crowd,net,R);
+ const finals=options.map((_,j)=>[base.curves[j].at(-1)]);
+ for(let k=0;k<ENSEMBLE;k++){const run=runCrowd(perturb(options,rand),crowd,net,R);run.curves.forEach((c,j)=>finals[j].push(c.at(-1)));}
+ const band=list=>{const s=[...list].sort((a,b)=>a-b);return [Math.min(s[1],list[0]),Math.max(s[s.length-2],list[0])];};
+ // Who would not take each option up, and the biggest reason why.
  const objections=options.map(()=>new Map());
  for(let i=0;i<n;i++)for(let j=0;j<options.length;j++){
-  if(options[j].blocked||choice[i]===j)continue;
-  const x=util[i][j];if(x.u>=crowd[i].threshold)continue;
+  if(options[j].blocked||base.on[j][i])continue;
+  const x=base.util[i][j];if(x.u>=crowd[i].threshold)continue;
   let cat='value',worst=-(crowd[i].threshold-x.parts.value);
   for(const k of ['friction','price','trust','install','risk'])if(x.parts[k]<worst){worst=x.parts[k];cat=k;}
   const m=objections[j];const e=m.get(cat)||{count:0,segments:{}};e.count++;e.segments[crowd[i].seg]=(e.segments[crowd[i].seg]||0)+1;m.set(cat,e);
  }
  const segName=id=>{const s=segs.find(x=>x.id===id);return s?.name||s?.[lang]||id;};
+ const last=base.frames.at(-1);
  const result=options.map((o,j)=>{
-  const adoption=curves[j].at(-1);
-  const tipping=curves[j].findIndex(v=>v>=16);
+  const curve=base.curves[j],adoption=curve.at(-1);
+  // A tipping point only when friends actually carried it: who takes it up alone does so in round 1.
+  const fromFriends=Math.round((adoption-curve[0])*10)/10;
+  let tipping=null;
+  if(fromFriends>=5){let best=0;for(let k=1;k<curve.length;k++){const d=curve[k]-curve[k-1];if(d>best){best=d;tipping=k+1;}}}
   const bySegment={};
-  for(const s of segs){let m=0,yes=0;for(let i=0;i<n;i++)if(crowd[i].seg===s.id){m++;if(choice[i]===j)yes++;}bySegment[segName(s.id)]=m?Math.round(yes/m*100):0;}
+  for(const s of segs){let m=0,yes=0;for(let i=0;i<n;i++)if(crowd[i].seg===s.id){m++;if(base.on[j][i])yes++;}bySegment[segName(s.id)]=m?Math.round(yes/m*100):0;}
   const objs=[...objections[j]].map(([category,e])=>({category,count:e.count,share:Math.round(e.count/n*1000)/10,
    segments:Object.entries(e.segments).sort((a,b)=>b[1]-a[1]).map(([id,c])=>({name:segName(id),count:c})),name:OBJECTION_NAMES[category][lang==='pl'?0:1],text:OBJECTIONS[category][lang==='pl'?0:1]}))
    .sort((a,b)=>b.count-a.count);
-  return {optionId:o.id,title:o.title,blocked:o.blocked,adoption,curve:curves[j],tippingRound:tipping>=0?tipping+1:null,bySegment,objections:objs};
+  return {optionId:o.id,title:o.title,blocked:o.blocked,rated:o.rated.impact&&o.rated.effort,adoption,range:o.blocked?[0,0]:band(finals[j]),
+   firstChoice:Math.round(last.filter(c=>c===j).length/n*1000)/10,fromFriends,curve,tippingRound:tipping,bySegment,objections:objs};
  });
  const ranked=[...result].filter(r=>!r.blocked).sort((a,b)=>b.adoption-a.adoption);
- const winner=ranked[0]&&ranked[0].adoption>0?ranked[0]:null;
- const undecided=Math.round(choice.filter(c=>c<0).length/n*1000)/10;
+ const top=ranked[0]&&ranked[0].adoption>0?ranked[0]:null,second=ranked[1]||null;
+ const unrated=ranked.filter(r=>!r.rated);
+ // Honest verdict: clear only when the ranges do not overlap. Unrated options make it a guess.
+ let certainty='none';
+ if(top){
+  if(!second)certainty=top.range[1]-top.range[0]>35&&unrated.length?'unclear':'clear';
+  else if(top.range[0]>second.range[1])certainty='clear';
+  else certainty=unrated.length?'unclear':'close';
+  // Without ratings the gap comes only from words in the titles: never call that a verdict.
+  if(!top.rated||(second&&!second.rated))certainty='unclear';
+ }
+ const q=s=>L(lang,'„'+s+'”','“'+s+'”'),rg=r=>r.range[0]===r.range[1]?r.adoption+'%':r.range[0]+'–'+r.range[1]+'%';
+ const verdict=certainty==='none'?L(lang,'Nikt nie wziąłby żadnej opcji — tłum widzi za małą korzyść albo za duży wysiłek.','Nobody would take any option up — the crowd sees too little benefit or too much effort.')
+  :certainty==='clear'?L(lang,q(top.title)+' wyraźnie prowadzi: '+rg(top)+' by to wzięło.',q(top.title)+' clearly leads: '+rg(top)+' would take it up.')
+  :certainty==='close'?L(lang,'Na styk: '+q(top.title)+' '+rg(top)+' vs '+q(second.title)+' '+rg(second)+'. O wyniku zdecyduje obiekcja, nie liczby.','Close call: '+q(top.title)+' '+rg(top)+' vs '+q(second.title)+' '+rg(second)+'. An objection will decide this, not the numbers.')
+  :L(lang,'Za wcześnie na werdykt: '+unrated.length+' z '+ranked.length+' opcji nie ma oceny korzyści i wysiłku, więc tłum zgaduje (widełki się nakładają).','Too early to call: '+unrated.length+' of '+ranked.length+' options have no benefit/effort rating, so the crowd is guessing (the ranges overlap).');
+ // The single most useful next step.
+ let next=null;
+ if(certainty==='unclear'){
+  const pick=[...unrated].sort((a,b)=>(b.range[1]-b.range[0])-(a.range[1]-a.range[0]))[0];
+  next={code:'rate',optionId:pick.optionId,title:L(lang,'Oceń korzyść i wysiłek: '+q(pick.title),'Rate benefit and effort: '+q(pick.title)),
+   why:L(lang,'Ta opcja ma najszersze widełki. Dwa kliknięcia zawężą wynik bardziej niż kolejna symulacja.','This option has the widest range. Two taps narrow the result more than another simulation.')};
+ }else if(top){
+  const ob=top.objections[0];
+  next=ob?{code:'test',optionId:top.optionId,category:ob.category,title:L(lang,'Sprawdź w realu: '+ob.name+' przy '+q(top.title),'Check for real: '+ob.name+' for '+q(top.title)),
+   why:ob.text+' '+L(lang,'('+ob.share+'% tłumu, głównie '+ob.segments.slice(0,2).map(s=>s.name).join(', ')+')','('+ob.share+'% of the crowd, mostly '+ob.segments.slice(0,2).map(s=>s.name).join(', ')+')')}:null;
+ }
+ const undecided=Math.round(last.filter(c=>c<0).length/n*1000)/10;
  const loudest=result.flatMap(r=>r.objections.map(o=>({...o,optionId:r.optionId,optionTitle:r.title}))).sort((a,b)=>b.count-a.count)[0]||null;
- return {agents:n,rounds:R,seed,options:result,ranking:ranked.map(r=>r.optionId),winner:winner&&{optionId:winner.optionId,title:winner.title,adoption:winner.adoption,tippingRound:winner.tippingRound},
-  undecided,loudest,segments:segs.map(s=>({id:s.id,name:segName(s.id),share:Math.round(s.share*100)})),frames,disclaimer};
+ return {agents:n,rounds:R,seed,options:result,ranking:ranked.map(r=>r.optionId),
+  winner:top&&{optionId:top.optionId,title:top.title,adoption:top.adoption,range:top.range,tippingRound:top.tippingRound},
+  certainty,verdict,next,undecided,loudest,segments:segs.map(s=>({id:s.id,name:segName(s.id),share:Math.round(s.share*100)})),frames:base.frames,disclaimer};
 }
 
 // The crowd's loudest objections become questions on the canvas, plus one real-world check.

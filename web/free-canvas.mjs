@@ -79,10 +79,12 @@ const T={
   cloudCreate:'Create your personal MCP connector. Paste it once into Claude or ChatGPT — from then on you brainstorm in the chat and this canvas updates by itself.',
   cloudLede:'Your connector is live. Add it once, then ask in any chat.',stepClaude:'<b>Claude</b>: Settings → Connectors → Add custom connector → paste the URL.',
   stepChatGPT:'<b>ChatGPT</b>: Settings → Apps & Connectors → add a custom connector (MCP) → paste the URL, no authentication.',stepAsk:'Then ask: “Use Thenvio and brainstorm my idea … with the goal …”.',connectorCopied:'Connector URL copied.',
-  swarmTitle:'Crowd (simulation)',swarmIntro:'Hundreds of synthetic people with different traits react to your options and influence each other. It shows what people would actually take up — and who rejects what, and why.',
+  swarmTitle:'Crowd (simulation)',swarmIntro:'Hundreds of synthetic people with different traits react to your options and influence each other. It shows who would plausibly take each option up, how sure that is — and who rejects what, and why.',
   swarmRun:'Simulate the crowd',swarmAgain:'Another crowd ↻',swarmAdd:'Add objections to the canvas',swarmTop:'Most taken up: “{t}” — {p}% after {r} rounds',swarmTip:' (tipping point in round {n})',
   swarmNone:'Nobody took any option up — the crowd sees too little benefit or too much friction.',swarmObj:'Main objection: {o} ({p}%)',swarmUndecided:'{p}% stayed undecided.',swarmAdded:'{n} crowd objections added as questions.',
   swarmConflict:'Value and uptake disagree: the futures scan favours “{f}”, the crowd takes up “{c}”. Find what makes the valuable option as easy to take up — or test whether the easy one is valuable enough.',
+  swarmUpdated:'Crowd updated: {v}',swarmStale:'The canvas changed since this crowd ran.',swarmRefresh:'Update crowd',swarmFriends:'+{p} pts through friends (from round {n})',swarmUnrated:'not rated — guess',swarmTestHow:'Ask 5 people about a recent real situation, not an opinion. Pass if at least 3 do not raise this objection or say what would remove it.',
+  cert_clear:'Clear lead',cert_close:'Close call',cert_unclear:'Too early',cert_none:'No uptake',crowdHud:'Crowd · {c} · “{t}” {r}',crowdHudNone:'Crowd · nobody would take any option up',crowdRunning:'{n} synthetic people react…',
   swarmNote:'Adoption, not value: a widely taken option can still be the wrong one. Check the objections with real people.',
   ghTitle:'Read from GitHub',ghConnect:'Connect GitHub (read)',ghReading:'Reading {repo}…',ghRead:'Read <b>{repo}</b> ({branch}): {n} canvas(es), {c} context file(s).',ghError:'GitHub: {e}',bodyPlaceholder:'Context, details, why it matters…',evidencePlaceholder:'Interview note, link, number…',invalidAi:'Invalid AI response: {e}',undoEmpty:'Nothing to undo.'},
  pl:{hint:'Kliknij dwukrotnie, by dodać · Przeciągnij kropkę, by połączyć · Tab dodaje gałąź',scan:'Skanuj przyszłości',tabNote:'Notatka',tabCoach:'Co dalej',tabFutures:'Przyszłości',
@@ -135,10 +137,12 @@ const T={
   cloudCreate:'Utwórz osobisty connector MCP. Wklejasz go raz w Claude albo ChatGPT — od tej pory rozkminiasz w czacie, a ten canvas aktualizuje się sam.',
   cloudLede:'Twój connector działa. Dodaj go raz, potem po prostu pisz w czacie.',stepClaude:'<b>Claude</b>: Ustawienia → Connectors → Dodaj własny connector → wklej adres.',
   stepChatGPT:'<b>ChatGPT</b>: Ustawienia → Aplikacje i connectory → dodaj własny connector (MCP) → wklej adres, bez uwierzytelniania.',stepAsk:'Potem napisz: „Użyj Thenvio i rozkmiń mój pomysł … z celem …”.',connectorCopied:'Skopiowano adres connectora.',
-  swarmTitle:'Tłum (symulacja)',swarmIntro:'Setki syntetycznych osób o różnych cechach reagują na Twoje opcje i wpływają na siebie nawzajem. Widać, co ludzie faktycznie by wzięli — i kto, co i dlaczego odrzuca.',
+  swarmTitle:'Tłum (symulacja)',swarmIntro:'Setki syntetycznych osób o różnych cechach reagują na Twoje opcje i wpływają na siebie nawzajem. Widać, kto prawdopodobnie wziąłby każdą opcję, na ile to pewne — i kto, co i dlaczego odrzuca.',
   swarmRun:'Symuluj tłum',swarmAgain:'Inny tłum ↻',swarmAdd:'Dodaj obiekcje na canvas',swarmTop:'Najchętniej brane: „{t}” — {p}% po {r} rundach',swarmTip:' (przełamanie w rundzie {n})',
   swarmNone:'Nikt nie wziął żadnej opcji — tłum widzi za małą korzyść albo za duży wysiłek.',swarmObj:'Główna obiekcja: {o} ({p}%)',swarmUndecided:'{p}% zostało niezdecydowanych.',swarmAdded:'Dodano obiekcje tłumu jako pytania: {n}.',
   swarmConflict:'Wartość i adopcja się rozjeżdżają: skan przyszłości stawia na „{f}”, a tłum bierze „{c}”. Znajdź, co uczyni wartościową opcję równie łatwą do wzięcia — albo sprawdź, czy ta łatwa daje dość korzyści.',
+  swarmUpdated:'Tłum zaktualizowany: {v}',swarmStale:'Canvas zmienił się od tej symulacji.',swarmRefresh:'Odśwież tłum',swarmFriends:'+{p} pkt przez znajomych (od rundy {n})',swarmUnrated:'bez oceny — zgadywanie',swarmTestHow:'Zapytaj 5 osób o ostatnią prawdziwą sytuację, nie o opinię. Sukces, jeśli co najmniej 3 nie zgłaszają tej obiekcji albo mówią, co by ją usunęło.',
+  cert_clear:'Wyraźny lider',cert_close:'Na styk',cert_unclear:'Za wcześnie',cert_none:'Brak chętnych',crowdHud:'Tłum · {c} · „{t}” {r}',crowdHudNone:'Tłum · nikt nie wziąłby żadnej opcji',crowdRunning:'{n} syntetycznych osób reaguje…',
   swarmNote:'To adopcja, nie wartość: chętnie brana opcja nadal może być zła. Sprawdź obiekcje z prawdziwymi ludźmi.',
   ghTitle:'Czytaj z GitHuba',ghConnect:'Połącz GitHub (odczyt)',ghReading:'Czytam {repo}…',ghRead:'Wczytano <b>{repo}</b> ({branch}): canvasy: {n}, pliki kontekstu: {c}.',ghError:'GitHub: {e}',bodyPlaceholder:'Kontekst, szczegóły, dlaczego to ważne…',evidencePlaceholder:'Notatka z rozmowy, link, liczba…',invalidAi:'Nieprawidłowa odpowiedź AI: {e}',undoEmpty:'Nie ma czego cofnąć.'}
 };
@@ -200,6 +204,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
   if(select!==undefined)selected=select;
   if(highlight&&!scanning)clearHighlight(false);
   if(swarmLayer.childElementCount)clearSwarm();
+  swarmAfterCommit();
   persist();render();
   return true;
  }
@@ -253,7 +258,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
   if(!list.length)return;
   const minX=Math.min(...list.map(n=>n.x)),maxX=Math.max(...list.map(n=>n.x+CARD_W));
   const minY=Math.min(...list.map(n=>n.y)),maxY=Math.max(...list.map(n=>n.y+CARD_H));
-  const vw=viewport.clientWidth,vh=viewport.clientHeight*(isPhone()&&!panel.hidden?.5:1);
+  const vw=viewport.clientWidth,vh=viewport.clientHeight*(isPhone()&&!panel.hidden&&!panel.classList.contains('is-peek')?.42:1);
   const scale=clamp(Math.min((vw-90)/(maxX-minX+40),(vh-150)/(maxY-minY+60),1.15),MIN_SCALE,1.15);
   const target={scale,x:(vw-(minX+maxX)*scale)/2,y:(vh-(minY+maxY)*scale)/2+(isPhone()?0:8)};
   animate?animateCamera(target):(Object.assign(cam,target),applyCamera());
@@ -825,7 +830,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
   if(!futures.forks.length||!futures.winner){clearHighlight(false);renderPanel();notice(futures.nextMove.title);return;}
   if(reducedMotion()){finishScan(futures);return;}
   scanning=true;viewport.classList.add('is-scanning');$('#boardFutures').classList.add('is-scanning');
-  hud.hidden=false;hud.classList.remove('is-done');
+  crowdHudOn=false;hud.hidden=false;hud.classList.remove("is-done");
   fitTo(g.nodes.filter(n=>n.free!==true).map(n=>n.id));
   renderPanel();
   const samples=futures.samples,frames=Math.max(1,Math.min(samples.length,22)),total=BigInt(futures.total);
@@ -845,13 +850,13 @@ export function initFreeCanvas({notice=()=>{}}={}){
   viewport.classList.remove('is-scanning');$('#boardFutures').classList.remove('is-scanning');
   setHighlight(r.winner.nodes,true);
   hud.hidden=false;hud.classList.add('is-done');
-  hudText.textContent=t('bestOf',{n:fmtBig(r.total),score:r.winner.score,conf:confidenceLabel(r.winner.confidence,locale)});
+  hudText.textContent=t('bestOf',{n:fmtBig(r.total),score:Math.round(r.winner.score),conf:confidenceLabel(r.winner.confidence,locale)});
   if(moveCamera)fitTo(r.winner.nodes);
   renderPanel();
  }
  function showRoute(s){
   setHighlight(s.nodes,true);hud.hidden=false;hud.classList.add('is-done');
-  hudText.textContent=(s.blocked?'✕ ':'')+s.choices.map(c=>c.optionTitle).join(' → ')+(s.score!==null?' · '+s.score+'/100':'');
+  hudText.textContent=(s.blocked?'✕ ':'')+s.choices.map(c=>c.optionTitle).join(' → ')+(s.score!==null?' · '+Math.round(s.score)+'/100':'');
   fitTo(s.nodes);
  }
  function recordDecision(){
@@ -978,7 +983,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
   let moves=[];try{moves=coachGraph(g,{locale,futures:currentFutures(),limit:12});}catch(err){console.warn(err);}
   nextMove=moves.find(m=>!skipped.has(m.id))||null;
   const n=selectedNode();
-  const calm=inline||scanning||highlight||dragging;
+  const calm=inline||scanning||highlight||dragging||!hud.hidden;
   const show=!!nextMove&&!calm&&!(isPhone()&&(panelMode||n));
   box.hidden=!show;
   if(show){
@@ -1119,7 +1124,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
   return t('askText',{title:g.title,goal:goal?t('askGoal',{goal}):''});
  }
  // ── Swarm: a synthetic crowd drifts toward the options it adopts ──
- let swarm=null,swarmSeed=0,swarmTimer=null;
+ let swarm=null,swarmSeed=0,swarmTimer=null,swarmStale=false,swarmWatch=null,crowdHudOn=false;
  const swarmLayer=$('#boardSwarm');
  function setCrowd(optionId,share){
   const e=cards.get(optionId);if(!e)return;
@@ -1135,22 +1140,45 @@ export function initFreeCanvas({notice=()=>{}}={}){
  }
  function runSwarm(next=false){
   if(next)swarmSeed++;
-  swarm=simulateSwarm(graph(),{locale,seed:swarmSeed});
+  swarm=simulateSwarm(graph(),{locale,seed:swarmSeed});swarmStale=false;swarmWatch=null;
   clearHighlight(false);
+  if(selected)deselect();
   openPanel('futures');
   playSwarm(swarm);
  }
- // Agents start in a cloud below the main idea and flow INTO the card they adopt, where they
- // disappear under it; the card's own meter shows the share. Nothing is left over text.
+ // A rating asked for by the crowd refreshes the crowd quietly, so the result follows the canvas.
+ function swarmAfterCommit(){
+  if(!swarm)return;
+  if(swarmWatch){
+   const n=graph().nodes.find(x=>x.id===swarmWatch);
+   if(n&&n.impact&&n.effort){
+    swarm=simulateSwarm(graph(),{locale,seed:swarmSeed});swarmStale=false;swarmWatch=null;
+    clearCrowdMeters();for(const o of swarm.options)if(!o.blocked)setCrowd(o.optionId,o.adoption);
+    showCrowdHud(swarm);notice(t('swarmUpdated',{v:swarm.verdict}));
+    return;
+   }
+  }
+  swarmStale=true;clearCrowdMeters();
+  if(crowdHudOn&&!highlight){hud.hidden=true;crowdHudOn=false;}
+ }
+ function crowdHudText(sim){
+  const w=sim.winner;if(!w)return t('crowdHudNone');
+  return t('crowdHud',{c:t('cert_'+sim.certainty),t:w.title.length>34?w.title.slice(0,33)+'…':w.title,r:w.range[0]===w.range[1]?w.adoption+'%':Math.round(w.range[0])+'–'+Math.round(w.range[1])+'%'});
+ }
+ function showCrowdHud(sim){if(!sim.options.length)return;crowdHudOn=true;hud.hidden=false;hud.classList.add('is-done');hudText.textContent=crowdHudText(sim);}
+ // Agents come out of the main idea and flow INTO the card they would take up, disappearing under
+ // it; the card's own meter shows the share. Nothing is left over text.
  function playSwarm(sim){
   clearSwarm();
-  if(!sim.options.length)return;
+  if(!sim.options.length){renderPanel();return;}
   const g=graph(),root=g.nodes.find(n=>n.id===g.rootId);
-  const home={x:root.x+CARD_W/2,y:root.y+CARD_H+170};
+  const home={x:root.x+CARD_W/2,y:root.y+CARD_H/2};
   const pr=i=>{const x=Math.sin(i*12.9898+swarmSeed*7.13)*43758.5453;return x-Math.floor(x);};
-  const cloud=sim.frames[0].map((_,i)=>{const a=pr(i)*Math.PI*2,r=20+pr(i+999)*70;return {x:home.x+Math.cos(a)*r*1.8,y:home.y+Math.sin(a)*r*.6};});
+  const cloud=sim.frames[0].map((_,i)=>({x:home.x+(pr(i)-.5)*CARD_W*.6,y:home.y+(pr(i+999)-.5)*CARD_H*.5}));
   const centre=sim.options.map(o=>{const n=g.nodes.find(x=>x.id===o.optionId);return n?{x:n.x+CARD_W/2,y:n.y+CARD_H/2}:home;});
   viewport.classList.add('is-swarming');
+  if(isPhone())panel.classList.add('is-peek');
+  hud.hidden=false;hud.classList.remove('is-done');hudText.textContent=t('crowdRunning',{n:sim.agents});
   const dots=cloud.map((p,i)=>{const c=svgEl('circle',{r:'3',cx:'0',cy:'0'});c.style.transform='translate('+p.x+'px,'+p.y+'px)';c.style.transitionDelay=Math.round(pr(i+31)*240)+'ms';swarmLayer.append(c);return c;});
   fitTo([g.rootId,...sim.options.map(o=>o.optionId)]);
   const place=(frame,k)=>{
@@ -1160,13 +1188,17 @@ export function initFreeCanvas({notice=()=>{}}={}){
     dots[i].classList.add('on');
     dots[i].style.transform='translate('+(p.x+(pr(i+5)-.5)*CARD_W*.5)+'px,'+(p.y+(pr(i+9)-.5)*CARD_H*.4)+'px)';
    });
-   sim.options.forEach((o,j)=>setCrowd(o.optionId,o.curve[k]));
+   sim.options.forEach(o=>setCrowd(o.optionId,o.curve[k]));
   };
   const finish=()=>{
    place(sim.frames.at(-1),sim.frames.length-1);
    swarmLayer.classList.add('is-fading');
    swarmTimer=setTimeout(()=>{swarmLayer.replaceChildren();swarmLayer.classList.remove('is-fading');viewport.classList.remove('is-swarming');},700);
+   panel.classList.remove('is-peek');
+   showCrowdHud(sim);
    renderPanel();
+   if(isPhone())fitTo([g.rootId,...sim.options.map(o=>o.optionId)]);
+   requestAnimationFrame(()=>$('#boardSwarmSection')?.scrollIntoView({block:'start',behavior:reducedMotion()?'auto':'smooth'}));
   };
   if(reducedMotion()){finish();return;}
   let f=0;
@@ -1174,33 +1206,54 @@ export function initFreeCanvas({notice=()=>{}}={}){
   swarmTimer=setTimeout(step,300);
  }
  function swarmSection(){
-  const sec=el('section','futures-section');
+  const sec=el('section','futures-section swarm-section');sec.id='boardSwarmSection';
   sec.append(el('h5','',t('swarmTitle')));
   if(!swarm){
    sec.append(el('p','board-fineprint',t('swarmIntro')),button('futures-secondary',t('swarmRun'),()=>runSwarm()));
    return sec;
   }
   if(swarm.empty){sec.append(el('p','board-empty',swarm.empty));return sec;}
-  const w=swarm.winner;
-  sec.append(el('p','board-lede-big',w?t('swarmTop',{t:w.title,p:w.adoption,r:swarm.rounds})+(w.tippingRound?t('swarmTip',{n:w.tippingRound}):''):t('swarmNone')));
+  if(swarmStale){
+   const st=el('div','swarm-stale');st.append(el('span','',t('swarmStale')),button('futures-secondary',t('swarmRefresh'),()=>runSwarm()));sec.append(st);
+  }
+  const head=el('div','swarm-verdict');
+  head.append(el('span','swarm-cert '+swarm.certainty,t('cert_'+swarm.certainty)),el('p','',swarm.verdict));
+  sec.append(head);
+  if(swarm.next){
+   const nx=swarm.next;
+   const b=button('futures-next',null,()=>{
+    if(nx.code==='rate'){swarmWatch=nx.optionId;runAction({type:'rate',nodeId:nx.optionId});}
+    else runAction({type:'add',parentId:nx.optionId,seed:{title:nx.title.slice(0,150),kind:'experiment',description:nx.why+'\n\n'+t('swarmTestHow')}});
+   });
+   b.append(el('small','',t('nextMove')),el('strong','',nx.title),el('span','',nx.why));
+   sec.append(b);
+  }
   for(const o of swarm.options){
-   const row=el('div','swarm-option'),head=el('div','swarm-row');
-   head.append(el('strong','',o.title),el('span','',o.blocked?'✕':o.adoption+'%'));
-   const bar=el('div','swarm-bar'),fill=el('i');fill.style.width=(o.blocked?0:o.adoption)+'%';bar.append(fill);
-   row.append(head,bar);
-   if(o.objections[0])row.append(el('span','swarm-why',t('swarmObj',{o:o.objections[0].name,p:o.objections[0].share})+' · '+o.objections[0].segments.slice(0,2).map(x=>x.name).join(', ')));
+   const row=el('div','swarm-option'),top=el('div','swarm-row');
+   const label=o.blocked?'✕':o.adoption+'%';
+   const rangeTxt=o.blocked||o.range[0]===o.range[1]?'':' '+Math.round(o.range[0])+'–'+Math.round(o.range[1]);
+   const nums=el('span','swarm-num');nums.append(el('b','',label),el('small','',rangeTxt));
+   const name=button('swarm-name',o.title,()=>{select(o.optionId,{keepTab:true});centerOn(o.optionId);});
+   top.append(name,nums);
+   const bar=el('div','swarm-bar'),rng=el('em'),fill=el('i');
+   if(!o.blocked){rng.style.left=o.range[0]+'%';rng.style.width=Math.max(1,o.range[1]-o.range[0])+'%';fill.style.width=o.adoption+'%';}
+   bar.append(rng,fill);
+   row.append(top,bar);
+   const bits=[];
+   if(o.objections[0])bits.push(t('swarmObj',{o:o.objections[0].name,p:o.objections[0].share})+' · '+o.objections[0].segments.slice(0,2).map(x=>x.name).join(', '));
+   if(o.tippingRound)bits.push(t('swarmFriends',{p:o.fromFriends,n:o.tippingRound}));
+   if(!o.rated&&!o.blocked)bits.push(t('swarmUnrated'));
+   if(bits.length)row.append(el('span','swarm-why',bits.join(' · ')));
    sec.append(row);
   }
-  const fw=currentFutures()?.winner;
-  if(w&&fw&&!fw.options.includes(w.optionId)){
+  const w=swarm.winner,fw=currentFutures()?.winner;
+  if(w&&fw&&swarm.certainty!=='unclear'&&!fw.options.includes(w.optionId)){
    const best=fw.choices.map(c=>c.optionTitle).join(' → ');
    sec.append(el('p','futures-weak',t('swarmConflict',{f:best,c:w.title})));
   }
-  if(swarm.undecided)sec.append(el('p','board-fineprint',t('swarmUndecided',{p:swarm.undecided})));
   const actions=el('div','futures-actions');
-  actions.append(button('futures-primary',t('swarmAdd'),()=>{
+  actions.append(button('futures-secondary',t('swarmAdd'),()=>{
    const out=swarmNotes(graph(),swarm,{locale});
-   const from=disp.get(graph().rootId);
    for(const id of out.added){const n=out.graph.nodes.find(x=>x.id===id);spawnFrom.set(id,{x:n.x,y:n.y});}
    commit(out.graph);notice(t('swarmAdded',{n:out.added.length}));
   }),button('futures-secondary',t('swarmAgain'),()=>runSwarm(true)));
@@ -1273,7 +1326,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
   }else{
    const w=r.winner,card=el('div','futures-card win');
    const h=el('h4');h.append(el('span','',t('winning')),el('span','',confidenceLabel(w.confidence,locale)));
-   const score=el('div','futures-score',String(w.score));score.append(el('small','','/100 '+t('score')));
+   const score=el('div','futures-score',String(Math.round(w.score)));score.append(el('small','','/100 '+t('score')));
    const route=el('ol','futures-route');
    for(const c of w.choices){
     const li=el('li'),b=button('',null,()=>{select(c.optionId,{keepTab:true});centerOn(c.optionId);});
@@ -1304,7 +1357,7 @@ export function initFreeCanvas({notice=()=>{}}={}){
    for(const s of others){
     const b=button('futures-alt',null,()=>showRoute(s));
     const diff=r.winner?s.choices.filter(c=>!r.winner.choices.some(x=>x.optionId===c.optionId)):s.choices;
-    b.append(el('strong','',s.choices.map(c=>c.optionTitle).join(' → ')),el('b','',String(s.score)),el('span','',diff.map(c=>c.forkTitle+': '+c.optionTitle).join(' · ')));
+    b.append(el('strong','',s.choices.map(c=>c.optionTitle).join(' → ')),el('b','',String(Math.round(s.score))),el('span','',diff.map(c=>c.forkTitle+': '+c.optionTitle).join(' · ')));
     list.append(b);
    }
    sec.append(list);host.append(sec);
